@@ -48,8 +48,9 @@ function touchEvent() {
    
         picList[i].addEventListener('touchstart', function(e) {
 
-            document.getElementById('pic-block').classList.replace("pic-def", "pic-clk");
+            document.getElementById("pic-area").classList.add("animating");
             clickChr2Proc(e);
+            sleepSetTimeout(400, () => document.getElementById("pic-area").classList.remove("animating"));
 
         })
 
@@ -104,47 +105,7 @@ function repPic() {
 //---------------
 async function clickChr2Proc(event) {
 
-    // 長押しなら遷移
-    if (await isHoldDown(event.target)) {
-        document.getElementById('box').style.opacity = 0;
-        sleepSetTimeout(300, () => window.location.href = './tmp/branch.html?chrId=' + chrId);
-    } else {
-        document.getElementById('pic-block').classList.replace("pic-clk", "pic-def");
-    }
+    sleepSetTimeout(300, () => document.getElementById('box').style.opacity = 0);
+    sleepSetTimeout(600, () => window.location.href = './tmp/branch.html?chrId=' + chrId);
 
-}
-
-//---------------
-// ロングタップ判定
-//---------------
-function isHoldDown(targetElement, thresholdMsec = 400) {
-    return new Promise((resolve) => {
-
-    const timerId = setTimeout(() => {
-      resolve(true);
-      removeListener();
-    }, thresholdMsec);
-
-    const touchendHandler = () => {
-      resolve(false);
-      removeListener();
-    };
-
-    const contextHandler = (event) => {
-      event.preventDefault();
-    }
-
-    const beforeTargetStyle = targetElement.style.userSelect;
-
-    const removeListener = () => {
-      clearTimeout(timerId);
-      targetElement.removeEventListener('touchend', touchendHandler);
-      targetElement.removeEventListener('contextmenu', contextHandler);
-      targetElement.style.userSelect = beforeTargetStyle;
-    };
-
-    targetElement.addEventListener('touchend', touchendHandler);
-    targetElement.removeEventListener('contextmenu', contextHandler);
-    targetElement.style.userSelect = 'none';
-  });
 }

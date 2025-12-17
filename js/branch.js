@@ -52,7 +52,7 @@ function repLv() {
     var lvHtml = "";
 
     lvHtml = lvHtml + '<div class="lv-wrapper" id="lv-wrapper">';
-    lvHtml = lvHtml + '    <svg class="lv-svg" viewBox="0 0 24 24">';
+    lvHtml = lvHtml + '    <svg class="lv-svg" id="lv-svg" viewBox="0 0 24 24">';
     lvHtml = lvHtml + '      <defs><clipPath id="lvClip">';
     lvHtml = lvHtml + '          <path d="M12 21s-6-4.35-9-8.28C.7 9.9 1.2 5.5 4.6 3.6c2.2-1.2 5.1-.7 6.9 1.1C13.3 2.9 16.2 2.4 18.4 3.6c3.4 1.9 3.9 6.3 1.6 9.12C18 16.6 12 21 12 21z"/>';
     lvHtml = lvHtml + '      </clipPath></defs>';
@@ -95,10 +95,6 @@ function chgLv() {
 
     // クラス更新
     lvWrap.className = `lv lv-wrapper lv${lvMap.get(evtLv)[0]}`;
-
-    // 押下アニメーション
-    lvArea.classList.add("animating");
-    sleepSetTimeout(250, () => lvArea.classList.remove("animating"));
 
 }
 
@@ -144,13 +140,12 @@ function touchEvent() {
 
                 if (evtId == tgtEvtId) {
 
-                    // ボタンレイアウト変更
-                    document.getElementById(evtId).classList.add("animating");
-                    document.getElementById(evtId).classList.replace("btn-sel", "btn-dec");
+                    // ボタン押下
+                    document.getElementById(evtId).classList.add("btn-animating");
 
-                    // 動画変更
+                    // 画面遷移
                     sleepSetTimeout(350, () => document.getElementById('box').style.opacity = 0);
-                    sleepSetTimeout(700, () => window.location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId);
+                    sleepSetTimeout(700, () => window.location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&evtLv=' + evtLv);
 
                 } else {
 
@@ -171,21 +166,8 @@ function touchEvent() {
 
             } else if (e.target.closest('.lv-wrapper')) {
 
-                // フェードアウト
-                document.getElementById('btn-area').style.opacity = 0;
-                enbFlg = false;
-
-                // 次イベント設定
-                evtLv = lvMap.get(evtLv)[3];
-                chgLv();
-
-                // ボタン再描画
-                evtId = '';
-                sleepSetTimeout(300, () => repBtn());
-
-                // フェードイン
-                sleepSetTimeout(450, () => document.getElementById('btn-area').style.opacity = 1);
-                sleepSetTimeout(600, () => enbFlg = true);
+                // LV押下処理
+                clickLvProc(e);
 
             }
 
@@ -193,4 +175,77 @@ function touchEvent() {
 
     });
 
+}
+
+//---------------
+// LV押下処理
+//---------------
+async function clickLvProc(event) {
+
+    // 押下アニメーション
+    var lvSvg = document.getElementById("lv-svg");
+    lvSvg.classList.add("lv-animating");
+    sleepSetTimeout(250, () => lvSvg.classList.remove("lv-animating"));
+
+    // 長押しなら遷移
+    if (await isHoldDown(event.target)) {
+
+        document.getElementById('box').style.opacity = 0;
+        sleepSetTimeout(300, () => window.location.href = '../title.html');
+
+    } else {
+
+        // フェードアウト
+        document.getElementById('btn-area').style.opacity = 0;
+        enbFlg = false;
+
+        // 次イベント設定
+        evtLv = lvMap.get(evtLv)[3];
+        chgLv();
+
+        // ボタン再描画
+        evtId = '';
+        sleepSetTimeout(300, () => repBtn());
+
+        // フェードイン
+        sleepSetTimeout(450, () => document.getElementById('btn-area').style.opacity = 1);
+        sleepSetTimeout(600, () => enbFlg = true);
+
+    }
+
+}
+
+//---------------
+// ロングタップ判定
+//---------------
+function isHoldDown(targetElement, thresholdMsec = 400) {
+    return new Promise((resolve) => {
+
+    const timerId = setTimeout(() => {
+      resolve(true);
+      removeListener();
+    }, thresholdMsec);
+
+    const touchendHandler = () => {
+      resolve(false);
+      removeListener();
+    };
+
+    const contextHandler = (event) => {
+      event.preventDefault();
+    }
+
+    const beforeTargetStyle = targetElement.style.userSelect;
+
+    const removeListener = () => {
+      clearTimeout(timerId);
+      targetElement.removeEventListener('touchend', touchendHandler);
+      targetElement.removeEventListener('contextmenu', contextHandler);
+      targetElement.style.userSelect = beforeTargetStyle;
+    };
+
+    targetElement.addEventListener('touchend', touchendHandler);
+    targetElement.removeEventListener('contextmenu', contextHandler);
+    targetElement.style.userSelect = 'none';
+  });
 }
