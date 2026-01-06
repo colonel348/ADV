@@ -79,16 +79,12 @@
 }
 
 .btn-def {
-    border-color: #0b3d91;
-    background-color: #0b3d91;
     color: #FFFFFF;
     right: 0%;
 }
 
 .btn-sel {
-    border-color: #0b3d91;
     background-color: #FFFFFF;
-    color: #0b3d91;
     right: 10%;
 }
 
