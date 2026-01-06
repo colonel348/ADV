@@ -35,7 +35,7 @@ function repBtn() {
     dataMap.forEach((value, key) => {
 
         if (evtLv == key.substring(0,1)) {
-            btnHtml += '<div id="' + key + '" class="btn btn-def btn-' + evtLv + '">' + value[0] + '</div>';
+            btnHtml += '<div id="' + key + '" class="btn btn-def btn-' + evtLv + '" style="border-color: ' + lvMap.get(evtLv)[1] + '; background-color: ' + lvMap.get(evtLv)[1] + '">' + value[0] + '</div>';
         }
 
     });
@@ -152,8 +152,10 @@ function touchEvent() {
                     // ボタンレイアウト変更
                     if (evtId != "") {
                         document.getElementById(evtId).classList.replace("btn-sel", "btn-def");
+                        document.getElementById(evtId).style = "border-color: " + lvMap.get(evtLv)[1] + "; background-color: " + lvMap.get(evtLv)[1];
                     }
                     document.getElementById(tgtEvtId).classList.replace("btn-def", "btn-sel");
+                    document.getElementById(tgtEvtId).style = "border-color: " + lvMap.get(evtLv)[1] + "; color: " + lvMap.get(evtLv)[1];
 
                     // イベントID変更
                     evtId = tgtEvtId;
