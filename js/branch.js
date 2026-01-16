@@ -258,6 +258,10 @@ async function clickLvProc(event) {
         numEvtLv = Number(evtLv) + 2;
     }
 
+    if (10 < numEvtLv) {
+        numEvtLv = 10;
+    }
+
     rutId = tgtEvtId.substring(0,1);
     evtLv = String(numEvtLv).padStart(2, '0');
 
@@ -276,7 +280,7 @@ async function clickLvProc(event) {
         // LV変更
         chgLv(evtLv, false);
 
-        if (10 <= Number(evtLv)) {
+        if (10 == numEvtLv) {
 
             // タイトルに戻る
             sleepSetTimeout(200, () => document.getElementById('box').style.opacity = 0);
