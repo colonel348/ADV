@@ -1,8 +1,10 @@
 // URLパラメタ
 var chrId;
+var rutId;
 var evtLv;
 var evtId;
-var dataMap;
+var evtDataMap;
+var selDataMap;
 
 var lvMap = new Map([
     ['A', ['1', '#0b3d91', 30, 'B']], 
@@ -23,19 +25,28 @@ function setParam() {
         chrId = "";
     }
 
-    if (urlParams.has('evtLv')) {
-        evtLv = urlParams.get('evtLv');
-    } else {
-        evtLv = "A";
-    }
-
     if (urlParams.has('evtId')) {
         evtId = urlParams.get('evtId');
     } else {
-        evtId = "";
+        evtId = "C00";
     }
 
-    dataMap = getDataMap();
+    rutId = evtId.substring(0,1);
+    evtLv = evtId.substring(1,3);
+
+    // Map設定
+    if (chrId == "AK") {
+        evtDataMap = evtDataAkMap;
+        defDataMap = defDataAkMap;
+
+    } else if (chrId == "SA") {
+        evtDataMap = evtDataSaMap;
+        defDataMap = defDataSaMap;
+
+    } else if (chrId == "FF") {
+        evtDataMap = evtDataFfMap;
+        defDataMap = defDataFfMap;
+    }
 
 }
 
@@ -45,23 +56,5 @@ function setParam() {
 function sleepSetTimeout(ms, callback) {
 
     setTimeout(callback, ms);
-
-}
-
-//---------------
-// データMap取得
-//---------------
-function getDataMap() {
-
-    // 対象データ取得
-    if (chrId == "AK") {
-        return dataAkMap;
-    } else if (chrId == "SA") {
-        return dataSaMap;
-    } else if (chrId == "FF") {
-        return dataFfMap;
-    } else {
-        return new Map();
-    }
 
 }

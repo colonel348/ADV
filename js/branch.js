@@ -1,4 +1,5 @@
 var enbFlg = false;
+var tgtEvtId = "";
 
 //---------------
 // 初期処理
@@ -15,7 +16,7 @@ window.addEventListener('load', function() {
     repLv();
 
     // 動画描画
-    setVideo(evtLv + '0');
+    setDefVideo();
 
     // フェードイン
     fadeIn();
@@ -32,13 +33,28 @@ function repBtn() {
 
     // ボタンHTML生成
     var btnHtml = '';
-    dataMap.forEach((value, key) => {
 
-        if (evtLv == key.substring(0,1)) {
-            btnHtml += '<div id="' + key + '" class="btn btn-def btn-' + evtLv + '" style="border-color: ' + lvMap.get(evtLv)[1] + '; background-color: ' + lvMap.get(evtLv)[1] + '">' + value[0] + '</div>';
-        }
+    var nextRutIdAry = getNextRutId(); 
+    for (var i = 0;i < nextRutIdAry.length; i++) {
 
-    });
+        // 検索対象
+        var nextRutId = nextRutIdAry[i];
+
+        for (const key of evtDataMap.keys()) {
+
+            // 比較対象
+            var dataRutId = key.substring(0,1);
+            var dataEvtLv = key.substring(1,3);
+
+            // ルートが同じでLVが近いイベントを取得
+            if (nextRutId == dataRutId && evtLv < dataEvtLv) {
+                btnHtml += '<div id="' + key + '" class="btn btn-def btn-' + nextRutId + '">' + evtDataMap.get(key)[0] + '</div>';
+                break;
+            }
+
+        }
+
+    }
 
     document.querySelector('#btn-area').innerHTML = btnHtml;
 
@@ -57,55 +73,96 @@ function repLv() {
     lvHtml = lvHtml + '          <path d="M12 21s-6-4.35-9-8.28C.7 9.9 1.2 5.5 4.6 3.6c2.2-1.2 5.1-.7 6.9 1.1C13.3 2.9 16.2 2.4 18.4 3.6c3.4 1.9 3.9 6.3 1.6 9.12C18 16.6 12 21 12 21z"/>';
     lvHtml = lvHtml + '      </clipPath></defs>';
     lvHtml = lvHtml + '      <rect class="lv-fill-back" x="0" y="0" width="24" height="24" fill="#222222" clip-path="url(#lvClip)"/>';
-    lvHtml = lvHtml + '      <rect class="lv-fill" x="0" y="18" width="24" height="24" fill="#0b3d91" clip-path="url(#lvClip)"/>';
+    lvHtml = lvHtml + '      <rect class="lv-fill-rev" x="0" y="0" width="24" height="24" fill="#FFBAE8" clip-path="url(#lvClip)"/>';
+    lvHtml = lvHtml + '      <rect class="lv-fill" x="0" y="18" width="24" height="24" fill="#d81b60" clip-path="url(#lvClip)"/>';
     lvHtml = lvHtml + '      <path d="M12 21s-6-4.35-9-8.28C.7 9.9 1.2 5.5 4.6 3.6c2.2-1.2 5.1-.7 6.9 1.1C13.3 2.9 16.2 2.4 18.4 3.6c3.4 1.9 3.9 6.3 1.6 9.12C18 16.6 12 21 12 21z" fill="none" stroke="#888" stroke-width="1"/>';
     lvHtml = lvHtml + '    </svg>';
-    lvHtml = lvHtml + '    <div class="lv-label">Lv1</div>';
+    lvHtml = lvHtml + '    <div class="lv-label"></div>';
     lvHtml = lvHtml + '</div>';
 
    document.querySelector('#lv-area').innerHTML = lvHtml;
 
    // 表示内容更新
-   chgLv();
+   chgLv(evtLv, false);
+   chgLv(evtLv, true);
 
 }
 
 //---------------
 // LV更新
 //---------------
-function chgLv() {
+function chgLv(tgtEvtLv, revFlg) {
 
-    var lvArea = document.getElementById("lv-area");
     var lvWrap = document.getElementById("lv-wrapper");
-    var lvFill = lvWrap.querySelector(".lv-fill");
     var lvLabel = lvWrap.querySelector(".lv-label");
+    var lvFill;
 
-    var evtLvNum = lvMap.get(evtLv);
-
-    // 背景色
-    lvFill.setAttribute("fill", lvMap.get(evtLv)[1]);
+    if (revFlg) {
+        lvFill = lvWrap.querySelector(".lv-fill-rev");
+    } else{
+        lvFill = lvWrap.querySelector(".lv-fill");
+    }
 
     // 塗り範囲 (下から上)
-    const percent = lvMap.get(evtLv)[2];
-    const y = 24 - (24 * percent / 100);
+    const y = 18 - (18 * (Number(tgtEvtLv) / 10)) + 3;
     lvFill.setAttribute("y", y);
 
     // テキスト更新
-    lvLabel.textContent = `Lv${lvMap.get(evtLv)[0]}`;
+    if (!revFlg) {
+        lvLabel.textContent = `${String(Number(tgtEvtLv)*10)}%`;
+    }
 
-    // クラス更新
-    lvWrap.className = `lv lv-wrapper lv${lvMap.get(evtLv)[0]}`;
+}
+
+//---------------
+// 動画設定（初期）
+//---------------
+function setDefVideo() {
+
+    // ボタンHTML生成
+    var defId = '01';
+
+    for (const key of defDataMap.keys()) {
+
+        // 比較対象
+        var dataRutId = key.substring(0,1);
+        var dataEvtLv = key.substring(1,3);
+
+        // 同ルートの範囲内から決定
+        if (rutId == dataRutId && evtLv <= dataEvtLv) {
+            defId = defDataMap.get(key);
+            break;
+        }
+
+    }
+
+    // 動画再生
+    setVideo('Z' + '/' + defId + '/def', 0);
+
+}
+
+//---------------
+// 動画設定（イベント）
+//---------------
+function setEvtVideo(tgtEvtId) {
+
+    // 比較対象
+    var tgtRutId = tgtEvtId.substring(0,1);
+    var tgtEvtLv = tgtEvtId.substring(1,3);
+
+    // 動画再生
+    setVideo(tgtRutId + '/' + tgtEvtLv + '/sel');
 
 }
 
 //---------------
 // 動画設定
 //---------------
-function setVideo(tgtEvtId) {
+function setVideo(srcPath) {
 
     const videoEle = document.getElementById("video-area");
 
-    videoEle.src = '../video/' + chrId + '/' + tgtEvtId + '/sel.mp4';
+    videoEle.src = '../video/' + chrId + '/' + srcPath + '.mp4';
     videoEle.load();
     videoEle.play(); 
 
@@ -136,33 +193,35 @@ function touchEvent() {
 
             if(e.target.closest('.btn')) {
 
-                var tgtEvtId = e.target.id;
+                tgtEvtId = e.target.id;
 
-                if (evtId == tgtEvtId) {
+                // 操作不可
+                enbFlg = false;
+                sleepSetTimeout(600, () => enbFlg = true);
 
-                    // ボタン押下
-                    document.getElementById(evtId).classList.add("btn-animating");
+                // ボタン押下
+                document.getElementById(tgtEvtId).classList.add("btn-animating");
+                sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
+                sleepSetTimeout(700, () => document.getElementById('btn-area').style.display = 'none');
 
-                    // 画面遷移
-                    sleepSetTimeout(350, () => document.getElementById('box').style.opacity = 0);
-                    sleepSetTimeout(700, () => window.location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&evtLv=' + evtLv);
+                // 表示内容更新
+                sleepSetTimeout(100, () => chgLv(tgtEvtId.substring(1,3), true));
 
-                } else {
+                // 動画変更
+                document.getElementById('video-area').style.opacity = 0;
+                sleepSetTimeout(400, () => setEvtVideo(tgtEvtId));
 
-                    // ボタンレイアウト変更
-                    if (evtId != "") {
-                        document.getElementById(evtId).classList.replace("btn-sel", "btn-def");
-                        document.getElementById(evtId).style = "border-color: " + lvMap.get(evtLv)[1] + "; background-color: " + lvMap.get(evtLv)[1];
-                    }
-                    document.getElementById(tgtEvtId).classList.replace("btn-def", "btn-sel");
-                    document.getElementById(tgtEvtId).style = "border-color: " + lvMap.get(evtLv)[1] + "; color: " + lvMap.get(evtLv)[1];
+                // 決定エリア表示
+                sleepSetTimeout(800, () => document.getElementById('dec-area').style.opacity = 1);
 
-                    // イベントID変更
-                    evtId = tgtEvtId;
+            } else if (e.target.closest('.dec-area')) {
 
-                    // 動画変更
-                    document.getElementById('video-area').style.opacity = 0;
-                    sleepSetTimeout(400, () => setVideo(evtId));
+                if (tgtEvtId != "") {
+
+                    // イベント決定
+                    document.getElementById('dec-area').style.opacity = 0;
+                    sleepSetTimeout(350, () => document.getElementById('box').style.opacity = 0);
+                    sleepSetTimeout(700, () => window.location.href = './event.html?chrId=' + chrId + '&evtId=' + tgtEvtId);
 
                 }
 
@@ -185,9 +244,22 @@ function touchEvent() {
 async function clickLvProc(event) {
 
     // 押下アニメーション
-    var lvSvg = document.getElementById("lv-svg");
-    lvSvg.classList.add("lv-animating");
-    sleepSetTimeout(250, () => lvSvg.classList.remove("lv-animating"));
+    var lvEle = document.getElementById("lv-wrapper");
+    lvEle.classList.add("lv-animating");
+    sleepSetTimeout(250, () => lvEle.classList.remove("lv-animating"));
+
+    // 次イベント設定
+    var numEvtLv;
+    if (tgtEvtId != "") {
+        // イベント押下後のLV押下
+        numEvtLv = Number(tgtEvtId.substring(1,3));
+    } else {
+        // イベント押下前のLV押下
+        numEvtLv = Number(evtLv) + 2;
+    }
+
+    rutId = tgtEvtId.substring(0,1);
+    evtLv = String(numEvtLv).padStart(2, '0');
 
     // 長押しなら遷移
     if (await isHoldDown(event.target)) {
@@ -201,17 +273,30 @@ async function clickLvProc(event) {
         document.getElementById('btn-area').style.opacity = 0;
         enbFlg = false;
 
-        // 次イベント設定
-        evtLv = lvMap.get(evtLv)[3];
-        chgLv();
+        // LV変更
+        chgLv(evtLv, false);
 
-        // ボタン再描画
-        evtId = '';
-        sleepSetTimeout(300, () => repBtn());
+        if (10 <= Number(evtLv)) {
 
-        // フェードイン
-        sleepSetTimeout(450, () => document.getElementById('btn-area').style.opacity = 1);
-        sleepSetTimeout(600, () => enbFlg = true);
+            // タイトルに戻る
+            sleepSetTimeout(200, () => document.getElementById('box').style.opacity = 0);
+            sleepSetTimeout(500, () => window.location.href = '../title.html');
+
+        } else {
+
+            // イベント決定エリア非表示
+            document.getElementById('dec-area').style.opacity = 0;
+
+            // ボタン再描画
+            tgtEvtId = '';
+            sleepSetTimeout(300, () => repBtn());
+
+            // フェードイン
+            sleepSetTimeout(450, () => document.getElementById('btn-area').style.display = 'block');
+            sleepSetTimeout(550, () => document.getElementById('btn-area').style.opacity = 1);
+            sleepSetTimeout(600, () => enbFlg = true);
+
+        }
 
     }
 
@@ -250,4 +335,27 @@ function isHoldDown(targetElement, thresholdMsec = 400) {
     targetElement.removeEventListener('contextmenu', contextHandler);
     targetElement.style.userSelect = 'none';
   });
+}
+
+//---------------
+// 次のID取得
+//---------------
+function getNextRutId() {
+
+    if (rutId == "A") {
+        return ["A", "B"];
+
+    } else if (rutId == "B") {
+        return ["A", "B", "C"];
+
+    } else if (rutId == "C") {
+        return ["B", "C", "D"];
+
+    } else if (rutId == "D") {
+        return ["C", "D", "E"];
+
+    } else if (rutId == "E") {
+        return ["D", "E"];
+    }
+
 }

@@ -22,10 +22,8 @@ window.addEventListener('load', function() {
 //---------------
 function dispTitle() {
 
-    var dataMap = getDataMap();
-
     // タイトル描画
-    document.querySelector('#title-txt').innerHTML = dataMap.get(evtId)[1];
+    document.querySelector('#title-txt').innerHTML = evtDataAkMap.get(evtId)[1];
 
     sleepSetTimeout(400, () => document.getElementById('title').classList.add('is-animated'));
     sleepSetTimeout(1000, () => document.getElementById('title-txt').style.opacity = 1);
@@ -40,19 +38,18 @@ function setVideo() {
 
     const videoEle = document.getElementById("video-area");
 
-    videoEle.src = '../video/' + chrId + '/' + evtId + '/evt.mp4';
+    videoEle.src = '../video/' + chrId + '/' + rutId + '/' + evtLv + '/evt.mp4';
     videoEle.load();
     sleepSetTimeout(1000, () => videoEle.play());
 
     videoEle.addEventListener('ended', () => {
 
         document.getElementById('box').style.opacity = 0;
-        var nextEvtLv = lvMap.get(evtLv)[3];
 
-        if (nextEvtLv != 'A') {
+        if (evtLv != '10') {
 
             // 次のイベント
-            sleepSetTimeout(1000, () => window.location.href = './branch.html?chrId=' + chrId + '&evtLv=' + nextEvtLv);
+            sleepSetTimeout(1000, () => window.location.href = './branch.html?chrId=' + chrId + '&evtId=' + evtId);
 
         } else {
 
