@@ -291,6 +291,10 @@ async function clickLvProc(event) {
             tgtEvtId = '';
             sleepSetTimeout(300, () => repBtn());
 
+            // 動画描画
+            document.getElementById('video-area').style.opacity = 0;
+            sleepSetTimeout(400, () => setDefVideo());
+
             // フェードイン
             sleepSetTimeout(450, () => document.getElementById('btn-area').style.display = 'block');
             sleepSetTimeout(550, () => document.getElementById('btn-area').style.opacity = 1);
