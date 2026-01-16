@@ -154,6 +154,7 @@
     font-size: 80px;
     color: white;
     animation: blinking 1s ease-in-out infinite alternate;
+    text-shadow: 8px 8px 8px black
 }
 
 @keyframes blinking {
