@@ -48,7 +48,8 @@ function repBtn() {
 
             // ルートが同じでLVが近いイベントを取得
             if (nextRutId == dataRutId && evtLv < dataEvtLv) {
-                btnHtml += '<div id="' + key + '" class="btn btn-def btn-' + nextRutId + '">' + evtDataMap.get(key)[0] + '</div>';
+                var dispEvtLv = String((Number(dataEvtLv) - Number(evtLv)) * 10);
+                btnHtml += '<div id="' + key + '" class="btn btn-' + nextRutId + '"><span class="btn-title">' + evtDataMap.get(key)[0] + '</span><span class="btn-point"> + ' + dispEvtLv + '%</span></div>';
                 break;
             }
 
@@ -202,7 +203,6 @@ function touchEvent() {
                 // ボタン押下
                 document.getElementById(tgtEvtId).classList.add("btn-animating");
                 sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
-                sleepSetTimeout(700, () => document.getElementById('btn-area').style.display = 'none');
 
                 // 表示内容更新
                 sleepSetTimeout(100, () => chgLv(tgtEvtId.substring(1,3), true));
@@ -253,6 +253,7 @@ async function clickLvProc(event) {
     if (tgtEvtId != "") {
         // イベント押下後のLV押下
         numEvtLv = Number(tgtEvtId.substring(1,3));
+        rutId = tgtEvtId.substring(0,1);
     } else {
         // イベント押下前のLV押下
         numEvtLv = Number(evtLv) + 2;
@@ -262,7 +263,6 @@ async function clickLvProc(event) {
         numEvtLv = 10;
     }
 
-    rutId = tgtEvtId.substring(0,1);
     evtLv = String(numEvtLv).padStart(2, '0');
 
     // 長押しなら遷移
@@ -300,7 +300,6 @@ async function clickLvProc(event) {
             sleepSetTimeout(400, () => setDefVideo());
 
             // フェードイン
-            sleepSetTimeout(450, () => document.getElementById('btn-area').style.display = 'block');
             sleepSetTimeout(550, () => document.getElementById('btn-area').style.opacity = 1);
             sleepSetTimeout(600, () => enbFlg = true);
 
