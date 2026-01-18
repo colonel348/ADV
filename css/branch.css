@@ -8,7 +8,7 @@
     opacity: 1;
     transition: all 0.4s;
     display: flex;
-    margin-top: 30%;
+    margin-top: 20%;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -21,7 +21,7 @@
     border-radius: 20px;
     font-weight: 900;
     height: 100px;
-    font-size: 50px;
+    font-size: 42px;
     width: 60%;
     opacity: 1;
     transition: all 0.6s;
@@ -33,7 +33,7 @@
     align-items: center;
     position: relative;
     overflow: visible;
-    margin: 50px;
+    margin: 40px;
 }
 
 .btn-title {
