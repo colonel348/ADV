@@ -253,6 +253,7 @@ async function clickLvProc(event) {
     if (tgtEvtId != "") {
         // イベント押下後のLV押下
         numEvtLv = Number(tgtEvtId.substring(1,3));
+        rutId = tgtEvtId.substring(0,1);
     } else {
         // イベント押下前のLV押下
         numEvtLv = Number(evtLv) + 2;
@@ -262,7 +263,6 @@ async function clickLvProc(event) {
         numEvtLv = 10;
     }
 
-    rutId = tgtEvtId.substring(0,1);
     evtLv = String(numEvtLv).padStart(2, '0');
 
     // 長押しなら遷移
