@@ -23,7 +23,7 @@ window.addEventListener('load', function() {
 function dispTitle() {
 
     // タイトル描画
-    document.querySelector('#title-txt').innerHTML = evtDataAkMap.get(evtId)[1];
+    document.querySelector('#title-txt').innerHTML = evtDataMap.get(evtId)[1];
 
     sleepSetTimeout(400, () => document.getElementById('title').classList.add('is-animated'));
     sleepSetTimeout(1000, () => document.getElementById('title-txt').style.opacity = 1);
