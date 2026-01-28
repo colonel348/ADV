@@ -195,6 +195,10 @@ function touchEvent() {
                 sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
                 sleepSetTimeout(750, () => document.getElementById('btn-area').style.display = "none");
 
+                // レベル非表示
+                sleepSetTimeout(350, () => document.getElementById('lv-area').style.opacity = 0);
+                sleepSetTimeout(750, () => document.getElementById('lv-area').style.display = "none");
+
                 // 動画変更
                 document.getElementById('video-area').style.opacity = 0;
                 sleepSetTimeout(500, () => setEvtVideo());
@@ -220,6 +224,10 @@ function touchEvent() {
                     // 選択前に戻る
                     tgtEvtId = "";
                     document.getElementById('dec-area').style.opacity = 0;
+
+                    // レベル非表示
+                    sleepSetTimeout(600, () => document.getElementById('lv-area').style.display = "flex");
+                    sleepSetTimeout(750, () => document.getElementById('lv-area').style.opacity = 1);
 
                     // 動画変更
                     document.getElementById('video-area').style.opacity = 0;
