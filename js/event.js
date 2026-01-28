@@ -38,7 +38,10 @@ function setVideo() {
 
     const videoEle = document.getElementById("video-area");
 
-    videoEle.src = '../video/' + chrId + '/' + rutId + '/' + evtLv + '/evt.mp4';
+    // 比較対象
+    var evtLvId = evtId.substring(0,1);
+
+    videoEle.src = '../video/' + chrId + '/' + evtLvId + '/' + evtId + '/evt.mp4';
     videoEle.load();
     sleepSetTimeout(1000, () => videoEle.play());
 
@@ -49,7 +52,7 @@ function setVideo() {
         if (evtLv != '10') {
 
             // 次のイベント
-            sleepSetTimeout(1000, () => window.location.href = './branch.html?chrId=' + chrId + '&evtId=' + evtId);
+            sleepSetTimeout(1000, () => window.location.href = './branch.html?chrId=' + chrId + '&evtLv=' + evtLv + '&evtId=' + evtId + '&evtIdHist=' + evtIdHist + evtId + ',');
 
         } else {
 

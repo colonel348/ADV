@@ -105,7 +105,11 @@ function repPic() {
 //---------------
 async function clickChr2Proc(event) {
 
-    sleepSetTimeout(300, () => document.getElementById('box').style.opacity = 0);
-    sleepSetTimeout(600, () => window.location.href = './tmp/branch.html?chrId=' + chrId);
+    if (chrId != "") {
+
+        sleepSetTimeout(300, () => document.getElementById('box').style.opacity = 0);
+        sleepSetTimeout(600, () => window.location.href = './tmp/branch.html?chrId=' + chrId);
+
+    }
 
 }

@@ -1,16 +1,15 @@
 // URLパラメタ
 var chrId;
-var rutId;
 var evtLv;
 var evtId;
+var evtIdHist;
 var evtDataMap;
-var selDataMap;
 
 var lvMap = new Map([
-    ['A', ['1', '#0b3d91', 30, 'B']], 
-    ['B', ['2', '#6a1b9a', 50, 'C']], 
-    ['C', ['3', '#ab47bc', 70, 'D']], 
-    ['D', ['4', '#d81b60', 90, 'A']]]);
+    [1, ['A', '#0b3d91', 30]], 
+    [2, ['B', '#6a1b9a', 50]], 
+    [3, ['C', '#ab47bc', 70]], 
+    [4, ['D', '#d81b60', 90]]]);
 
 //---------------
 // パラメタ設定
@@ -25,27 +24,33 @@ function setParam() {
         chrId = "";
     }
 
+    if (urlParams.has('evtLv')) {
+        evtLv = Number(urlParams.get('evtLv'));
+    } else {
+        evtLv = 1;
+    }
+
     if (urlParams.has('evtId')) {
         evtId = urlParams.get('evtId');
     } else {
-        evtId = "C00";
+        evtId = "";
     }
 
-    rutId = evtId.substring(0,1);
-    evtLv = evtId.substring(1,3);
+    if (urlParams.has('evtIdHist')) {
+        evtIdHist = urlParams.get('evtIdHist');
+    } else {
+        evtIdHist = "";
+    }
 
     // Map設定
     if (chrId == "AK") {
         evtDataMap = evtDataAkMap;
-        defDataMap = defDataAkMap;
 
     } else if (chrId == "SA") {
         evtDataMap = evtDataSaMap;
-        defDataMap = defDataSaMap;
 
     } else if (chrId == "FF") {
         evtDataMap = evtDataFfMap;
-        defDataMap = defDataFfMap;
     }
 
 }
