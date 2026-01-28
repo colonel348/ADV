@@ -269,7 +269,7 @@ async function clickLvProc(event) {
     sleepSetTimeout(800, () => setDefVideo());
 
     // フェードアウト
-    document.getElementById('btn-area').style.opacity = 0;
+    sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
 
     // 長押しなら遷移
     if (await isHoldDown(event.target)) {
@@ -296,11 +296,11 @@ async function clickLvProc(event) {
             document.getElementById('dec-area').style.opacity = 0;
 
             // ボタン再描画
-            sleepSetTimeout(300, () => repBtn());
+            sleepSetTimeout(650, () => repBtn());
 
             // フェードイン
-            sleepSetTimeout(600, () => document.getElementById('btn-area').style.opacity = 1);
-            sleepSetTimeout(700, () => enbFlg = true);
+            sleepSetTimeout(700, () => document.getElementById('btn-area').style.opacity = 1);
+            sleepSetTimeout(800, () => enbFlg = true);
 
         }
 
