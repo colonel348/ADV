@@ -193,7 +193,7 @@ function touchEvent() {
                 // ボタン押下
                 document.getElementById(tgtEvtId).classList.add("btn-animating");
                 sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
-                sleepSetTimeout(750, () => document.getElementById('btn-area').style.display = "none");
+                sleepSetTimeout(900, () => document.getElementById('btn-area').style.display = "none");
 
                 // レベル非表示
                 sleepSetTimeout(350, () => document.getElementById('lv-area').style.opacity = 0);
@@ -264,6 +264,13 @@ async function clickLvProc(event) {
     // LVアップ
     evtLv = evtLv + 1;
 
+    // 動画変更
+    document.getElementById('video-area').style.opacity = 0;
+    sleepSetTimeout(800, () => setDefVideo());
+
+    // フェードアウト
+    document.getElementById('btn-area').style.opacity = 0;
+
     // 長押しなら遷移
     if (await isHoldDown(event.target)) {
 
@@ -272,8 +279,6 @@ async function clickLvProc(event) {
 
     } else {
 
-        // フェードアウト
-        document.getElementById('btn-area').style.opacity = 0;
         enbFlg = false;
 
         if (4 < evtLv) {
