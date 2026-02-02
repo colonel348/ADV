@@ -264,10 +264,6 @@ async function clickLvProc(event) {
     // LVアップ
     evtLv = evtLv + 1;
 
-    // 動画変更
-    document.getElementById('video-area').style.opacity = 0;
-    sleepSetTimeout(900, () => setDefVideo());
-
     // フェードアウト
     sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
 
@@ -296,11 +292,11 @@ async function clickLvProc(event) {
             document.getElementById('dec-area').style.opacity = 0;
 
             // ボタン再描画
-            sleepSetTimeout(750, () => repBtn());
+            sleepSetTimeout(650, () => repBtn());
 
             // フェードイン
-            sleepSetTimeout(800, () => document.getElementById('btn-area').style.opacity = 1);
-            sleepSetTimeout(900, () => enbFlg = true);
+            sleepSetTimeout(700, () => document.getElementById('btn-area').style.opacity = 1);
+            sleepSetTimeout(800, () => enbFlg = true);
 
         }
 
