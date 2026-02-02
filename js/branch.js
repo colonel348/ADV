@@ -166,7 +166,7 @@ function setVideo(srcPath) {
 //---------------
 function fadeIn() {
 
-    // 描画対象がなければタイトルへ
+    document.getElementById('btn-area').classList.add('area-show');
     sleepSetTimeout(400, () => document.getElementById('box').style.opacity = 1);
     sleepSetTimeout(800, () => enbFlg = true);
 
@@ -192,7 +192,7 @@ function touchEvent() {
 
                 // ボタン押下
                 document.getElementById(tgtEvtId).classList.add("btn-animating");
-                sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
+                sleepSetTimeout(350, () => document.getElementById('btn-area').classList.remove('area-show'));
                 sleepSetTimeout(900, () => document.getElementById('btn-area').style.display = "none");
 
                 // レベル非表示
@@ -234,7 +234,7 @@ function touchEvent() {
                     sleepSetTimeout(500, () => setDefVideo());
 
                     sleepSetTimeout(600, () => document.getElementById('btn-area').style.display = "flex");
-                    sleepSetTimeout(750, () => document.getElementById('btn-area').style.opacity = 1);
+                    sleepSetTimeout(750, () => document.getElementById('btn-area').classList.add('area-show'));
 
                 }
 
@@ -265,7 +265,7 @@ async function clickLvProc(event) {
     evtLv = evtLv + 1;
 
     // フェードアウト
-    sleepSetTimeout(350, () => document.getElementById('btn-area').style.opacity = 0);
+    sleepSetTimeout(350, () => document.getElementById('btn-area').classList.remove('area-show'));
 
     // 長押しなら遷移
     if (await isHoldDown(event.target)) {
@@ -295,7 +295,7 @@ async function clickLvProc(event) {
             sleepSetTimeout(650, () => repBtn());
 
             // フェードイン
-            sleepSetTimeout(700, () => document.getElementById('btn-area').style.opacity = 1);
+            sleepSetTimeout(700, () => document.getElementById('btn-area').classList.add('area-show'));
             sleepSetTimeout(800, () => enbFlg = true);
 
         }
