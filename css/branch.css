@@ -20,7 +20,7 @@
 
 .area-show {
     opacity: 1;
-    transform: translateY(4px);
+    transform: translateY(0px);
 }
 
 .btn {
@@ -161,7 +161,7 @@
 .lv-area {
     z-index: 500;
     position: absolute;
-    top: 0%;
+    top: 13%;
     left: 20%;
     justify-content: center;
     align-items: center;
