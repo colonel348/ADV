@@ -121,7 +121,7 @@
     border-radius: 20px;
     font-weight: 900;
     height: 120px;
-    font-size: 50px;
+    font-size: 44px;
     width: 60%;
     opacity: 1;
     transition: all 0.6s;
@@ -311,4 +311,5 @@
     100% {
         opacity: 0;
     }
+
 }
