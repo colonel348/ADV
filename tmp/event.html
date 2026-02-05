@@ -12,18 +12,24 @@
         <title>select</title>
     </head>
     <body>
-        <div id="title-area" class="title-area">
-            <div id="title" class="title">
-                <span class="title-wrap">
-                    <span id="title-txt" class="title-txt">
-                    </span>
-                </span>
-            </div>
-        </div>
         <div class="box" id="box">
-            <video id="video-area" class="video-area" autoplay playsinline webkit-playsinline muted>
-                <source type="video/mp4">
-            </video>
+            <div id="lv-area" class="lv-area"></div>
+            <div id="btn-area" class="btn-area"></div>
+            <div id="dec-area" class="dec-area">
+                <div id="btn-act" class="dec-btn btn-act"><span class="dec-btn-title">続行</span></div>
+                <div id="btn-can" class="dec-btn btn-can"><span class="dec-btn-title">キャンセル</span></div>
+            </div>
+            <div id="title-area" class="title-area">
+                <div id="title" class="title">
+                    <span class="title-wrap">
+                        <span id="title-txt" class="title-txt">
+                        </span>
+                    </span>
+                </div>
+            </div>
+            <video id="video-area-def" class="video-area video-area-def" autoplay loop playsinline webkit-playsinline muted><source type="video/mp4"></video>
+            <video id="video-area-sel" class="video-area video-area-sel" autoplay playsinline webkit-playsinline muted><source type="video/mp4"></video>
+            <video id="video-area-evt" class="video-area video-area-evt" autoplay playsinline webkit-playsinline muted><source type="video/mp4"></video>
         </div>
     </body>
 </html>

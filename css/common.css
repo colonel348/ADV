@@ -19,14 +19,3 @@ body {
     opacity: 0;
     transition: opacity 1s, background-color 0.4s;
 }
-
-/*---------------*/
-/* 動画エリア */
-/*---------------*/
-.video-area {
-    width: 100%;
-    transition: all 0.6s;
-    opacity: 1;
-    position: absolute;
-    top: 2%;
-}
