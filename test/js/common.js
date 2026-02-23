@@ -1,8 +1,8 @@
 // URLパラメタ
 var chrId;
 var evtId;
-var selMap;
-var evtData = {};
+var selIdx;
+var evtMap;
 
 //---------------
 // パラメタ設定
@@ -17,42 +17,26 @@ function setParam() {
         chrId = "";
     }
 
-    if (urlParams.has('evtId')) {
-        evtId = urlParams.get('evtId');
+    if (urlParams.has('selIdx')) {
+        selIdx = Number(urlParams.get('selIdx'));
     } else {
-        evtId = "";
+        selIdx = 0;
     }
 
     // Map設定
     if (chrId == "AK") {
-        selMap = selAkMap;
+        evtMap = evtAkMap;
+        evtId = evtMap[selIdx].id;
 
     } else if (chrId == "SA") {
-        selMap = selSaMap;
+        evtMap = evtSaMap;
+        evtId = evtMap[selIdx].id;
 
     } else if (chrId == "FF") {
-        selMap = selFfMap;
+        evtMap = evtFfMap;
+        evtId = evtMap[selIdx].id;
     }
 
-}
-
-//---------------
-// 選択肢設定
-//---------------
-function setChoice(evtId, brcId, selId, selMsg){
-
-  if (!evtData[evtId]) {
-    evtData[evtId] = { branches:{} };
-  }
-
-  if (!evtData[evtId].branches[brcId]) {
-    evtData[evtId].branches[brcId] = [];
-  }
-
-  evtData[evtId].branches[brcId].push({
-    selId,
-    selMsg
-  });
 }
 
 //---------------

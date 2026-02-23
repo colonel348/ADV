@@ -13,7 +13,6 @@ let isReady = false;
 
 let video;
 let fade;
-let loading;
 
 /*************************************************
  * 全動画プリロード
@@ -34,7 +33,6 @@ function preloadVideos() {
       // 全部読み込んだら開始
       if (loadedCount === videoList.length) {
         isReady = true;
-        loading.style.display = "none";
         playVideo(0);
       }
     });
@@ -59,17 +57,18 @@ function playVideo(index) {
   video.style.transform = "scale(1)";
   video.style.transition = "none";
 
-  video.play().catch(() => {
-    console.log("autoplay blocked");
-  });
-
   // evt02ズーム演出
   if (index === 1) {
-    video.style.transform = "scale(1.1)";
     setTimeout(() => {
-      video.style.transition = "transform 2s linear";
-      video.style.transform = "scale(1.0)";
-    }, 50);
+      video.play();
+      video.style.transform = "scale(1.1)";
+      setTimeout(() => {
+        video.style.transition = "transform 2s";
+        video.style.transform = "scale(1.0)";
+      }, 50);
+    }, 700);
+  } else {
+    video.play();
   }
 }
 
@@ -88,7 +87,7 @@ function goNext() {
   } else {
     fade.classList.add("black");
     doFade(() => {
-      window.location.href = "next.html";
+      window.location.href = "./select.html?chrId=" + chrId + "&selIdx=" + selIdx;
     });
   }
 }
@@ -102,9 +101,15 @@ function doFade(callback) {
   setTimeout(() => {
     callback();
 
-    setTimeout(() => {
-      fade.classList.remove("show");
-    }, 50);
+    if (currentIndex === 1) {
+      setTimeout(() => {
+        fade.classList.remove("show");
+      }, 700);
+    } else {
+      setTimeout(() => {
+        fade.classList.remove("show");
+      }, 50);
+    }
 
   }, 600);
 }
@@ -128,7 +133,6 @@ window.addEventListener('load', function() {
 
   video = document.getElementById("video");
   fade = document.getElementById("fade");
-  loading = document.getElementById("loading");
 
   // パラメタ取得
   setParam();
