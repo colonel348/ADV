@@ -19,15 +19,23 @@ html, body {
 }
 
 /* ===== 背景 ===== */
-#bg {
-  position: absolute;   /* ← fixed → absolute */
+#bgWrap {
+  position: absolute;
   inset: 0;
-  background-size: auto 100%;
-  background-repeat: no-repeat;
-  background-position: left center;
+  overflow: hidden;
+}
+
+#bgImg {
+  height: 100%;
+  width: auto;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translate(-20px, -50%);
   transition: opacity .4s ease, transform .4s ease;
   will-change: transform, opacity;
 }
+
 /* ===== サイドバー ===== */
 #sidebar {
   position: absolute;   /* ← fixed → absolute */
@@ -108,7 +116,9 @@ html, body {
 </head>
 <body>
 <div id="viewport">
-<div id="bg"></div>
+<div id="bgWrap">
+  <img id="bgImg" />
+</div>
 
 <div id="sidebar">
   <div id="cardList"></div>
@@ -137,7 +147,7 @@ let currentIndex = 0; // 初期：一番上
 let startY = 0;
 
 let cardList;
-let bg;
+let bgImg;
 let fade;
 
 let isDragging = false;
@@ -224,25 +234,26 @@ cardList.style.transform = `translateY(${-offset}px)`;
   const evt = EVENT_MAP[currentIndex];
   const nextUrl = '../video/' + chrId + '/' + evt.id + '/sel.png';
 
-  if (animated) {
-    // 左から右へスライド用：左に置く
-    bg.style.opacity = 0;
-    bg.style.transform = "translateX(-12%)";
 
-    setTimeout(() => {
-      bg.style.backgroundImage = `url(${nextUrl})`;
+if (animated) {
+  bgImg.style.opacity = 0;
+  bgImg.style.transform = "translate(-60px, -50%)";
 
-      requestAnimationFrame(() => {
-        bg.style.opacity = 1;
-        bg.style.transform = "translateX(0%)";
-      });
-    }, 200);
+  setTimeout(() => {
+    bgImg.src = nextUrl;
 
-  } else {
-    bg.style.backgroundImage = `url(${nextUrl})`;
-    bg.style.opacity = 1;
-        bg.style.transform = "translateX(0%)";
-  }
+    requestAnimationFrame(() => {
+      bgImg.style.opacity = 1;
+      bgImg.style.transform = "translate(-20px, -50%)";
+    });
+  }, 200);
+
+} else {
+  bgImg.src = nextUrl;
+  bgImg.style.opacity = 1;
+  bgImg.style.transform = "translate(-20px, -50%)";
+}
+
 }
 
 /*************************************************
@@ -371,7 +382,7 @@ document.getElementById("decideBtn").addEventListener("click", () => {
 window.addEventListener('load', function() {
 
 cardList = document.getElementById("cardList");
-bg = document.getElementById("bg");
+bgImg = document.getElementById("bgImg");
 fade = document.getElementById("fade");
 
   // パラメタ取得
