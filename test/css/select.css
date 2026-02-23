@@ -68,8 +68,8 @@ html, body {
 /* ===== 決定ボタン ===== */
 #decideBtn {
   position: absolute;
-  right: 55px;
-  bottom: 35px;
+  right: 60px;
+  bottom: 60px;
   padding: 12px 80px;
   font-size: 15px;
   border-radius: 14px;
