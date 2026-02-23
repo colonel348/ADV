@@ -287,9 +287,9 @@ window.addEventListener('load', function() {
   touchAction();
 
   // 画像読込後に画面表示
-  preloadAllImages().then(() => {
+  //preloadAllImages().then(() => {
     updateSelection(false);
     sleepSetTimeout(500, () => document.getElementById('viewport').style.opacity = 1);
-  });
+  //});
 
 });
