@@ -1,118 +1,139 @@
-//=========================
-// 変数
-//=========================
-let selVideoEle;
-let brcVideoEle;
-let choicesEle;
+/*************************************************
+ * 設定
+ *************************************************/
+const videoList = [
+  { src: "evt1", loop: false },
+  { src: "evt2", loop: true },
+  { src: "evt3", loop: false }
+];
 
-const END_URL = "end.html";
+let currentIndex = 0;
+let loadedCount = 0;
+let isReady = false;
 
-//=========================
-// 初期処理
-//=========================
-function preloadAll() {
-    const list = [];
-    const branches = evtData[evtId].branches;
+let video;
+let fade;
+let loading;
 
-    for (const [brcId, choices] of Object.entries(branches)) {
+/*************************************************
+ * 全動画プリロード
+ *************************************************/
+function preloadVideos() {
+  videoList.forEach((item, index) => {
+    const v = document.createElement("video");
 
-        list.push('brc' + brcId);
+    v.src = '../video/' + chrId + '/' + evtId + '/' + item.src + '.mp4';
+    v.preload = "auto";
+    v.muted = true;
+    v.playsInline = true;
 
-        for (const choice of choices) {
-            list.push('sel' + choice.selId);
-        }
-    }
+    // 読み込み完了
+    v.addEventListener("loadeddata", () => {
+      loadedCount++;
 
-
-    return Promise.all(list.map(src => {
-        return new Promise(res => {
-            const v = document.createElement("video");
-            v.src = '../video/' + chrId + '/' + evtId + '/' + src + '.mp4';
-            v.preload = "auto";
-            v.muted = true;
-            v.playsInline = true;
-            v.oncanplaythrough = res;
-        });
-    }));
-}
-
-/* ===== 動画 ===== */
-
-function play(el, src, loop = false) {
-    el.src = '../video/' + chrId + '/' + evtId + '/' + src + '.mp4';;
-    el.loop = loop;
-    el.load();
-    el.play().catch(() => {});
-}
-
-function fadeTo(src, loop = false, onEnd = null) {
-    play(brcVideoEle, src, loop);
-    brcVideoEle.classList.add("active");
-    selVideoEle.classList.remove("active");
-    brcVideoEle.onended = onEnd;
-    [selVideoEle, brcVideoEle] = [brcVideoEle, selVideoEle];
-}
-
-/* ===== 選択肢 ===== */
-
-function showChoices(brcId) {
-    choicesEle.innerHTML = "";
-
-    const list = getChoices(brcId);
-
-    list.forEach(row => {
-        const b = document.createElement("button");
-        b.className = "choiceBtn";
-        b.textContent = row.selMsg;
-        b.onclick = () => playFlow("sel" + row.selId);
-        choicesEle.appendChild(b);
+      // 全部読み込んだら開始
+      if (loadedCount === videoList.length) {
+        isReady = true;
+        loading.style.display = "none";
+        playVideo(0);
+      }
     });
 
-    requestAnimationFrame(() => choicesEle.classList.add("show"));
+    // iOS対策でload開始
+    v.load();
+  });
 }
 
-function getChoices(route) {
-    return evtData[evtId]?.branches?.[route] || [];
+/*************************************************
+ * 動画再生
+ *************************************************/
+function playVideo(index) {
+  currentIndex = index;
+  const data = videoList[index];
+
+  video.src = '../video/' + chrId + '/' + evtId + '/' + data.src + '.mp4';
+  video.loop = data.loop;
+  video.currentTime = 0;
+
+  // scaleリセット
+  video.style.transform = "scale(1)";
+  video.style.transition = "none";
+
+  video.play().catch(() => {
+    console.log("autoplay blocked");
+  });
+
+  // evt02ズーム演出
+  if (index === 1) {
+    video.style.transform = "scale(1.1)";
+    setTimeout(() => {
+      video.style.transition = "transform 2s linear";
+      video.style.transform = "scale(1.0)";
+    }, 50);
+  }
 }
 
-function hideChoices() {
-    choicesEle.classList.remove("show");
-    setTimeout(() => choicesEle.innerHTML = "", 400);
-}
+/*************************************************
+ * フェード → 次へ
+ *************************************************/
+function goNext() {
+  if (!isReady) return;
 
-/* ===== フロー ===== */
-
-function playFlow(route) {
-    hideChoices();
-    const f = evtData[route];
-
-    fadeTo(route, false, () => {
-        var brcId = route.substring(3, 4);
-        if (brcId == 'E') {
-            fadeTo(location.href = END_URL);
-        } else {
-            fadeTo('brc' + brcId, true);
-            showChoices(brcId);
-        }
+  if (currentIndex === 0) {
+    fade.classList.remove("black");
+    doFade(() => playVideo(1));
+  } else if (currentIndex === 1) {
+    fade.classList.add("black");
+    doFade(() => playVideo(2));
+  } else {
+    fade.classList.add("black");
+    doFade(() => {
+      window.location.href = "next.html";
     });
+  }
 }
 
-//=========================
-// 初期処理
-//=========================
+/*************************************************
+ * フェード処理
+ *************************************************/
+function doFade(callback) {
+  fade.classList.add("show");
+
+  setTimeout(() => {
+    callback();
+
+    setTimeout(() => {
+      fade.classList.remove("show");
+    }, 50);
+
+  }, 600);
+}
+
+/*************************************************
+ * タップ操作
+ *************************************************/
+function tapAction() {
+  video.addEventListener("click", goNext);
+
+  video.addEventListener("ended", () => {
+    if (currentIndex === 1) return; // evt02はループ
+    goNext();
+  });
+}
+
+/*************************************************
+ * 起動
+ *************************************************/
 window.addEventListener('load', function() {
 
-    // オブジェクト取得
-    selVideoEle = document.getElementById("selVideo");
-    brcVideoEle = document.getElementById("brcVideo");
-    choicesEle = document.getElementById("choices");
+  video = document.getElementById("video");
+  fade = document.getElementById("fade");
+  loading = document.getElementById("loading");
 
-    // パラメタ取得
-    setParam();
-
-    // 動画読込
-    preloadAll();
-    selVideoEle.classList.add("active");
-    playFlow("sel" + "A1");
-
+  // パラメタ取得
+  setParam();
+  // 動画読込
+  preloadVideos();
+  // タップ操作
+  tapAction();
 });
