@@ -1,35 +1,21 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="../css/common.css" type="text/css">
-        <link rel="stylesheet" href="../css/event.css" type="text/css">
-        <script src="../js/common.js"></script>
-        <script src="../js/event.js"></script>
-        <script src="../data/dataAK.js"></script>
-        <script src="../data/dataSA.js"></script>
-        <script src="../data/dataFF.js"></script>
-        <title>select</title>
-    </head>
-    <body>
-        <div class="box" id="box">
-            <div id="lv-area" class="lv-area"></div>
-            <div id="btn-area" class="btn-area"></div>
-            <div id="dec-area" class="dec-area">
-                <div id="btn-act" class="dec-btn btn-act"><span class="dec-btn-title">続行</span></div>
-                <div id="btn-can" class="dec-btn btn-can"><span class="dec-btn-title">キャンセル</span></div>
-            </div>
-            <div id="title-area" class="title-area">
-                <div id="title" class="title">
-                    <span class="title-wrap">
-                        <span id="title-txt" class="title-txt">
-                        </span>
-                    </span>
-                </div>
-            </div>
-            <video id="video-area-def" class="video-area video-area-def" autoplay loop playsinline webkit-playsinline muted><source type="video/mp4"></video>
-            <video id="video-area-sel" class="video-area video-area-sel" playsinline webkit-playsinline muted><source type="video/mp4"></video>
-            <video id="video-area-evt" class="video-area video-area-evt" playsinline webkit-playsinline muted><source type="video/mp4"></video>
-        </div>
-    </body>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/common.css" type="text/css">
+    <link rel="stylesheet" href="../css/event.css" type="text/css">
+    <script src="../js/common.js"></script>
+    <script src="../js/event.js"></script>
+    <script src="../data/dataAK.js"></script>
+    <script src="../data/dataSA.js"></script>
+    <script src="../data/dataFF.js"></script>
+    <title>Video Sequence Preload</title>
+  </head>
+  <body>
+    <div id="videoContainer">
+      <video id="video" muted playsinline webkit-playsinline></video>
+      <div id="fade"></div>
+    </div>
+  </body>
 </html>
