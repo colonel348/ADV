@@ -14,11 +14,18 @@ html, body {
   overflow: hidden;
 }
 
-video {
+#videoWrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  will-change: transform;
+}
+
+#video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform-origin: center;
 }
 
 /* フェード用 */
