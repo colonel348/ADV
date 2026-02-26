@@ -15,6 +15,7 @@ const evtAkMap = [
   { id: "C3", name: "後背位", place: "神社"},
 
 // Lv.4 ---------------------------------
-  { id: "D1", name: "全裸登校", place: "住宅街"}
+  { id: "D1", name: "全裸登校", place: "住宅街"},
+  { id: "D2", name: "全裸移動", place: "ニューヨーク"}
 
 ];
