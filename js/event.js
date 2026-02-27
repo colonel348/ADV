@@ -261,19 +261,27 @@ function goNext() {
   const FADE_TIME = 600; // CSSと一致させる
 
   setTimeout(() => {
-    // 最後なら遷移
+
     if (nextIndex >= videoPtn.length) {
       window.location.href =
         `./select.html?chrId=${chrId}&selIdx=${selIdx}`;
       return;
     }
 
-    // 白のみ追加タメ
+    // ★★★★★ ここ追加（iOS対策）
+    if (isIOS()) {
+      // 先に軽く play を許可させる
+      video.muted = true;
+      video.play().catch(()=>{});
+      video.pause();
+    }
+
     if (fadeOutColor === "W") {
       setTimeout(() => playVideo(nextIndex), WHITE_HOLD);
     } else {
       playVideo(nextIndex);
     }
+
   }, FADE_TIME);
 }
 
