@@ -282,12 +282,20 @@ function goNext() {
     }
 
     // ★★★★★ ここ追加（iOS対策）
-    if (isIOS()) {
-      // 先に軽く play を許可させる
-      video.muted = true;
-      video.play().catch(()=>{});
-      video.pause();
+if (isIOS()) {
+  try {
+    video.muted = true;
+
+    // ★ 再生コンテキスト確保
+    const p = video.play();
+    if (p && p.then) {
+      p.then(() => {
+        video.pause();
+        video.currentTime = 0;
+      }).catch(()=>{});
     }
+  } catch(e) {}
+}
 
     if (fadeOutColor === "W") {
       setTimeout(() => playVideo(nextIndex), WHITE_HOLD);
