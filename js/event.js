@@ -166,9 +166,6 @@ function playVideo(index) {
   }
 }
 
-/*************************************************
- * 実際の動画ロード＆再生
- *************************************************/
 function startVideoCore(index, data, fadeInColor) {
   const src = buildSrc(data.src);
 
@@ -180,7 +177,12 @@ function startVideoCore(index, data, fadeInColor) {
   video.style.visibility = "hidden";
   video.style.opacity = "0";
 
-  if (video.src !== src) video.src = src;
+  // src 切替
+  if (video.src !== src) {
+    video.src = src;
+    video.load(); // ★ 明示ロード（重要）
+  }
+
   video.currentTime = 0;
 
   // ズーム初期値
@@ -188,15 +190,17 @@ function startVideoCore(index, data, fadeInColor) {
   videoWrap.style.transform =
     fadeInColor === "W" ? "scale(1.1)" : "scale(1)";
 
-  // 再生開始
-  if (data.loop && isIOS()) {
-    startSeamlessLoop(video);
-  } else {
-    video.loop = data.loop;
-    video.play().catch(() => {});
-  }
+  // ===== 再生開始を保証 =====
+  const startPlayback = () => {
+    if (data.loop && isIOS()) {
+      startSeamlessLoop(video);
+    } else {
+      video.loop = data.loop;
+      video.play().catch(() => {});
+    }
+  };
 
-  // 最初のフレーム到達後に表示
+  // ===== 最初のフレーム到達後に表示 =====
   const reveal = () => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -210,10 +214,19 @@ function startVideoCore(index, data, fadeInColor) {
     });
   };
 
+  // ★★★★★ ここが最重要修正 ★★★★★
   if (video.readyState >= 2) {
+    startPlayback();
     reveal();
   } else {
-    video.addEventListener("loadeddata", reveal, { once: true });
+    video.addEventListener(
+      "loadeddata",
+      () => {
+        startPlayback();
+        reveal();
+      },
+      { once: true }
+    );
   }
 }
 
