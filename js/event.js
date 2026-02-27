@@ -1,48 +1,98 @@
 /*************************************************
- * 設定
+ * 動画パターン定義（B:黒 / W:白）
  *************************************************/
-const videoList = [
-  { src: "evt1", loop: false },
-  { src: "evt2", loop: true }, // ← iOS疑似ループ対象
-  { src: "evt3", loop: false }
+let videoPtn;
+
+const videoPtn1 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt2", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt3", loop: false, fadeIn: "B", fadeOut: "B" }
 ];
 
+const videoPtn2 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "B" },
+  { src: "evt3", loop: true,  fadeIn: "B", fadeOut: "B" }
+];
+
+const videoPtn9 = [
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "B" }
+];
+
+/*************************************************
+ * 状態管理
+ *************************************************/
 let currentIndex = 0;
 let loadedCount = 0;
 let isReady = false;
+let isTransitioning = false;
+let firstPlayDone = false;
 
-let video;
-let fade;
-let videoWrap;
+let whiteFadeTimer = null;
+const WHITE_HOLD = 800; // 白フェード時のタメ(ms)
 
+let video, fade, videoWrap;
 let loopRAF = null;
 const videoCache = [];
 
 /*************************************************
- * iOS判定
+ * ユーティリティ
  *************************************************/
+
+/** フェード色正規化 */
+function normalizeColor(c) {
+  if (!c) return "B";
+  const v = String(c).toUpperCase();
+  return (v === "W" || v === "WHITE") ? "W" : "B";
+}
+
+/** iOS判定 */
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent)
     || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
+/** 動画パス生成 */
+function buildSrc(name) {
+  return `../media/${chrId}/${evtData.id}/${name}.mp4`;
+}
+
+/** 白遅延クリア */
+function clearWhiteDelay() {
+  if (whiteFadeTimer) {
+    clearTimeout(whiteFadeTimer);
+    whiteFadeTimer = null;
+  }
+}
+
 /*************************************************
- * 全動画プリロード（完全版）
+ * 動画パターン選択
+ *************************************************/
+function setVideo() {
+  if (evtData.ptn == "1") {
+    videoPtn = videoPtn1;
+  } else if (evtData.ptn == "2") {
+    videoPtn = videoPtn2;
+  } else {
+    videoPtn = videoPtn9;
+  }
+}
+
+/*************************************************
+ * プリロード
  *************************************************/
 function preloadVideos() {
-  videoList.forEach((item, index) => {
+  videoPtn.forEach((item, index) => {
     const v = document.createElement("video");
 
-    v.src = '../media/' + chrId + '/' + evtId + '/' + item.src + '.mp4';
+    v.src = buildSrc(item.src);
     v.preload = "auto";
     v.muted = true;
     v.playsInline = true;
-    v.loop = false; // ★重要：ネイティブループ禁止
 
     v.addEventListener("loadeddata", () => {
       loadedCount++;
-
-      if (loadedCount === videoList.length) {
+      if (loadedCount === videoPtn.length) {
         isReady = true;
         playVideo(0);
       }
@@ -54,142 +104,202 @@ function preloadVideos() {
 }
 
 /*************************************************
- * 動画再生（iOS安定版）
+ * フェード色適用
+ *************************************************/
+function applyFadeColor(color) {
+  if (color === "B") {
+    fade.classList.add("black");
+  } else {
+    fade.classList.remove("black");
+  }
+}
+
+/*************************************************
+ * メイン再生制御
  *************************************************/
 function playVideo(index) {
-  currentIndex = index;
-  const data = videoList[index];
+  clearWhiteDelay();
 
-  // 既存ループ停止
+  currentIndex = index;
+  isTransitioning = false;
   stopSeamlessLoop();
 
-  const src = '../media/' + chrId + '/' + evtId + '/' + data.src + '.mp4';
+  const data = videoPtn[index];
+  const fadeInColor = normalizeColor(data.fadeIn);
 
-  // src変更時のガタつき防止
-  if (video.src !== src) {
-    video.src = src;
-  }
+  // フェード色を先に確定
+  applyFadeColor(fadeInColor);
 
-  video.currentTime = 0;
+  if (fadeInColor === "W") {
+    // ===== 白フェードイン =====
 
-  // ズームリセット
-  videoWrap.style.transform = "scale(1)";
-  videoWrap.style.transition = "none";
+    // 一度黒で完全遮蔽 → 白へ切替（チラ見防止）
+    fade.classList.add("black", "show");
 
-  // ===== 2本目（iOSループ特別処理） =====
-  if (index === 1 && isIOS()) {
-    startSeamlessLoop(video);
-    startZoomIOS();
-  } else {
-    video.loop = data.loop;
-    video.play().catch(()=>{});
-  }
-}
+    requestAnimationFrame(() => {
+      applyFadeColor("W");
 
-/*************************************************
- * iOS専用：シームレスループ（最重要）
- *************************************************/
-function startSeamlessLoop(v) {
-  const LOOP_MARGIN = 0.06;
+      requestAnimationFrame(() => {
+        startVideoCore(index, data, fadeInColor);
 
-  function checkLoop(now, metadata) {
-    if (v.duration && v.currentTime >= v.duration - LOOP_MARGIN) {
-      v.currentTime = 0.001; // ← 0にしないのが超重要
-    }
-    loopRAF = v.requestVideoFrameCallback(checkLoop);
-  }
+        // 白タメ
+        whiteFadeTimer = setTimeout(() => {
+          fade.classList.remove("show");
 
-  v.currentTime = 0.001;
-
-  v.play().then(() => {
-    loopRAF = v.requestVideoFrameCallback(checkLoop);
-  }).catch(()=>{});
-}
-
-function stopSeamlessLoop() {
-  if (loopRAF) {
-    try {
-      video.cancelVideoFrameCallback(loopRAF);
-    } catch(e){}
-    loopRAF = null;
-  }
-}
-
-/*************************************************
- * iOSズーム（wrapperに適用）
- *************************************************/
-function startZoomIOS() {
-  setTimeout(() => {
-    videoWrap.style.transform = "scale(1.1)";
-
-    setTimeout(() => {
-      videoWrap.style.transition = "transform 2s linear";
-      videoWrap.style.transform = "scale(1.0)";
-    }, 50);
-  }, 700);
-}
-
-/*************************************************
- * フェード → 次へ
- *************************************************/
-function goNext() {
-  if (!isReady) return;
-
-  if (currentIndex === 0) {
-    fade.classList.remove("black");
-    doFade(() => playVideo(1));
-
-  } else if (currentIndex === 1) {
-    fade.classList.add("black");
-    doFade(() => playVideo(2));
+          requestAnimationFrame(() => {
+            videoWrap.style.transition = "transform 2s linear";
+            videoWrap.style.transform = "scale(1.0)";
+          });
+        }, WHITE_HOLD);
+      });
+    });
 
   } else {
-    fade.classList.add("black");
-    doFade(() => {
-      window.location.href =
-        "./select.html?chrId=" + chrId + "&selIdx=" + selIdx;
+    // ===== 黒フェードイン（遅延なし） =====
+
+    fade.classList.add("show");
+    startVideoCore(index, data, fadeInColor);
+
+    requestAnimationFrame(() => {
+      fade.classList.remove("show");
     });
   }
 }
 
 /*************************************************
- * フェード処理
+ * 実際の動画ロード＆再生
  *************************************************/
-function doFade(callback) {
-  fade.classList.add("show");
+function startVideoCore(index, data, fadeInColor) {
+  const src = buildSrc(data.src);
 
-  setTimeout(() => {
-    callback();
+  // 初回は完全非表示（チラ見防止）
+  if (!firstPlayDone) {
+    video.style.display = "none";
+  }
 
-    if (currentIndex === 1) {
-      setTimeout(() => fade.classList.remove("show"), 700);
-    } else {
-      setTimeout(() => fade.classList.remove("show"), 50);
-    }
-  }, 600);
+  video.style.visibility = "hidden";
+  video.style.opacity = "0";
+
+  if (video.src !== src) video.src = src;
+  video.currentTime = 0;
+
+  // ズーム初期値
+  videoWrap.style.transition = "none";
+  videoWrap.style.transform =
+    fadeInColor === "W" ? "scale(1.1)" : "scale(1)";
+
+  // 再生開始
+  if (data.loop && isIOS()) {
+    startSeamlessLoop(video);
+  } else {
+    video.loop = data.loop;
+    video.play().catch(() => {});
+  }
+
+  // 最初のフレーム到達後に表示
+  const reveal = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!firstPlayDone) {
+          video.style.display = "block";
+          firstPlayDone = true;
+        }
+        video.style.visibility = "visible";
+        video.style.opacity = "1";
+      });
+    });
+  };
+
+  if (video.readyState >= 2) {
+    reveal();
+  } else {
+    video.addEventListener("loadeddata", reveal, { once: true });
+  }
 }
 
 /*************************************************
- * タップ操作
+ * iOSシームレスループ
+ *************************************************/
+function startSeamlessLoop(v) {
+  const LOOP_MARGIN = 0.06;
+
+  function checkLoop() {
+    if (v.duration && v.currentTime >= v.duration - LOOP_MARGIN) {
+      v.currentTime = 0.001;
+    }
+    loopRAF = v.requestVideoFrameCallback(checkLoop);
+  }
+
+  v.currentTime = 0.001;
+  v.play().then(() => {
+    loopRAF = v.requestVideoFrameCallback(checkLoop);
+  }).catch(() => {});
+}
+
+function stopSeamlessLoop() {
+  if (loopRAF) {
+    try { video.cancelVideoFrameCallback(loopRAF); } catch (e) {}
+    loopRAF = null;
+  }
+}
+
+/*************************************************
+ * 次動画へ
+ *************************************************/
+function goNext() {
+  if (!isReady || isTransitioning) return;
+
+  isTransitioning = true;
+
+  const data = videoPtn[currentIndex];
+  const fadeOutColor = normalizeColor(data.fadeOut);
+  const nextIndex = currentIndex + 1;
+
+  applyFadeColor(fadeOutColor);
+  fade.classList.add("show");
+
+  const FADE_TIME = 600; // CSSと一致させる
+
+  setTimeout(() => {
+    // 最後なら遷移
+    if (nextIndex >= videoPtn.length) {
+      window.location.href =
+        `./select.html?chrId=${chrId}&selIdx=${selIdx}`;
+      return;
+    }
+
+    // 白のみ追加タメ
+    if (fadeOutColor === "W") {
+      setTimeout(() => playVideo(nextIndex), WHITE_HOLD);
+    } else {
+      playVideo(nextIndex);
+    }
+  }, FADE_TIME);
+}
+
+/*************************************************
+ * ユーザー操作
  *************************************************/
 function tapAction() {
   video.addEventListener("click", goNext);
 
   video.addEventListener("ended", () => {
-    if (currentIndex === 1) return; // ループ中は無視
+    if (videoPtn[currentIndex].loop) return;
+    if (isTransitioning) return;
     goNext();
   });
 }
 
 /*************************************************
- * 起動
+ * 初期化
  *************************************************/
 window.addEventListener("load", () => {
   video = document.getElementById("video");
   fade = document.getElementById("fade");
   videoWrap = document.getElementById("videoWrap");
 
-  setParam();        // ← 既存関数
-  preloadVideos();   // ← 全事前読込
+  setParam();
+  setVideo();
+  preloadVideos();
   tapAction();
 });
