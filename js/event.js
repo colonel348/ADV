@@ -33,7 +33,7 @@ function preloadVideos() {
   videoList.forEach((item, index) => {
     const v = document.createElement("video");
 
-    v.src = '../media/' + chrId + '/' + evtData.id + '/' + item.src + '.mp4';
+    v.src = '../media/' + chrId + '/' + evtId + '/' + item.src + '.mp4';
     v.preload = "auto";
     v.muted = true;
     v.playsInline = true;
@@ -63,7 +63,7 @@ function playVideo(index) {
   // 既存ループ停止
   stopSeamlessLoop();
 
-  const src = '../media/' + chrId + '/' + evtData.id + '/' + data.src + '.mp4';
+  const src = '../media/' + chrId + '/' + evtId + '/' + data.src + '.mp4';
 
   // src変更時のガタつき防止
   if (video.src !== src) {
