@@ -3,9 +3,6 @@
 //---------------
 window.addEventListener('load', function() {
 
-    // URLパラメタ設定
-    setParam();
-
     // フェードイン
     fadeIn();
 

@@ -264,7 +264,7 @@ function goNext() {
     // 最後なら遷移
     if (nextIndex >= videoPtn.length) {
       window.location.href =
-        `./select.html?chrId=${chrId}&selIdx=${selIdx}`;
+        `./select.html?chrId=${chrId}&selIdx=${selIdx + 1}`;
       return;
     }
 

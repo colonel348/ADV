@@ -27,16 +27,17 @@ function setParam() {
     // Map設定
     if (chrId == "AK") {
         evtMap = evtAkMap;
-        evtData = evtMap[selIdx];
-
     } else if (chrId == "SA") {
         evtMap = evtSaMap;
-        evtData = evtMap[selIdx];
-
     } else if (chrId == "FF") {
         evtMap = evtFfMap;
-        evtData = evtMap[selIdx];
     }
+
+    if (selIdx < evtMap.length) {
+        evtData = evtMap[selIdx];
+    } else {
+        evtData = evtMap[evtMap.length -1];
+    }
 
 }
 
