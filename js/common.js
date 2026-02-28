@@ -3,6 +3,7 @@ var chrId;
 var evtId;
 var selIdx;
 var evtMap;
+var evtData;
 
 //---------------
 // パラメタ設定
@@ -26,15 +27,15 @@ function setParam() {
     // Map設定
     if (chrId == "AK") {
         evtMap = evtAkMap;
-        evtId = evtMap[selIdx].id;
+        evtData = evtMap[selIdx];
 
     } else if (chrId == "SA") {
         evtMap = evtSaMap;
-        evtId = evtMap[selIdx].id;
+        evtData = evtMap[selIdx];
 
     } else if (chrId == "FF") {
         evtMap = evtFfMap;
-        evtId = evtMap[selIdx].id;
+        evtData = evtMap[selIdx];
     }
 
 }
