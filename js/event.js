@@ -39,6 +39,9 @@ let pageStartTime = 0;
 const FIRST_PLAY_DELAY = 3000;
 let firstVideoStarted = false;
 
+let fadeOutTriggered = false; // ★追加：早期フェード発火管理
+const EARLY_FADE_TIME = 0.6;  // ★動画終了何秒前にフェード開始
+
 /*************************************************
  * ユーティリティ
  *************************************************/
@@ -213,6 +216,26 @@ function startVideoCore(index, data, fadeInColor) {
     video.play().catch(() => {});
   }
 
+  // 早期フェード監視
+  fadeOutTriggered = false;
+
+  if (!data.loop) {
+    const onTimeUpdate = () => {
+      if (fadeOutTriggered) return;
+      if (!video.duration) return;
+
+      const remain = video.duration - video.currentTime;
+
+      if (remain <= EARLY_FADE_TIME) {
+        fadeOutTriggered = true;
+        video.removeEventListener("timeupdate", onTimeUpdate);
+        goNext(); // ★終了前フェード
+      }
+    };
+
+    video.addEventListener("timeupdate", onTimeUpdate);
+  }
+
   // 最初のフレーム到達後に表示
   const reveal = () => {
     requestAnimationFrame(() => {
@@ -303,6 +326,8 @@ function tapAction() {
   video.addEventListener("ended", () => {
     if (videoPtn[currentIndex].loop) return;
     if (isTransitioning) return;
+    if (fadeOutTriggered) return; // ★追加（超重要）
+
     goNext();
   });
 }
