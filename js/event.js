@@ -35,6 +35,10 @@ let video, fade, videoWrap;
 let loopRAF = null;
 const videoCache = [];
 
+let pageStartTime = 0;
+const FIRST_PLAY_DELAY = 3000;
+let firstVideoStarted = false;
+
 /*************************************************
  * ユーティリティ
  *************************************************/
@@ -119,6 +123,19 @@ function applyFadeColor(color) {
  *************************************************/
 function playVideo(index) {
   clearWhiteDelay();
+
+  // ★ 初回動画だけ2.5秒制御
+  if (!firstVideoStarted && index === 0) {
+    const elapsed = performance.now() - pageStartTime;
+    const wait = FIRST_PLAY_DELAY - elapsed;
+
+    if (wait > 0) {
+      firstVideoStarted = true;
+      setTimeout(() => playVideo(index), wait);
+      return;
+    }
+    firstVideoStarted = true;
+  }
 
   currentIndex = index;
   isTransitioning = false;
@@ -290,6 +307,30 @@ function tapAction() {
   });
 }
 
+
+/*************************************************
+ * タイトル表示
+ *************************************************/
+function dispTitle() {
+
+  // タイトル描画
+  document.querySelector('#title-txt').innerHTML = evtData.place;
+
+  setTimeout(() => {
+    document.getElementById('title').classList.add('is-animated');
+    setTimeout(() => {
+      document.getElementById('title-txt').style.opacity = 1;
+      setTimeout(() => {
+        document.getElementById('title-txt').style.opacity = 0;
+        setTimeout(() => {
+          document.getElementById('title').classList.remove('is-animated');
+        }, 500);
+      }, 1500);
+    }, 600);
+  }, 400);
+
+}
+
 /*************************************************
  * 初期化
  *************************************************/
@@ -300,6 +341,7 @@ window.addEventListener("load", () => {
 
   setParam();
   setVideo();
+  dispTitle();
   preloadVideos();
   tapAction();
 });
