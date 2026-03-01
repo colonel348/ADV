@@ -87,8 +87,7 @@ function createCards() {
   cardList.style.transform = `translateY(${-offset}px)`;
 
   // ===== 背景更新 =====
-  const evt = evtMap[selIdx];
-  const nextUrl = '../media/' + chrId + '/' + evt.id + '/sel.png';
+  const nextUrl = '../media/' + chrId + '/' + evtData.id + '/sel.png';
 
 if (animated) {
   // ① フェードアウト（その場）
@@ -208,8 +207,6 @@ function touchAction() {
   decideBtn.addEventListener("click", () => {
     if (isDeciding) return; // 二重押し防止
     isDeciding = true;
-
-    const evt = evtMap[selIdx];
 
     // 押下アニメ
     decideBtn.classList.add("pressed", "disabled");
