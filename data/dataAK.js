@@ -1,5 +1,8 @@
 const evtAkMap = [
 
+  { id: "E1", ptn: "2", name: "アメリカ編１", place: "タクシー内"},
+  { id: "E2", ptn: "1", name: "アメリカ編２", place: "ニューヨーク"},
+
 // Lv.1 ---------------------------------
   { id: "A1", ptn: "9", name: "パンツ露出", place: "校舎裏"},
   { id: "A2", ptn: "9", name: "パイズリ", place: "カフェ"},
@@ -15,9 +18,7 @@ const evtAkMap = [
   { id: "C3", ptn: "9", name: "後背位", place: "神社"},
 
 // Lv.4 ---------------------------------
-  { id: "D1", ptn: "9", name: "全裸登校", place: "住宅街"},
+  { id: "D1", ptn: "9", name: "全裸登校", place: "住宅街"}
 
-  { id: "E1", ptn: "2", name: "アメリカ編１", place: "タクシー内"},
-  { id: "E2", ptn: "1", name: "アメリカ編２", place: "ニューヨーク"}
 
 ];

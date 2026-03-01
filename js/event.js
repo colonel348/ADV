@@ -11,8 +11,8 @@ const videoPtn1 = [
 
 const videoPtn2 = [
   { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
-  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "B" },
-  { src: "evt3", loop: true,  fadeIn: "B", fadeOut: "B" }
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt3", loop: true,  fadeIn: "W", fadeOut: "B" }
 ];
 
 const videoPtn9 = [

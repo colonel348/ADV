@@ -33,11 +33,11 @@ function setParam() {
         evtMap = evtFfMap;
     }
 
-    if (selIdx < evtMap.length) {
-        evtData = evtMap[selIdx];
-    } else {
-        evtData = evtMap[evtMap.length -1];
+    if (selIdx >= evtMap.length) {
+        selIdx = evtMap.length -1;
     }
+
+    evtData = evtMap[selIdx];
 
 }
 
