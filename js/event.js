@@ -40,7 +40,7 @@ const FIRST_PLAY_DELAY = 3000;
 let firstVideoStarted = false;
 
 let fadeOutTriggered = false; // ★追加：早期フェード発火管理
-const EARLY_FADE_TIME = 0.6;  // ★動画終了何秒前にフェード開始
+const EARLY_FADE_TIME = 0.8;  // ★動画終了何秒前にフェード開始
 
 /*************************************************
  * ユーティリティ
