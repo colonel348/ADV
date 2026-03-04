@@ -181,7 +181,9 @@ function playVideo(index) {
     startVideoCore(index, data, fadeInColor);
 
     requestAnimationFrame(() => {
-      fade.classList.remove("show");
+      requestAnimationFrame(() => {
+        fade.classList.remove("show");
+      });
     });
   }
 }
