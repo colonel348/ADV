@@ -111,7 +111,7 @@ if (animated) {
     // ⑤ 右→左スライドイン
     requestAnimationFrame(() => {
       bgImg.style.opacity = 1;
-      bgImg.style.transform = "translate(-20px, -50%)";
+      bgImg.style.transform = "translate(0px, -50%)";
     });
 
   }, 180);
@@ -119,7 +119,7 @@ if (animated) {
 } else {
   bgImg.src = nextUrl;
   bgImg.style.opacity = 1;
-  bgImg.style.transform = "translate(-20px, -50%)";
+  bgImg.style.transform = "translate(0px, -50%)";
 }
 }
 
