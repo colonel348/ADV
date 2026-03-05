@@ -30,6 +30,7 @@ let firstPlayDone = false;
 
 let whiteFadeTimer = null;
 const WHITE_HOLD = 800; // 白フェード時のタメ(ms)
+const BLACK_HOLD = 200; // 黒フェード時のタメ(ms)
 
 let video, fade, videoWrap;
 let loopRAF = null;
@@ -162,7 +163,6 @@ function playVideo(index) {
       requestAnimationFrame(() => {
         startVideoCore(index, data, fadeInColor);
 
-        // 白タメ
         whiteFadeTimer = setTimeout(() => {
           fade.classList.remove("show");
 
@@ -178,11 +178,16 @@ function playVideo(index) {
     // ===== 黒フェードイン（遅延なし） =====
 
     fade.classList.add("show");
-    startVideoCore(index, data, fadeInColor);
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        fade.classList.remove("show");
+
+        startVideoCore(index, data, fadeInColor);
+
+        // 黒タメ
+        blackFadeTimer = setTimeout(() => {
+          fade.classList.remove("show");
+        }, BLACK_HOLD);
       });
     });
   }
