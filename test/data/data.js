@@ -17,7 +17,7 @@ const evtData = [
   { evtId: "AK-01", evtNm: "アメリカ編", cpt:[
     { cptId: "1", ptnId: "2", plcNm: "タクシー"},
     { cptId: "2", ptnId: "1", plcNm: "ニューヨーク"},
-    { cptId: "3", ptnId: "9", plcNm: "ニューヨークホテル"}
+    { cptId: "3", ptnId: "1", plcNm: "ニューヨークホテル"}
   ]}
 
 ];
