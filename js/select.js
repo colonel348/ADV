@@ -2,6 +2,7 @@
  * 変数
  *************************************************/
 let startY = 0;
+let startX = 0;
 
 let cardList;
 let bgImg;
@@ -13,6 +14,8 @@ let lastY = 0;
 let lastTime = 0;
 let momentumTimer = null;
 
+let isStartMode = false;
+
 /*************************************************
  * 画像プリロード
  *************************************************/
@@ -21,9 +24,12 @@ let preloadPromise = null;
 function preloadAllImages() {
   if (preloadPromise) return preloadPromise;
 
-  const urls = evtMap.map(evt =>
-    '../media/' + chrId + '/' + evt.id + '/sel.png'
-  );
+  const urls = [];
+  evtData.forEach(evt => {
+    evt.cpt.forEach(cpt => {
+      urls.push('../data/' + evt.evtId + '/CPT-' + cpt.cptId + '/sel.png');
+    });
+  });
 
   preloadPromise = Promise.all(
     urls.map(url => {
@@ -43,10 +49,22 @@ function preloadAllImages() {
  * カード生成
  *************************************************/
 function createCards() {
-  evtMap.forEach((evt, i) => {
+  evtData.forEach((data, i) => {
     const div = document.createElement("div");
     div.className = "card";
-    div.textContent = evt.name;
+    div.textContent = data.evtNm;
+
+    div.className = "card";
+    div.textContent = data.evtNm;
+
+    // evtIdの先頭2文字
+    const prefix = data.evtId.substring(0,2);
+
+    if(prefix === "AK"){
+      div.classList.add("ak");
+    }else if(prefix === "SA"){
+      div.classList.add("sa");
+    }
 
     // タップでそのカードへジャンプ
     div.addEventListener("click", () => {
@@ -57,9 +75,10 @@ function createCards() {
       }
 
       // すでに選択中なら何もしない
-      if (selIdx === i) return;
+      if (evtIdx === i) return;
 
-      selIdx = i;
+      evtIdx = i;
+      cptIdx = 0;
       updateSelection(true);
     });
 
@@ -73,7 +92,7 @@ function createCards() {
   const cards = document.querySelectorAll(".card");
 
   cards.forEach((c, i) => {
-    c.classList.toggle("active", i === selIdx);
+    c.classList.toggle("active", i === evtIdx);
   });
 
   // ===== 実寸取得 =====
@@ -82,13 +101,13 @@ function createCards() {
 
   // ===== 左中央基準 =====
   const visibleOffset = (sidebarHeight / 2) - (cardHeight / 2);
-  const offset = selIdx * cardHeight - visibleOffset;
+  const offset = evtIdx * cardHeight - visibleOffset;
 
   cardList.style.transform = `translateY(${-offset}px)`;
 
   // ===== 背景更新 =====
-  evtData = evtMap[selIdx];
-  const nextUrl = '../media/' + chrId + '/' + evtData.id + '/sel.png';
+  tgtEvtData = evtData[evtIdx];
+  const nextUrl = '../data/' + tgtEvtData.evtId + '/CPT-' + tgtEvtData.cpt[cptIdx].cptId + '/sel.png';
 
 if (animated) {
   // ① フェードアウト（その場）
@@ -124,6 +143,49 @@ if (animated) {
 }
 
 /*************************************************
+ * モード
+ *************************************************/
+function applyMode() {
+  const viewport = document.getElementById("viewport");
+  const startOverlay = document.getElementById("startOverlay");
+  const sidebar = document.getElementById("sidebar");
+
+  if (isStartMode) {
+    viewport.classList.add("start-mode");
+  } else {
+    viewport.classList.remove("start-mode");
+    // 通常へ戻るときサイドバーを左からスライドイン
+    sidebar.classList.add("force-hidden");
+    requestAnimationFrame(() => {
+      sidebar.classList.remove("force-hidden");
+    });
+  }
+}
+
+let isDeciding = false;
+
+/*************************************************
+ * 次のイベント
+ *************************************************/
+function goToEvent() {
+  if (isDeciding) return;
+  isDeciding = true;
+
+  const decideBtn = document.getElementById("decideBtn");
+  if (decideBtn) decideBtn.classList.add("pressed", "disabled");
+
+  // 少し待ってからフェード開始
+  setTimeout(() => {
+    fade.classList.add("show");
+  }, 120);
+
+  // 画面遷移
+  setTimeout(() => {
+    location.href = './event.html?&evtIdx=' + evtIdx + '&cptIdx=' + cptIdx;
+  }, 520);
+}
+
+/*************************************************
  * タッチ処理
  *************************************************/
 function touchAction() {
@@ -135,11 +197,13 @@ function touchAction() {
 
   // タッチ開始
   swipeArea.addEventListener("touchstart", e => {
+  
     // ボタンやカードタップは除外
     if (e.target.closest("#decideBtn") || e.target.closest(".card")) return;
 
     isDragging = true;
     startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
     lastY = startY;
     lastTime = performance.now();
     velocityY = 0;
@@ -175,64 +239,92 @@ function touchAction() {
 
   // タッチ終了
   swipeArea.addEventListener("touchend", e => {
+    if (isStartMode) return;
     if (!isDragging) return;
     isDragging = false;
 
     const dy = e.changedTouches[0].clientY - startY;
-
+    const dx = e.changedTouches[0].clientX - startX;
+    
     // 通常スワイプ
-    if (Math.abs(dy) > 40) {
-      if (dy > 0 && selIdx > 0) {
-        selIdx--;
-        updateSelection();
-      } else if (dy < 0 && selIdx < evtMap.length - 1) {
-        selIdx++;
-        updateSelection();
+    const evt = evtData[evtIdx];
+
+    // ===== 横スワイプ（cpt切替） =====
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+
+      // 右→左（次のcpt）
+      if (dx < 0) {
+
+        if (cptIdx < evt.cpt.length - 1) {
+          cptIdx++;
+          updateSelection();
+        }
+
       }
+      // 左→右（前のcpt）
+      else {
+
+        if (cptIdx > 0) {
+          cptIdx--;
+          updateSelection();
+        }
+
+      }
+
       return;
     }
 
-    // 慣性
+    // ===== 縦スワイプ（evt切替） =====
+    if (Math.abs(dy) > 40) {
+
+      if (dy > 0 && evtIdx > 0) {
+        evtIdx--;
+        cptIdx = 0;
+        updateSelection();
+      }
+      else if (dy < 0 && evtIdx < evtData.length - 1) {
+        evtIdx++;
+        cptIdx = 0;
+        updateSelection();
+      }
+
+      return;
+    }
+
+    // ===== 慣性 =====
     const speed = velocityY;
     if (Math.abs(speed) > 0.4) {
       startMomentum(speed);
     }
+
   }, {
     passive: true
   });
 
   // 決定ボタン
   const decideBtn = document.getElementById("decideBtn");
-  let isDeciding = false;
+  decideBtn.addEventListener("click", goToEvent);
 
-  decideBtn.addEventListener("click", () => {
-    if (isDeciding) return; // 二重押し防止
-    isDeciding = true;
-
-    evtData = evtMap[selIdx];
-
-    // 押下アニメ
-    decideBtn.classList.add("pressed", "disabled");
-
-    // 少し待ってからフェード開始
-    setTimeout(() => {
-      fade.classList.add("show");
-    }, 120);
-
-    // 画面遷移
-    setTimeout(() => {
-      location.href = './event.html?chrId=' + chrId + '&selIdx=' + selIdx;
-    }, 520);
+  // TAP TO STARTの画面タップ
+  const startOverlay = document.getElementById("startOverlay");
+  startOverlay.addEventListener("click", () => {
+    if (!isStartMode) return;
+    goToEvent();
   });
 
-  // 戻るボタン
-  document.getElementById("backBtn").addEventListener("click", () => {
-    fade.classList.add("show");
+  document.getElementById("backBtn").addEventListener("click", (e) => {
+    // startOverlayのclickへ伝播して遷移しないように
+    e.stopPropagation();
 
-    sleepSetTimeout(500, () => location.href = "../title.html");
+    if (isStartMode) {
+      // start → 通常へ
+      isStartMode = false;
+      updateSelection(false);
+      applyMode();
+      return;
+    }
 
   });
-
 }
 
 /*************************************************
@@ -253,13 +345,13 @@ function startMomentum(initialVelocity) {
 
     // 1フレームで複数枚飛ばないよう制御
     if (v > 0) {
-      if (selIdx > 0) {
-        selIdx--;
+      if (evtIdx > 0) {
+        evtIdx--;
         updateSelection();
       }
     } else {
-      if (selIdx < evtMap.length - 1) {
-        selIdx++;
+      if (evtIdx < evtData.length - 1) {
+        evtIdx++;
         updateSelection();
       }
     }
@@ -281,6 +373,13 @@ window.addEventListener('load', function() {
 
   // パラメタ取得
   setParam();
+
+  if (cptIdx >= 1) {
+    isStartMode = true;
+  } else {
+    isStartMode = false;
+  }
+  
   // カード生成
   createCards();
   // 押下イベント
@@ -289,6 +388,7 @@ window.addEventListener('load', function() {
   // 画像読込後に画面表示
   preloadAllImages().then(() => {
     updateSelection(false);
+    applyMode(); // ★追加
     sleepSetTimeout(500, () => document.getElementById('viewport').style.opacity = 1);
   });
 

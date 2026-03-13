@@ -3,20 +3,48 @@
  *************************************************/
 let videoPtn;
 
-const videoPtn1 = [
+const ptnV1 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "B" }
+];
+
+const ptnL1 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" }
+];
+
+const ptnV2 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt2", loop: true,  fadeIn: "W", fadeOut: "B" }
+];
+
+const ptnL2 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "B" }
+];
+
+const ptnV3 = [
   { src: "evt1", loop: false, fadeIn: "B", fadeOut: "W" },
   { src: "evt2", loop: true,  fadeIn: "W", fadeOut: "B" },
   { src: "evt3", loop: false, fadeIn: "B", fadeOut: "B" }
 ];
 
-const videoPtn2 = [
+const ptnL3 = [
   { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
   { src: "evt2", loop: false, fadeIn: "B", fadeOut: "W" },
   { src: "evt3", loop: true,  fadeIn: "W", fadeOut: "B" }
 ];
 
-const videoPtn9 = [
-  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "B" }
+const ptnV4 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt2", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt3", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt4", loop: true,  fadeIn: "W", fadeOut: "B" }
+];
+
+const ptnL4 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt3", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt4", loop: false, fadeIn: "B", fadeOut: "W" }
 ];
 
 /*************************************************
@@ -62,7 +90,7 @@ function isIOS() {
 
 /** 動画パス生成 */
 function buildSrc(name) {
-  return `../media/${chrId}/${evtData.id}/${name}.mp4`;
+  return `../data/${tgtEvtData.evtId}/CPT-${tgtEvtData.cpt[cptIdx].cptId}/${name}.mp4`;
 }
 
 /** 白遅延クリア */
@@ -77,13 +105,23 @@ function clearWhiteDelay() {
  * 動画パターン選択
  *************************************************/
 function setVideo() {
-  if (evtData.ptn == "1") {
-    videoPtn = videoPtn1;
-  } else if (evtData.ptn == "2") {
-    videoPtn = videoPtn2;
-  } else {
-    videoPtn = videoPtn9;
-  }
+  if (tgtEvtData.cpt[cptIdx].ptnId == "V1") {
+    videoPtn = ptnV1;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L1") {
+    videoPtn = ptnL1;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "V2") {
+    videoPtn = ptnV2;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L2") {
+    videoPtn = ptnL2;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "V3") {
+    videoPtn = ptnV3;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L3") {
+    videoPtn = ptnL3;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "V4") {
+    videoPtn = ptnV4;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L4") {
+    videoPtn = ptnL4;
+  } 
 }
 
 /*************************************************
@@ -310,9 +348,29 @@ function goNext() {
   setTimeout(() => {
     // 最後なら遷移
     if (nextIndex >= videoPtn.length) {
-      window.location.href =
-        `./select.html?chrId=${chrId}&selIdx=${selIdx + 1}`;
+
+      // ① 同一evt内で次のcptがあるか？
+      const hasNextCpt = tgtEvtData?.cpt && (cptIdx + 1) < tgtEvtData.cpt.length;
+
+      if (hasNextCpt) {
+        // cptIdx = cptIdx+1, evtIdx(=evtIdx)は据え置き
+        window.location.href = `./select.html?evtIdx=${evtIdx}&cptIdx=${cptIdx + 1}`;
+        return;
+      }
+
+      // ② 次のevtがあるか？
+      const hasNextEvt = (evtIdx + 1) < evtData.length;
+
+      if (hasNextEvt) {
+        // evtIdx=evtIdx+1, cptIdxは未設定（=パラメータを付けない）
+        window.location.href = `./select.html?evtIdx=${evtIdx + 1}`;
+        return;
+      }
+
+      // ③ 次のevtも無い → evtIdxは据え置き、cptIdxは未設定
+      window.location.href = `./select.html?evtIdx=${evtIdx}`;
       return;
+
     }
 
     // 白のみ追加タメ
@@ -346,7 +404,7 @@ function tapAction() {
 function dispTitle() {
 
   // タイトル描画
-  document.querySelector('#title-txt').innerHTML = evtData.place;
+  document.querySelector('#title-txt').innerHTML = tgtEvtData.cpt[cptIdx].plcNm;
 
   setTimeout(() => {
     document.getElementById('title').classList.add('is-animated');

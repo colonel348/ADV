@@ -1,9 +1,10 @@
-// URLパラメタ
-var chrId;
+//---------------
+// パラメタ設定
+//---------------
 var evtId;
-var selIdx;
-var evtMap;
-var evtData;
+var evtIdx;
+var cptIdx;
+var tgtEvtData;
 
 //---------------
 // パラメタ設定
@@ -12,32 +13,23 @@ function setParam() {
 
     var urlParams = new URLSearchParams(window.location.search);
 
-    if (urlParams.has('chrId')) {
-        chrId = urlParams.get('chrId');
+    if (urlParams.has('evtIdx')) {
+        evtIdx = Number(urlParams.get('evtIdx'));
     } else {
-        chrId = "";
+        evtIdx = 0;
     }
 
-    if (urlParams.has('selIdx')) {
-        selIdx = Number(urlParams.get('selIdx'));
+    if (urlParams.has('cptIdx')) {
+        cptIdx = Number(urlParams.get('cptIdx'));
     } else {
-        selIdx = 0;
+        cptIdx = 0;
     }
 
-    // Map設定
-    if (chrId == "AK") {
-        evtMap = evtAkMap;
-    } else if (chrId == "SA") {
-        evtMap = evtSaMap;
-    } else if (chrId == "FF") {
-        evtMap = evtFfMap;
-    }
-
-    if (selIdx >= evtMap.length) {
-        selIdx = evtMap.length -1;
+    if (evtIdx >= evtData.length) {
+        evtIdx = evtData.length -1;
     }
 
-    evtData = evtMap[selIdx];
+    tgtEvtData = evtData[evtIdx];
 
 }
 
