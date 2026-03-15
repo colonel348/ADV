@@ -52,29 +52,51 @@ function createCards() {
   evtData.forEach((data, i) => {
     const div = document.createElement("div");
     div.className = "card";
-    div.textContent = data.evtNm;
 
-    div.className = "card";
-    div.textContent = data.evtNm;
+    const inner = document.createElement("div");
+    inner.className = "cardInner";
 
-    // evtIdの先頭2文字
+    // 背景画像をCSS変数で渡す
+    inner.style.setProperty(
+      "--card-bg",
+      `url("../data/${data.evtId}/bnr.png")`
+    );
+
+    const border = document.createElement("div");
+    border.className = "innerBorder";
+
+    const label = document.createElement("div");
+    label.className = "label";
+
+    const first = data.evtNm.charAt(0);
+    const rest = data.evtNm.slice(1);
+
+    const span = document.createElement("span");
+    span.className = "labelFirst";
+    span.textContent = first;
+
     const prefix = data.evtId.substring(0,2);
 
     if(prefix === "AK"){
-      div.classList.add("ak");
-    }else if(prefix === "SA"){
-      div.classList.add("sa");
+      span.style.color = "#FF6699";
+    }
+    else if(prefix === "SA"){
+      span.style.color = "#00BBDD";
     }
 
-    // タップでそのカードへジャンプ
+    label.appendChild(span);
+    label.append(rest);
+
+    inner.appendChild(border);
+    inner.appendChild(label);
+    div.appendChild(inner);
+
     div.addEventListener("click", () => {
-      // 慣性停止
       if (momentumTimer) {
         cancelAnimationFrame(momentumTimer);
         momentumTimer = null;
       }
 
-      // すでに選択中なら何もしない
       if (evtIdx === i) return;
 
       evtIdx = i;
@@ -88,58 +110,63 @@ function createCards() {
 
 /*************************************************
  * 選択更新
- *************************************************/function updateSelection(animated = true) {
+ *************************************************/
+function updateSelection(animated = true, slideDir = "left") {
   const cards = document.querySelectorAll(".card");
 
   cards.forEach((c, i) => {
     c.classList.toggle("active", i === evtIdx);
   });
 
-  // ===== 実寸取得 =====
-  const cardHeight = cards[0]?.offsetHeight + 28 || 90;
-  const sidebarHeight = document.getElementById("sidebar").clientHeight;
+  const sidebar = document.getElementById("sidebar");
+  const activeCard = cards[evtIdx];
 
-  // ===== 左中央基準 =====
-  const visibleOffset = (sidebarHeight / 2) - (cardHeight / 2);
-  const offset = evtIdx * cardHeight - visibleOffset;
+  if (activeCard) {
+    const sidebarHeight = sidebar.clientHeight;
+    const activeTop = activeCard.offsetTop;
+    const activeHeight = activeCard.offsetHeight;
 
-  cardList.style.transform = `translateY(${-offset}px)`;
+    const offset = activeTop - ((sidebarHeight - activeHeight) / 2);
+    cardList.style.transform = `translateY(${-offset}px)`;
+  }
 
   // ===== 背景更新 =====
   tgtEvtData = evtData[evtIdx];
   const nextUrl = '../data/' + tgtEvtData.evtId + '/CPT-' + tgtEvtData.cpt[cptIdx].cptId + '/sel.png';
 
-if (animated) {
-  // ① フェードアウト（その場）
-  bgImg.style.opacity = 0;
+  if (animated) {
+    bgImg.style.opacity = 0;
 
-  setTimeout(() => {
-    // ② 一度右外へ配置
-    bgImg.style.transition = "none";
-    bgImg.style.transform = "translate(-60px, -50%)";
+    setTimeout(() => {
+      bgImg.style.transition = "none";
 
-    // ★ 強制リフロー（超重要）
-    bgImg.offsetHeight;
+      // スライド方向ごとの開始位置
+      // slideDir === "left"  : 右から入って左へ動く
+      // slideDir === "right" : 左から入って右へ動く
+      const startX = slideDir === "right" ? "60px" : "-60px";
 
-    // ③ 画像差し替え
+      bgImg.style.transform = `translate(${startX}, -50%)`;
+
+      // 強制リフロー
+      bgImg.offsetHeight;
+
+      // 画像差し替え
+      bgImg.src = nextUrl;
+
+      // transition を戻す
+      bgImg.style.transition = "transform .4s ease, opacity .4s ease, filter .45s ease";
+
+      requestAnimationFrame(() => {
+        bgImg.style.opacity = 1;
+        bgImg.style.transform = "translate(0px, -50%)";
+      });
+    }, 180);
+
+  } else {
     bgImg.src = nextUrl;
-
-    // ④ transition を戻す
-    bgImg.style.transition = "transform .4s ease, opacity .4s ease";
-
-    // ⑤ 右→左スライドイン
-    requestAnimationFrame(() => {
-      bgImg.style.opacity = 1;
-      bgImg.style.transform = "translate(0px, -50%)";
-    });
-
-  }, 180);
-
-} else {
-  bgImg.src = nextUrl;
-  bgImg.style.opacity = 1;
-  bgImg.style.transform = "translate(0px, -50%)";
-}
+    bgImg.style.opacity = 1;
+    bgImg.style.transform = "translate(0px, -50%)";
+  }
 }
 
 /*************************************************
@@ -254,21 +281,17 @@ function touchAction() {
 
       // 右→左（次のcpt）
       if (dx < 0) {
-
         if (cptIdx < evt.cpt.length - 1) {
           cptIdx++;
-          updateSelection();
+          updateSelection(true, "left");
         }
-
       }
       // 左→右（前のcpt）
       else {
-
         if (cptIdx > 0) {
           cptIdx--;
-          updateSelection();
+          updateSelection(true, "right");
         }
-
       }
 
       return;
