@@ -399,6 +399,12 @@ window.addEventListener('load', function() {
 
   if (cptIdx >= 1) {
     isStartMode = true;
+    
+    const chapterText = document.getElementById("chapterText");
+    if (chapterText) {
+      chapterText.textContent = "Chapter " + (cptIdx + 1);
+    }
+
   } else {
     isStartMode = false;
   }
