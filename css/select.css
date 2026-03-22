@@ -268,8 +268,8 @@ body {
   opacity: 1;
 }
 
-/* ===== 戻るボタン ===== 
-*/#backBtn {
+/* ===== 戻るボタン ===== */
+#backBtn {
   position: fixed;
   left: 20px;
   top: 20px;
@@ -279,10 +279,6 @@ body {
 
   border-radius: 50%;
   border: none;
-
-  font-weight: bold;
-  font-size: 20px;
-
   background: rgba(255,255,255,0.92);
 
   display: flex;
@@ -290,30 +286,31 @@ body {
   justify-content: center;
 
   cursor: pointer;
-
   box-shadow: 0 0 10px rgba(0,0,0,.35);
 
   opacity: 0;
-  transition: opacity .35s ease;
-  transform: scaleY(-1);
+  pointer-events: none;
+  transition: opacity .35s ease, transform .2s ease;
   z-index: 30;
 
   -webkit-appearance: none;
   appearance: none;
-  color: #000;
   padding: 0;
-  line-height: 1;
 }
 
-/* 矢印上下反転 */
-#backBtn span {
-  display: inline-block;
-  transform: rotate(180deg);
+#viewport.start-mode #backBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#backBtn img {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
 #backBtn:active {
   transform: scale(0.92);
-  background: #fff;
 }
 
 /* ===== TAP TO START オーバーレイ ===== */
