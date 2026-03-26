@@ -44,7 +44,7 @@ const ptnL4 = [
   { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
   { src: "evt2", loop: false, fadeIn: "B", fadeOut: "W" },
   { src: "evt3", loop: true,  fadeIn: "W", fadeOut: "B" },
-  { src: "evt4", loop: false, fadeIn: "B", fadeOut: "W" }
+  { src: "evt4", loop: false, fadeIn: "B", fadeOut: "B" }
 ];
 
 /*************************************************
