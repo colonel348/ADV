@@ -15,6 +15,7 @@ const evtData = [
   ]},
 
   { evtId: "AK-04", evtNm: "デッサン編", cpt:[
+    { cptId: "2", ptnId: "V1", plcNm: "美術教室"},
     { cptId: "3", ptnId: "L4", plcNm: "美術教室"}
   ]},
 
