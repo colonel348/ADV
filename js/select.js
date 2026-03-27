@@ -109,6 +109,35 @@ function createCards() {
 }
 
 /*************************************************
+ * アイコン作成
+ *************************************************/
+function renderChapterIcons() {
+  const wrap = document.getElementById("chapterIcons");
+  if (!wrap) return;
+
+  wrap.innerHTML = "";
+
+  const evt = evtData[evtIdx];
+  if (!evt || !evt.cpt) return;
+
+  evt.cpt.forEach((cpt, i) => {
+    const item = document.createElement("div");
+    item.className = "chapterIcon ext-" + cpt.extLv;
+
+    if (i === cptIdx) {
+      item.classList.add("active");
+    }
+
+    const circle = document.createElement("div");
+    circle.className = "chapterCircle";
+    circle.textContent = cpt.cptId;
+
+    item.appendChild(circle);
+    wrap.appendChild(item);
+  });
+}
+
+/*************************************************
  * 選択更新
  *************************************************/
 function updateSelection(animated = true, slideDir = "left") {
@@ -167,6 +196,8 @@ function updateSelection(animated = true, slideDir = "left") {
     bgImg.style.opacity = 1;
     bgImg.style.transform = "translate(0px, -50%)";
   }
+
+  renderChapterIcons();
 }
 
 /*************************************************
