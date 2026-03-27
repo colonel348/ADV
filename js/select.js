@@ -101,7 +101,7 @@ function createCards() {
 
       evtIdx = i;
       cptIdx = 0;
-      updateSelection(true);
+      updateSelection(true, "left", "event");
     });
 
     cardList.appendChild(div);
@@ -109,38 +109,76 @@ function createCards() {
 }
 
 /*************************************************
- * アイコン作成
+ * チャプターアイコン更新種別
  *************************************************/
-function renderChapterIcons() {
+function updateChapterIcons(mode = "rebuild") {
   const wrap = document.getElementById("chapterIcons");
   if (!wrap) return;
-
-  wrap.innerHTML = "";
 
   const evt = evtData[evtIdx];
   if (!evt || !evt.cpt) return;
 
-  evt.cpt.forEach((cpt, i) => {
-    const item = document.createElement("div");
-    item.className = "chapterIcon ext-" + cpt.extLv;
+  const currentCount = wrap.children.length;
+  const nextCount = evt.cpt.length;
 
-    if (i === cptIdx) {
-      item.classList.add("active");
-    }
+  // イベント切替時、または個数が違う場合は作り直し
+  if (mode === "rebuild" || currentCount !== nextCount) {
+    wrap.innerHTML = "";
 
-    const circle = document.createElement("div");
-    circle.className = "chapterCircle";
-    circle.textContent = cpt.cptId;
+    evt.cpt.forEach((cpt, i) => {
+      const item = document.createElement("div");
+      item.type = "div";
+      item.className = "chapterIcon ext-" + cpt.extLv;
+      item.dataset.index = i;
 
-    item.appendChild(circle);
-    wrap.appendChild(item);
+      if (i === cptIdx) {
+        item.classList.add("active");
+      }
+
+      const circle = document.createElement("div");
+      circle.className = "chapterCircle";
+      circle.textContent = cpt.cptId;
+
+      item.appendChild(circle);
+
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (isStartMode) return;
+        if (i === cptIdx) return;
+
+        cptIdx = i;
+        updateSelection(true, i > cptIdx ? "left" : "right", "chapter");
+      });
+
+      wrap.appendChild(item);
+    });
+
+    return;
+  }
+
+  // 同一イベント内のチャプター切替時は active だけ差し替え
+  const icons = wrap.querySelectorAll(".chapterIcon");
+  icons.forEach((icon, i) => {
+    icon.classList.toggle("active", i === cptIdx);
   });
+}
+
+/*************************************************
+ * チャプターアイコン フェードイン
+ *************************************************/
+function animateChapterIconsIn() {
+  const wrap = document.getElementById("chapterIcons");
+  if (!wrap) return;
+
+  wrap.classList.remove("icons-enter");
+  void wrap.offsetWidth; // 強制リフロー
+  wrap.classList.add("icons-enter");
 }
 
 /*************************************************
  * 選択更新
  *************************************************/
-function updateSelection(animated = true, slideDir = "left") {
+function updateSelection(animated = true, slideDir = "left", changeType = "event") {
   const cards = document.querySelectorAll(".card");
 
   cards.forEach((c, i) => {
@@ -197,7 +235,12 @@ function updateSelection(animated = true, slideDir = "left") {
     bgImg.style.transform = "translate(0px, -50%)";
   }
 
-  renderChapterIcons();
+  if (changeType === "event") {
+    updateChapterIcons("rebuild");
+    animateChapterIconsIn();
+  } else {
+    updateChapterIcons("switch");
+  }
 }
 
 /*************************************************
@@ -314,14 +357,14 @@ function touchAction() {
       if (dx < 0) {
         if (cptIdx < evt.cpt.length - 1) {
           cptIdx++;
-          updateSelection(true, "left");
+          updateSelection(true, "left", "chapter");
         }
       }
       // 左→右（前のcpt）
       else {
         if (cptIdx > 0) {
           cptIdx--;
-          updateSelection(true, "right");
+          updateSelection(true, "right", "chapter");
         }
       }
 
@@ -334,12 +377,12 @@ function touchAction() {
       if (dy > 0 && evtIdx > 0) {
         evtIdx--;
         cptIdx = 0;
-        updateSelection();
+        updateSelection(true, "left", "event");
       }
       else if (dy < 0 && evtIdx < evtData.length - 1) {
         evtIdx++;
         cptIdx = 0;
-        updateSelection();
+        updateSelection(true, "left", "event");
       }
 
       return;
@@ -433,7 +476,7 @@ window.addEventListener('load', function() {
     
     const chapterText = document.getElementById("chapterText");
     if (chapterText) {
-      chapterText.textContent = "Chapter " + (cptIdx + 1);
+      chapterText.textContent = "Chapter " + tgtEvtData.cpt[cptIdx].cptId;
     }
 
   } else {
@@ -447,7 +490,7 @@ window.addEventListener('load', function() {
 
   // 画像読込後に画面表示
   preloadAllImages().then(() => {
-    updateSelection(false);
+    updateSelection(false, "left", "event");
     applyMode(); // ★追加
     sleepSetTimeout(500, () => document.getElementById('viewport').style.opacity = 1);
   });

@@ -199,7 +199,6 @@ body {
 
 /* ===== 決定ボタン ===== */
 #decideBtn {
-  position: absolute;
   right: 60px;
   bottom: 80px;
   padding: 12px 80px;
@@ -362,17 +361,39 @@ body {
   }
 }
 
-/* ===== チャプターアイコン ===== */
-#chapterIcons {
+/* ===== 決定エリア ===== */
+#decisionArea {
   position: absolute;
-  right: 58px;
-  bottom: 150px;
-  z-index: 21;
+  right: 20px;   /* ← 今の決定ボタンの位置に合わせる */
+  bottom: 40px;
 
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
+  flex-direction: column;
+  align-items: center; /* ← ここが重要（中央揃え） */
+}
+
+/* ===== チャプターアイコン ===== */
+#chapterIcons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+
+  margin-bottom: 20px;
+}
+
+#chapterIcons.icons-enter .chapterIcon {
+  animation: chapterIconFadeIn 0.4s ease both;
+}
+
+@keyframes chapterIconFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .chapterIcon {
@@ -403,7 +424,6 @@ body {
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
 
-  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
   transition:
     transform .22s ease,
     box-shadow .22s ease,
@@ -441,6 +461,7 @@ body {
 /* A */
 .chapterIcon.ext-A.active .chapterCircle {
   background: #22dd77;
+  color: #334;
   box-shadow:
     0 0 0 3px rgba(34,221,119,0.20),
     0 0 16px rgba(255,255,255,0.40),
@@ -450,6 +471,7 @@ body {
 /* B */
 .chapterIcon.ext-B.active .chapterCircle {
   background: #35c9ff;
+  color: #334;
   box-shadow:
     0 0 0 3px rgba(53,201,255,0.20),
     0 0 16px rgba(255,255,255,0.40),
@@ -469,6 +491,7 @@ body {
 /* D */
 .chapterIcon.ext-D.active .chapterCircle {
   background: #ff4a7d;
+  color: #334;
   box-shadow:
     0 0 0 3px rgba(255,74,125,0.20),
     0 0 16px rgba(255,255,255,0.40),
@@ -478,6 +501,7 @@ body {
 /* E */
 .chapterIcon.ext-E.active .chapterCircle {
   background: #c13cff;
+  color: #334;
   box-shadow:
     0 0 0 3px rgba(193,60,255,0.20),
     0 0 16px rgba(255,255,255,0.40),
