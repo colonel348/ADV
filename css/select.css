@@ -199,7 +199,6 @@ body {
 
 /* ===== 決定ボタン ===== */
 #decideBtn {
-  position: absolute;
   right: 60px;
   bottom: 80px;
   padding: 12px 80px;
@@ -362,6 +361,153 @@ body {
   }
 }
 
+/* ===== 決定エリア ===== */
+#decisionArea {
+  position: absolute;
+  right: 20px;   /* ← 今の決定ボタンの位置に合わせる */
+  bottom: 40px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ← ここが重要（中央揃え） */
+}
+
+/* ===== チャプターアイコン ===== */
+#chapterIcons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+
+  margin-bottom: 20px;
+}
+
+#chapterIcons.icons-enter .chapterIcon {
+  animation: chapterIconFadeIn 0.4s ease both;
+}
+
+@keyframes chapterIconFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chapterIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chapterCircle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+
+  border: 3px solid rgba(255,255,255,0.75);
+
+  /* 未選択: 内側は少しブラーっぽい半透明 */
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+
+  transition:
+    transform .22s ease,
+    box-shadow .22s ease,
+    background .22s ease,
+    border-color .22s ease;
+}
+
+/* ===== extLvごとの色 ===== */
+.chapterIcon.ext-A .chapterCircle {
+  border-color: #22dd77;
+}
+
+.chapterIcon.ext-B .chapterCircle {
+  border-color: #35c9ff;
+}
+
+.chapterIcon.ext-C .chapterCircle {
+  border-color: #ffcc00;
+}
+
+.chapterIcon.ext-D .chapterCircle {
+  border-color: #ff4a7d;
+}
+
+.chapterIcon.ext-E .chapterCircle {
+  border-color: #c13cff;
+}
+
+/* ===== 選択中 ===== */
+.chapterIcon.active .chapterCircle {
+  transform: scale(1.08);
+  color: #fff;
+}
+
+/* A */
+.chapterIcon.ext-A.active .chapterCircle {
+  background: #22dd77;
+  color: #334;
+  box-shadow:
+    0 0 0 3px rgba(34,221,119,0.20),
+    0 0 16px rgba(255,255,255,0.40),
+    0 0 22px rgba(34,221,119,0.45);
+}
+
+/* B */
+.chapterIcon.ext-B.active .chapterCircle {
+  background: #35c9ff;
+  color: #334;
+  box-shadow:
+    0 0 0 3px rgba(53,201,255,0.20),
+    0 0 16px rgba(255,255,255,0.40),
+    0 0 22px rgba(53,201,255,0.45);
+}
+
+/* C */
+.chapterIcon.ext-C.active .chapterCircle {
+  background: #ffcc00;
+  color: #334;
+  box-shadow:
+    0 0 0 3px rgba(255,204,0,0.20),
+    0 0 16px rgba(255,255,255,0.40),
+    0 0 22px rgba(255,204,0,0.45);
+}
+
+/* D */
+.chapterIcon.ext-D.active .chapterCircle {
+  background: #ff4a7d;
+  color: #334;
+  box-shadow:
+    0 0 0 3px rgba(255,74,125,0.20),
+    0 0 16px rgba(255,255,255,0.40),
+    0 0 22px rgba(255,74,125,0.45);
+}
+
+/* E */
+.chapterIcon.ext-E.active .chapterCircle {
+  background: #c13cff;
+  color: #334;
+  box-shadow:
+    0 0 0 3px rgba(193,60,255,0.20),
+    0 0 16px rgba(255,255,255,0.40),
+    0 0 22px rgba(193,60,255,0.45);
+}
+
 /* ===== startmode用 Chapter表示 ===== */
 #chapterBadge {
   position: fixed;
@@ -451,4 +597,9 @@ body {
 #viewport.start-mode #chapterBadge {
   opacity: 1;
   transform: translateY(0);
+}
+
+#viewport.start-mode #chapterIcons {
+  opacity: 0;
+  pointer-events: none;
 }
