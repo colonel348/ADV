@@ -55,6 +55,7 @@ let loadedCount = 0;
 let isReady = false;
 let isTransitioning = false;
 let firstPlayDone = false;
+let timeUpdateHandler = null;
 
 let whiteFadeTimer = null;
 const WHITE_HOLD = 800; // 白フェード時のタメ(ms)
@@ -237,6 +238,11 @@ function playVideo(index) {
 function startVideoCore(index, data, fadeInColor) {
   const src = buildSrc(data.src);
 
+  if (timeUpdateHandler) {
+    video.removeEventListener("timeupdate", timeUpdateHandler);
+    timeUpdateHandler = null;
+  }
+
   // 初回は完全非表示（チラ見防止）
   if (!firstPlayDone) {
     video.style.display = "none";
@@ -265,7 +271,7 @@ function startVideoCore(index, data, fadeInColor) {
   fadeOutTriggered = false;
 
   if (!data.loop) {
-    const onTimeUpdate = () => {
+    timeUpdateHandler = function () {
       if (fadeOutTriggered) return;
       if (!video.duration) return;
 
@@ -273,12 +279,15 @@ function startVideoCore(index, data, fadeInColor) {
 
       if (remain <= EARLY_FADE_TIME) {
         fadeOutTriggered = true;
-        video.removeEventListener("timeupdate", onTimeUpdate);
-        goNext(); // ★終了前フェード
+
+        video.removeEventListener("timeupdate", timeUpdateHandler);
+        timeUpdateHandler = null;
+
+        goNext();
       }
     };
 
-    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("timeupdate", timeUpdateHandler);
   }
 
   // 最初のフレーム到達後に表示
