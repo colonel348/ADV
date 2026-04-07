@@ -2,6 +2,7 @@ const evtData = [
 
   { evtId: "SA-03", evtNm: "挑発編", cpt:[
     { cptId: "1", extLv: "A", ptnId: "V3", plcNm: "体育倉庫"},
+    { cptId: "2", extLv: "B", ptnId: "L4", plcNm: "体育倉庫"}
   ]},
 
   { evtId: "AK-02", evtNm: "特訓編", cpt:[
