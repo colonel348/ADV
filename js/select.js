@@ -83,6 +83,9 @@ function createCards() {
     else if(prefix === "SA"){
       span.style.color = "#00BBDD";
     }
+    else if(prefix === "FF"){
+      span.style.color = "#00CC66";
+    }
 
     label.appendChild(span);
     label.append(rest);
