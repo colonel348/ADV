@@ -252,7 +252,7 @@ function startVideoCore(index, data, fadeInColor) {
   video.style.opacity = "0";
 
   if (video.src !== src) video.src = src;
-  video.currentTime = 0;
+  video.currentTime = 0.001;
 
   // ズーム初期値
   videoWrap.style.transition = "none";
