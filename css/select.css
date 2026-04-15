@@ -365,7 +365,7 @@ body {
 #decisionArea {
   position: absolute;
   right: 20px;   /* ← 今の決定ボタンの位置に合わせる */
-  bottom: 40px;
+/*  bottom: 40px; */
 
   display: flex;
   flex-direction: column;

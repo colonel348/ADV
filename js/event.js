@@ -243,39 +243,69 @@ function startVideoCore(index, data, fadeInColor) {
     timeUpdateHandler = null;
   }
 
+  // 初回は完全非表示（チラ見防止）
+  if (!firstPlayDone) {
+    video.style.display = "none";
+  }
+
   video.style.visibility = "hidden";
   video.style.opacity = "0";
 
   if (video.src !== src) video.src = src;
-  video.currentTime = 0.001; // ★0だと止まりやすい
+  video.currentTime = 0;
 
+  // ズーム初期値
   videoWrap.style.transition = "none";
   videoWrap.style.transform =
     fadeInColor === "W" ? "scale(1.1)" : "scale(1)";
 
-  // ★再生開始フラグ
-  let started = false;
-
-  const reveal = () => {
-    if (started) return;
-    started = true;
-
-    requestAnimationFrame(() => {
-      video.style.visibility = "visible";
-      video.style.opacity = "1";
-    });
-  };
-
-  // ★ここが重要：playingで表示
-  video.addEventListener("playing", reveal, { once: true });
-
-  // 再生
+  // 再生開始
   if (data.loop && isIOS()) {
     startSeamlessLoop(video);
   } else {
     video.loop = data.loop;
     video.play().catch(() => {});
   }
+
+  // 早期フェード監視
+  fadeOutTriggered = false;
+
+  if (!data.loop) {
+    timeUpdateHandler = function () {
+      if (fadeOutTriggered) return;
+      if (!video.duration) return;
+
+      const remain = video.duration - video.currentTime;
+
+      if (remain <= EARLY_FADE_TIME) {
+        fadeOutTriggered = true;
+
+        video.removeEventListener("timeupdate", timeUpdateHandler);
+        timeUpdateHandler = null;
+
+        goNext();
+      }
+    };
+
+    video.addEventListener("timeupdate", timeUpdateHandler);
+  }
+
+  // 最初のフレーム到達後に表示
+  const revealOnPlay = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!firstPlayDone) {
+          video.style.display = "block";
+          firstPlayDone = true;
+        }
+        video.style.visibility = "visible";
+        video.style.opacity = "1";
+      });
+    });
+  };
+
+  video.addEventListener("playing", revealOnPlay, { once: true });
+
 }
 
 /*************************************************
@@ -292,12 +322,9 @@ function startSeamlessLoop(v) {
   }
 
   v.currentTime = 0.001;
-
-  v.addEventListener("playing", () => {
+  v.play().then(() => {
     loopRAF = v.requestVideoFrameCallback(checkLoop);
-  }, { once: true });
-
-  v.play().catch(() => {});
+  }).catch(() => {});
 }
 
 function stopSeamlessLoop() {
