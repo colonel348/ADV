@@ -72,6 +72,10 @@ let firstVideoStarted = false;
 let fadeOutTriggered = false; // ★追加：早期フェード発火管理
 const EARLY_FADE_TIME = 0.8;  // ★動画終了何秒前にフェード開始
 
+let longPressTimer = null;
+let isLongPressTriggered = false;
+const LONG_PRESS_TIME = 1000;
+
 /*************************************************
  * ユーティリティ
  *************************************************/
@@ -394,6 +398,28 @@ function goNext() {
 function tapAction() {
   video.addEventListener("click", goNext);
 
+  // -------------------
+  // 長押し開始
+  // -------------------
+  function startLongPress() {
+    if (isTransitioning || isLongPressTriggered) return;
+    longPressTimer = setTimeout(() => {
+      forceExit();
+    }, LONG_PRESS_TIME);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  // iOS / Android
+  video.addEventListener("touchstart", startLongPress, { passive:true });
+  video.addEventListener("touchend", cancelLongPress);
+  video.addEventListener("touchcancel", cancelLongPress);
+
   video.addEventListener("ended", () => {
     if (videoPtn[currentIndex].loop) return;
     if (isTransitioning) return;
@@ -402,7 +428,6 @@ function tapAction() {
     goNext();
   });
 }
-
 
 /*************************************************
  * タイトル表示
@@ -425,6 +450,39 @@ function dispTitle() {
     }, 600);
   }, 400);
 
+}
+
+/*************************************************
+ * タイトル表示
+ *************************************************/
+function forceExit() {
+
+  if (isLongPressTriggered) return;
+
+  isLongPressTriggered = true;
+
+  // 他の遷移と競合しないように止める
+  isTransitioning = true;
+
+  clearWhiteDelay();
+  stopSeamlessLoop();
+
+  if (timeUpdateHandler) {
+    video.removeEventListener("timeupdate", timeUpdateHandler);
+    timeUpdateHandler = null;
+  }
+
+  // 黒フェード
+  applyFadeColor("B");
+  fade.classList.add("show");
+
+  // フェード後遷移
+  setTimeout(() => {
+
+    // 好きな遷移先に変更可
+    window.location.href = "./select.html";
+
+  }, 600); // goNextのFADE_TIMEと合わせる
 }
 
 /*************************************************

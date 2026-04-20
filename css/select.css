@@ -60,6 +60,10 @@ body {
   z-index: 0;
   pointer-events: none;
 
+  opacity: 1;
+  transition:
+    opacity .7s ease;
+
   /* 黒グラデーション + 漫画トーン風ドット */
   background:
     radial-gradient(circle, rgba(255,255,255,0.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px,
@@ -585,4 +589,9 @@ body {
 #viewport.start-mode #chapterIcons {
   opacity: 0;
   pointer-events: none;
+}
+
+/* blurを止める */
+#sidebar.delay-blur::before {
+  opacity: 0;
 }

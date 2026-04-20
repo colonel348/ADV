@@ -223,8 +223,20 @@ function applyMode() {
     viewport.classList.remove("start-mode");
     // 通常へ戻るときサイドバーを左からスライドイン
     sidebar.classList.add("force-hidden");
+
+    /* blur開始を一旦止める */
+    sidebar.classList.add("delay-blur");
+
     requestAnimationFrame(() => {
+
+      /* 先にカードだけ出す */
       sidebar.classList.remove("force-hidden");
+
+      /* 少し遅れてblur解放 */
+      setTimeout(() => {
+        sidebar.classList.remove("delay-blur");
+      }, 450);
+
     });
   }
 }
