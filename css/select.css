@@ -372,140 +372,123 @@ body {
   align-items: center; /* ← ここが重要（中央揃え） */
 }
 
-/* ===== チャプターアイコン ===== */
-#chapterIcons {
+/* =========================
+   チャプターダイヤ配置
+========================= */
+.cardChapterIcons {
+  position: absolute;
+
+  bottom: 10px;
+
   display: flex;
-  justify-content: center;
-  gap: 10px;
 
-  margin-bottom: 20px;
+  z-index: 8;
 }
 
-#chapterIcons.icons-enter .chapterIcon {
-  animation: chapterIconFadeIn 0.4s ease both;
-}
 
-@keyframes chapterIconFadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.92);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
+/* =========================
+   未選択ダイヤ
+========================= */
+.chapterDiamond {
 
-.chapterIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
 
-.chapterCircle {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  transform: rotate(45deg);
+
+  opacity: 1;
+  margin-right: 5px;
+
+  /* 枠線はグレー */
+  border: 1px solid #ccc;
+
   box-sizing: border-box;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  color: #fff;
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1;
-
-  border: 3px solid rgba(255,255,255,0.75);
-
-  /* 未選択: 内側は少しブラーっぽい半透明 */
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-
   transition:
-    transform .22s ease,
-    box-shadow .22s ease,
-    background .22s ease,
-    border-color .22s ease;
+    transform .25s ease,
+    box-shadow .25s ease,
+    background-color .25s ease,
+    border-color .25s ease;
+
+  z-index: 8;
 }
 
-/* ===== extLvごとの色 ===== */
-.chapterIcon.ext-A .chapterCircle {
-  border-color: #22dd77;
+
+/* =========================
+   未選択時カラー（くすみ色）
+========================= */
+
+/* A 緑 → 灰緑 */
+.chapterDiamond.ext-A {
+  background-color: #5d7c69;
 }
 
-.chapterIcon.ext-B .chapterCircle {
-  border-color: #35c9ff;
+/* B 水色 → 灰青 */
+.chapterDiamond.ext-B {
+  background-color: #617785;
 }
 
-.chapterIcon.ext-C .chapterCircle {
-  border-color: #ffcc00;
+/* C 黄 → 灰黄 */
+.chapterDiamond.ext-C {
+  background-color: #8a8460;
 }
 
-.chapterIcon.ext-D .chapterCircle {
-  border-color: #ff4a7d;
+/* D 赤 → 灰赤 */
+.chapterDiamond.ext-D {
+  background-color: #8a646c;
 }
 
-.chapterIcon.ext-E .chapterCircle {
-  border-color: #c13cff;
+/* E 紫 → 灰紫 */
+.chapterDiamond.ext-E {
+  background-color: #76687f;
 }
 
-/* ===== 選択中 ===== */
-.chapterIcon.active .chapterCircle {
-  transform: scale(1.08);
-  color: #fff;
-}
 
-/* A */
-.chapterIcon.ext-A.active .chapterCircle {
-  background: #22dd77;
-  color: #334;
+/* =========================
+   選択中（今の鮮やか色を維持）
+========================= */
+.chapterDiamond.active {
+
+  transform:
+    rotate(45deg)
+    scale(1.2);
+
   box-shadow:
-    0 0 0 3px rgba(34,221,119,0.20),
-    0 0 16px rgba(255,255,255,0.40),
-    0 0 22px rgba(34,221,119,0.45);
+    0 0 5px currentColor,
+    0 0 10px currentColor;
+  z-index: 10;
 }
 
-/* B */
-.chapterIcon.ext-B.active .chapterCircle {
-  background: #35c9ff;
-  color: #334;
-  box-shadow:
-    0 0 0 3px rgba(53,201,255,0.20),
-    0 0 16px rgba(255,255,255,0.40),
-    0 0 22px rgba(53,201,255,0.45);
+
+/* A active（元の色） */
+.chapterDiamond.ext-A.active {
+  background-color: #22dd77;
+  border-color: #ffffff;
 }
 
-/* C */
-.chapterIcon.ext-C.active .chapterCircle {
-  background: #ffcc00;
-  color: #334;
-  box-shadow:
-    0 0 0 3px rgba(255,204,0,0.20),
-    0 0 16px rgba(255,255,255,0.40),
-    0 0 22px rgba(255,204,0,0.45);
+/* B active */
+.chapterDiamond.ext-B.active {
+  background-color: #35c9ff;
+  border-color: #ffffff;
 }
 
-/* D */
-.chapterIcon.ext-D.active .chapterCircle {
-  background: #ff4a7d;
-  color: #334;
-  box-shadow:
-    0 0 0 3px rgba(255,74,125,0.20),
-    0 0 16px rgba(255,255,255,0.40),
-    0 0 22px rgba(255,74,125,0.45);
+/* C active */
+.chapterDiamond.ext-C.active {
+  background-color: #ffcc00;
+  border-color: #ffffff;
 }
 
-/* E */
-.chapterIcon.ext-E.active .chapterCircle {
-  background: #c13cff;
-  color: #334;
-  box-shadow:
-    0 0 0 3px rgba(193,60,255,0.20),
-    0 0 16px rgba(255,255,255,0.40),
-    0 0 22px rgba(193,60,255,0.45);
+/* D active */
+.chapterDiamond.ext-D.active {
+  background-color: #ff4a7d;
+  border-color: #ffffff;
+}
+
+/* E active */
+.chapterDiamond.ext-E.active {
+  background-color: #c13cff;
+  border-color: #ffffff;
 }
 
 /* ===== startmode用 Chapter表示 ===== */
