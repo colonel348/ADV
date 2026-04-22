@@ -15,6 +15,10 @@ let lastTime = 0;
 let momentumTimer = null;
 
 let isStartMode = false;
+let isCharacterMode = false;
+let chrList = ["FF", "AK", "SA"];
+let chrIdx = 1; // AK
+let filteredEvtData = [];
 
 /*************************************************
  * 画像プリロード
@@ -49,7 +53,7 @@ function preloadAllImages() {
  * カード生成
  *************************************************/
 function createCards() {
-  evtData.forEach((data, i) => {
+  filteredEvtData.forEach((data, i) => {
     const div = document.createElement("div");
     div.className = "card";
 
@@ -155,7 +159,7 @@ function updateSelection(animated = true, slideDir = "left", changeType = "event
   }
 
   // ===== 背景更新 =====
-  tgtEvtData = evtData[evtIdx];
+  tgtEvtData = filteredEvtData[evtIdx];
   const nextUrl = '../data/' + tgtEvtData.evtId + '/CPT-' + tgtEvtData.cpt[cptIdx].cptId + '/sel.png';
 
   if (animated) {
@@ -243,6 +247,15 @@ function applyMode() {
 
 let isDeciding = false;
 
+function applyCharacterMode() {
+  const viewport = document.getElementById("viewport");
+
+  if (isCharacterMode) {
+    viewport.classList.add("character-mode");
+  } else {
+    viewport.classList.remove("character-mode");
+  }
+}
 /*************************************************
  * 次のイベント
  *************************************************/
@@ -260,7 +273,7 @@ function goToEvent() {
 
   // 画面遷移
   setTimeout(() => {
-    location.href = './event.html?&evtIdx=' + evtIdx + '&cptIdx=' + cptIdx;
+    location.href = './event.html?chrId=' + chrId + '&evtId=' + tgtEvtData.evtId + '&cptIdx=' + cptIdx;
   }, 520);
 }
 
@@ -333,6 +346,15 @@ function touchAction() {
 
       // 右→左（次のcpt）
       if (dx < 0) {
+      
+        // キャラモードなら戻る
+        if (isCharacterMode) {
+          isCharacterMode = false;
+          applyCharacterMode();
+          requestAnimationFrame(updateCharHighlight);
+          return;
+        }
+      
         if (cptIdx < evt.cpt.length - 1) {
           cptIdx++;
           updateSelection(true, "left", "chapter");
@@ -340,6 +362,15 @@ function touchAction() {
       }
       // 左→右（前のcpt）
       else {
+      
+        // 先頭cptならキャラモードへ
+        if (cptIdx === 0) {
+          isCharacterMode = true;
+          applyCharacterMode();
+          updateCharHighlight();
+          return;
+        }
+
         if (cptIdx > 0) {
           cptIdx--;
           updateSelection(true, "right", "chapter");
@@ -351,6 +382,21 @@ function touchAction() {
 
     // ===== 縦スワイプ（evt切替） =====
     if (Math.abs(dy) > 40) {
+
+      if (isCharacterMode) {
+
+        if (Math.abs(dy) > 40) {
+
+          if (dy > 0) {
+            changeCharacter(-1);
+          } else {
+            changeCharacter(1);
+          }
+
+        }
+
+        return;
+      }
 
       if (dy > 0 && evtIdx > 0) {
         evtIdx--;
@@ -400,6 +446,53 @@ function touchAction() {
     }
 
   });
+  
+  document.querySelectorAll(".charItem").forEach((el, i) => {
+
+    el.addEventListener("click", () => {
+
+      // 同じキャラなら何もしない（任意）
+      if (i === chrIdx) return;
+
+      // 差分で既存関数を使う
+      const diff = i - chrIdx;
+
+      changeCharacter(diff);
+    });
+
+  });
+}
+
+/*************************************************
+ * ハイライト
+ *************************************************/
+function updateCharHighlight() {
+
+  const selector = document.getElementById("characterSelector");
+  const highlight = document.getElementById("charHighlight");
+  const active = document.querySelector(".charItem.active");
+
+  if (!selector || !highlight || !active) return;
+
+  const parentRect = selector.getBoundingClientRect();
+  const rect = active.getBoundingClientRect();
+
+  // ★ 中央位置を計算
+  const centerY = rect.top + rect.height / 2;
+
+  // ★ highlightの高さの半分を引く
+  const highlightHalf = highlight.offsetHeight / 2;
+
+  const top = centerY - parentRect.top - highlightHalf;
+
+  highlight.style.top = top + "px";
+
+  // 色
+  const chr = active.dataset.chr;
+
+  if (chr === "AK") highlight.style.backgroundColor = "#ff6699";
+  if (chr === "SA") highlight.style.backgroundColor = "#00bbdd";
+  if (chr === "FF") highlight.style.backgroundColor = "#00cc66";
 }
 
 /*************************************************
@@ -438,6 +531,92 @@ function startMomentum(initialVelocity) {
 }
 
 /*************************************************
+ * イベントフィルター
+ *************************************************/
+function updateFilteredEvents() {
+  filteredEvtData = evtData.filter(evt =>
+    evt.evtId.startsWith(chrId)
+  );
+
+  const index = filteredEvtData.findIndex(evt =>
+    evt.evtId === evtId
+  );
+
+  if (index !== -1) {
+    evtIdx = index;
+  } else {
+    evtIdx = 0; // fallback（先頭にするなど）
+  }
+}
+
+/*************************************************
+ * キャラクター変更
+ *************************************************/
+function changeCharacter(dir) {
+
+  chrIdx += dir;
+
+  if (chrIdx < 0) chrIdx = 0;
+  if (chrIdx >= chrList.length) chrIdx = chrList.length - 1;
+
+  chrId = chrList[chrIdx];
+
+  // active更新
+  document.querySelectorAll(".charItem").forEach((el, i) => {
+    el.classList.toggle("active", i === chrIdx);
+  });
+
+  updateCharHighlight();
+
+  /* ===== フェードアウト ===== */
+  cardList.classList.add("card-fade-out");
+
+  setTimeout(() => {
+
+    /* ===== 中身更新（今まで通り） ===== */
+    updateFilteredEvents();
+
+    cardList.innerHTML = "";
+    createCards();
+
+    evtIdx = 0;
+    cptIdx = 0;
+
+    updateSelection(true, "left", "event");
+
+    /* ===== フェードイン準備 ===== */
+    cardList.classList.remove("card-fade-out");
+
+    requestAnimationFrame(() => {
+
+      /* ===== フェードイン実行 ===== */
+      cardList.classList.add("card-fade-in-active");
+
+      setTimeout(() => {
+        cardList.classList.remove("card-fade-in-active");
+      }, 250);
+
+    });
+
+  }, 200);
+}
+
+/*************************************************
+ * 初期値設定
+ *************************************************/
+function initCharacterActive() {
+
+  const items = document.querySelectorAll(".charItem");
+
+  items.forEach(el => {
+    const chr = el.dataset.chr;
+    el.classList.toggle("active", chr === chrId);
+  });
+  
+  chrIdx = chrList.findIndex(chr => chr === chrId);
+}
+
+/*************************************************
  * 初期化
  *************************************************/
 window.addEventListener('load', function() {
@@ -461,6 +640,12 @@ window.addEventListener('load', function() {
     isStartMode = false;
   }
   
+  // 初期キャラ選択
+  initCharacterActive();
+  // フィルター生成
+  updateFilteredEvents();
+  // ハイライト
+  updateCharHighlight();
   // カード生成
   createCards();
   // 押下イベント

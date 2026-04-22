@@ -364,21 +364,21 @@ function goNext() {
 
       if (hasNextCpt) {
         // cptIdx = cptIdx+1, evtIdx(=evtIdx)は据え置き
-        window.location.href = `./select.html?evtIdx=${evtIdx}&cptIdx=${cptIdx + 1}`;
+        window.location.href = `./select.html?chrId=${chrId}&evtId=${evtId}&cptIdx=${cptIdx + 1}`;
         return;
       }
 
-      // ② 次のevtがあるか？
-      const hasNextEvt = (evtIdx + 1) < evtData.length;
+      //// ② 次のevtがあるか？
+      //const hasNextEvt = (evtIdx + 1) < evtData.length;
 
-      if (hasNextEvt) {
-        // evtIdx=evtIdx+1, cptIdxは未設定（=パラメータを付けない）
-        window.location.href = `./select.html?evtIdx=${evtIdx + 1}`;
-        return;
-      }
+      //if (hasNextEvt) {
+      //  // evtIdx=evtIdx+1, cptIdxは未設定（=パラメータを付けない）
+      //  window.location.href = `./select.html?chrId=${chrId}&evtId=${evtIdx + 1}`;
+      //   return;
+      //}
 
       // ③ 次のevtも無い → evtIdxは据え置き、cptIdxは未設定
-      window.location.href = `./select.html?evtIdx=${evtIdx}`;
+      window.location.href = `./select.html?chrId=${chrId}&evtId=${evtId}`;
       return;
 
     }

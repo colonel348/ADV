@@ -101,7 +101,7 @@ body {
   position: absolute;
   width: 100%;
   z-index: 1;
-  transition: transform 0.35s ease;
+  transition: transform 0.35s ease, margin-left .25s ease, opacity .2s ease;
   overflow: visible;
 }
 
@@ -199,6 +199,15 @@ body {
   transform: scale(1.4);
   filter: brightness(1.06);
   box-shadow: 0 0px 14px rgba(0,0,0,.20);
+}
+
+/* 消える */
+.card-fade-out {
+  opacity: 0;
+}
+
+.card-fade-in-active {
+  opacity: 1;
 }
 
 /* ===== 決定ボタン ===== */
@@ -539,6 +548,104 @@ body {
     -2px  2px 0 rgba(255,255,255,0.55),
      2px  2px 0 rgba(255,255,255,0.55),
      0    3px 8px rgba(255,255,255,0.55);
+}
+
+/* キャラ選択モード */
+#characterSelector {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 60px;
+
+  z-index: 12;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-40px);
+
+  transition: all .35s ease;
+}
+
+#characterSelector::before {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 90px; /* 左の幅（後で調整可） */
+
+  /* 少し透過したグレー */
+  background: rgba(40, 40, 40, 0.7);
+
+  z-index: 0;
+}
+
+/* 表示時 */
+#viewport.character-mode #characterSelector {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.nameGap {
+  display: inline-block;
+  height: 6px;
+}
+
+/* ハイライト本体 */
+#charHighlight {
+  position: absolute;
+
+  width: 48px; /* 文字より少し大きく */
+  height: 150px;
+
+  border-radius: 12px;
+
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: #ff6699; /* 初期（AK） */
+
+  z-index: 0;
+  
+  transition:
+    top .35s ease,
+    background-color .35s ease;
+}
+
+/* 縦文字 */
+.charItem {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+
+  padding: 12px 6px;
+  border-radius: 10px;
+
+  transition: all .25s ease;
+  
+  position: relative;
+  z-index: 1;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#viewport.character-mode #cardList {
+  margin-left: 100px;
 }
 
 /* ===== start-mode（TAP TO START） ===== */

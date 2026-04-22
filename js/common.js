@@ -2,6 +2,7 @@
 // パラメタ設定
 //---------------
 var evtId;
+var chrId;
 var evtIdx;
 var cptIdx;
 var tgtEvtData;
@@ -13,23 +14,25 @@ function setParam() {
 
     var urlParams = new URLSearchParams(window.location.search);
 
-    if (urlParams.has('evtIdx')) {
-        evtIdx = Number(urlParams.get('evtIdx'));
-    } else {
-        evtIdx = 0;
-    }
-
     if (urlParams.has('cptIdx')) {
         cptIdx = Number(urlParams.get('cptIdx'));
     } else {
         cptIdx = 0;
     }
 
-    if (evtIdx >= evtData.length) {
-        evtIdx = evtData.length -1;
+    if (urlParams.has('chrId')) {
+        chrId = String(urlParams.get('chrId'));
+    } else {
+        chrId = "AK";
     }
 
-    tgtEvtData = evtData[evtIdx];
+    if (urlParams.has('evtId')) {
+        evtId = String(urlParams.get('evtId'));
+    } else {
+        evtId = "AK-01";
+    }
+
+    tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];
 
 }
 
