@@ -2,7 +2,7 @@ const evtData = [
 
   { evtId: "FF-02", evtNm: "慰め編", cpt:[
     { cptId: "1", extLv: "B", ptnId: "L4", plcNm: "ホテル"},
-    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ホテル"}, // 動画生成中
+    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ホテル"}, // サムネがまだ
   ]},
 
   { evtId: "FF-01", evtNm: "記念撮影編", cpt:[
@@ -20,11 +20,11 @@ const evtData = [
 
   { evtId: "AK-04", evtNm: "デッサン編", cpt:[
     { cptId: "2", extLv: "C", ptnId: "V1", plcNm: "美術教室"}, // OK
-    { cptId: "3", extLv: "D", ptnId: "L3", plcNm: "美術教室"} // 動画生成済みで編集待ち。
+    { cptId: "3", extLv: "D", ptnId: "L3", plcNm: "美術教室"} // OK
   ]},
 
   { evtId: "AK-01", evtNm: "アメリカ編", cpt:[
-    { cptId: "1", extLv: "B", ptnId: "V2", plcNm: "タクシー"},
+    { cptId: "1", extLv: "B", ptnId: "V2", plcNm: "タクシー"}, // 動画生成中
     { cptId: "2", extLv: "E", ptnId: "V3", plcNm: "ニューヨーク"},
     { cptId: "3", extLv: "E", ptnId: "L2", plcNm: "ニューヨークホテル"}
   ]},
@@ -46,7 +46,7 @@ const evtData = [
 
   { evtId: "SA-01", evtNm: "決戦編", cpt:[
     { cptId: "2", extLv: "E", ptnId: "V3", plcNm: "ビビッドストリート"},
-    { cptId: "3", extLv: "E", ptnId: "L3", plcNm: "ビビッドストリート"}
+    { cptId: "3", extLv: "E", ptnId: "L3", plcNm: "ビビッドストリート"} // 動画生成済みで編集待ち。
   ]}
 
 ];
