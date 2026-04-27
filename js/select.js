@@ -337,9 +337,6 @@ function touchAction() {
 
     const dy = e.changedTouches[0].clientY - startY;
     const dx = e.changedTouches[0].clientX - startX;
-    
-    // 通常スワイプ
-    const evt = evtData[evtIdx];
 
     // ===== 横スワイプ（cpt切替） =====
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
@@ -353,11 +350,12 @@ function touchAction() {
           applyCharacterMode();
           requestAnimationFrame(updateCharHighlight);
           return;
-        }
-      
-        if (cptIdx < evt.cpt.length - 1) {
-          cptIdx++;
-          updateSelection(true, "left", "chapter");
+        }else{
+
+          if (cptIdx < tgtEvtData.cpt.length - 1) {
+            cptIdx++;
+            updateSelection(true, "left", "chapter");
+          }
         }
       }
       // 左→右（前のcpt）
@@ -396,17 +394,18 @@ function touchAction() {
         }
 
         return;
-      }
+      }else{
 
-      if (dy > 0 && evtIdx > 0) {
-        evtIdx--;
-        cptIdx = 0;
-        updateSelection(true, "left", "event");
-      }
-      else if (dy < 0 && evtIdx < evtData.length - 1) {
-        evtIdx++;
-        cptIdx = 0;
-        updateSelection(true, "left", "event");
+        if (dy > 0 && evtIdx > 0) {
+          evtIdx--;
+          cptIdx = 0;
+          updateSelection(true, "left", "event");
+        }
+        else if (dy < 0 && evtIdx < filteredEvtData.length - 1) {
+          evtIdx++;
+          cptIdx = 0;
+          updateSelection(true, "left", "event");
+        }
       }
 
       return;
@@ -554,10 +553,12 @@ function updateFilteredEvents() {
  *************************************************/
 function changeCharacter(dir) {
 
-  chrIdx += dir;
 
-  if (chrIdx < 0) chrIdx = 0;
-  if (chrIdx >= chrList.length) chrIdx = chrList.length - 1;
+  if (chrIdx + dir < 0 || chrIdx + dir > 2) {
+    return;
+  }
+
+  chrIdx += dir;
 
   chrId = chrList[chrIdx];
 

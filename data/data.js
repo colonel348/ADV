@@ -36,17 +36,17 @@ const evtData = [
 
   { evtId: "SA-04", evtNm: "練習編", cpt:[
     { cptId: "1", extLv: "B", ptnId: "V4", plcNm: "ダンススタジオ"},
-    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ダンススタジオ"}
+    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ダンススタジオ"} // OK
   ]},
 
   { evtId: "SA-02", evtNm: "補習編", cpt:[
     { cptId: "1", extLv: "A", ptnId: "L2", plcNm: "教室"},
-    { cptId: "2", extLv: "D", ptnId: "V3", plcNm: "教室"} // 動画生成中
+    { cptId: "2", extLv: "D", ptnId: "V3", plcNm: "教室"}
   ]},
 
   { evtId: "SA-01", evtNm: "決戦編", cpt:[
     { cptId: "2", extLv: "E", ptnId: "V3", plcNm: "ビビッドストリート"},
-    { cptId: "3", extLv: "E", ptnId: "L3", plcNm: "ビビッドストリート"} // 動画生成済みで編集待ち。
+    { cptId: "3", extLv: "E", ptnId: "L3", plcNm: "ビビッドストリート"} // OK
   ]}
 
 ];
