@@ -1,13 +1,21 @@
 const evtData = [
 
+/*************************************************
+ * ホタル
+ *************************************************/
+
   { evtId: "FF-02", evtNm: "慰め編", cpt:[
-    { cptId: "1", extLv: "B", ptnId: "L4", plcNm: "ホテル"},
-    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ホテル"}, // サムネがまだ
+    { cptId: "1", extLv: "B", ptnId: "L4", plcNm: "ホテル"}, // ★
+    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ホテル"}, // ●
   ]},
 
   { evtId: "FF-01", evtNm: "記念撮影編", cpt:[
-    { cptId: "2", extLv: "C", ptnId: "L3", plcNm: "屋上"}
+    { cptId: "2", extLv: "C", ptnId: "L3", plcNm: "屋上"} // ★
   ]},
+
+/*************************************************
+ * 小豆沢こはね
+ *************************************************/
 
   { evtId: "AK-02", evtNm: "特訓編", cpt:[
     { cptId: "1", extLv: "B", ptnId: "V3", plcNm: "スタジオ"},
@@ -19,15 +27,19 @@ const evtData = [
   ]},
 
   { evtId: "AK-04", evtNm: "デッサン編", cpt:[
-    { cptId: "2", extLv: "C", ptnId: "V1", plcNm: "美術教室"}, // OK
-    { cptId: "3", extLv: "D", ptnId: "L3", plcNm: "美術教室"} // OK
+    { cptId: "2", extLv: "C", ptnId: "V1", plcNm: "美術教室"}, // ●
+    { cptId: "3", extLv: "D", ptnId: "L3", plcNm: "美術教室"} // ●
   ]},
 
   { evtId: "AK-01", evtNm: "アメリカ編", cpt:[
-    { cptId: "1", extLv: "B", ptnId: "V2", plcNm: "タクシー"}, // 動画生成中
+    { cptId: "1", extLv: "B", ptnId: "V2", plcNm: "タクシー"}, // ●
     { cptId: "2", extLv: "E", ptnId: "V3", plcNm: "ニューヨーク"},
     { cptId: "3", extLv: "E", ptnId: "L2", plcNm: "ニューヨークホテル"}
   ]},
+
+/*************************************************
+ * 白石杏
+ *************************************************/
 
   { evtId: "SA-03", evtNm: "挑発編", cpt:[
     { cptId: "1", extLv: "A", ptnId: "V3", plcNm: "体育倉庫"},
@@ -36,7 +48,7 @@ const evtData = [
 
   { evtId: "SA-04", evtNm: "練習編", cpt:[
     { cptId: "1", extLv: "B", ptnId: "V4", plcNm: "ダンススタジオ"},
-    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ダンススタジオ"} // OK
+    { cptId: "2", extLv: "C", ptnId: "V3", plcNm: "ダンススタジオ"} // ●
   ]},
 
   { evtId: "SA-02", evtNm: "補習編", cpt:[
@@ -46,7 +58,7 @@ const evtData = [
 
   { evtId: "SA-01", evtNm: "決戦編", cpt:[
     { cptId: "2", extLv: "E", ptnId: "V3", plcNm: "ビビッドストリート"},
-    { cptId: "3", extLv: "E", ptnId: "L3", plcNm: "ビビッドストリート"} // OK
+    { cptId: "3", extLv: "E", ptnId: "L3", plcNm: "ビビッドストリート"} // ●
   ]}
 
 ];

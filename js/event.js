@@ -210,8 +210,9 @@ function playVideo(index) {
           fade.classList.remove("show");
 
           requestAnimationFrame(() => {
-            videoWrap.style.transition = "transform 2s linear";
+            videoWrap.style.transition = "transform 2s linear, filter 2.0s ease-out";
             videoWrap.style.transform = "scale(1.0)";
+            videoWrap.style.filter = "blur(0px)";
           });
         }, WHITE_HOLD);
       });
@@ -260,8 +261,14 @@ function startVideoCore(index, data, fadeInColor) {
 
   // ズーム初期値
   videoWrap.style.transition = "none";
-  videoWrap.style.transform =
-    fadeInColor === "W" ? "scale(1.1)" : "scale(1)";
+
+  if (fadeInColor === "W") {
+    videoWrap.style.transform = "scale(1.1)";
+    videoWrap.style.filter = "blur(6px)";
+  } else {
+    videoWrap.style.transform = "scale(1)";
+    videoWrap.style.filter = "blur(0px)";
+  }
 
   // 再生開始
   if (data.loop && isIOS()) {
