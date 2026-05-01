@@ -34,7 +34,7 @@ const evtData = [
   { evtId: "AK-01", evtNm: "アメリカ編", cpt:[
     { cptId: "1", extLv: "B", ptnId: "V2", plcNm: "タクシー"}, // ●
     { cptId: "2", extLv: "E", ptnId: "L2", plcNm: "ニューヨーク"}, // ★
-    { cptId: "3", extLv: "E", ptnId: "L2", plcNm: "ニューヨークホテル"}
+    { cptId: "3", extLv: "E", ptnId: "L3", plcNm: "ニューヨークホテル"}
   ]},
 
 /*************************************************
