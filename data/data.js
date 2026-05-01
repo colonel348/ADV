@@ -18,7 +18,7 @@ const evtData = [
  *************************************************/
 
   { evtId: "AK-02", evtNm: "特訓編", cpt:[
-    { cptId: "1", extLv: "B", ptnId: "V3", plcNm: "スタジオ"},
+    { cptId: "1", extLv: "B", ptnId: "V3", plcNm: "スタジオ"}, // ★
     { cptId: "2", extLv: "C", ptnId: "V2", plcNm: "スタジオ"}
   ]},
 
@@ -33,7 +33,7 @@ const evtData = [
 
   { evtId: "AK-01", evtNm: "アメリカ編", cpt:[
     { cptId: "1", extLv: "B", ptnId: "V2", plcNm: "タクシー"}, // ●
-    { cptId: "2", extLv: "E", ptnId: "V3", plcNm: "ニューヨーク"},
+    { cptId: "2", extLv: "E", ptnId: "L2", plcNm: "ニューヨーク"}, // ★
     { cptId: "3", extLv: "E", ptnId: "L2", plcNm: "ニューヨークホテル"}
   ]},
 
