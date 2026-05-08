@@ -21,6 +21,32 @@ let chrIdx = 1; // AK
 let filteredEvtData = [];
 
 /*************************************************
+ * シーズンカラー
+ *************************************************/
+
+const ssnData = [
+
+  // ホタル
+  { ssnId: "FF-S1", ssnLv: "3"},
+  { ssnId: "FF-S2", ssnLv: "2"},
+  { ssnId: "FF-S3", ssnLv: "4"},
+  { ssnId: "FF-S4", ssnLv: "5"},
+
+  // 小豆沢こはね
+  { ssnId: "AK-S1", ssnLv: "1"},
+  { ssnId: "AK-S2", ssnLv: "3"},
+  { ssnId: "AK-S3", ssnLv: "4"},
+  { ssnId: "AK-S4", ssnLv: "5"},
+
+  // 白石杏
+  { ssnId: "SA-S1", ssnLv: "3"},
+  { ssnId: "SA-S2", ssnLv: "2"},
+  { ssnId: "SA-S3", ssnLv: "1"},
+  { ssnId: "SA-S4", ssnLv: "5"},
+
+];
+
+/*************************************************
  * 画像プリロード
  *************************************************/
 let preloadPromise = null;
@@ -69,6 +95,14 @@ function createCards() {
     const border = document.createElement("div");
     border.className = "innerBorder";
 
+    const seasonTag = document.createElement("div");
+    seasonTag.className = "seasonTag";
+
+    // evtId の5文字目 → シーズン番号
+    const seasonNo = data.evtId.charAt(4);
+
+    seasonTag.textContent = "シーズン" + seasonNo;
+
     const label = document.createElement("div");
     label.className = "label";
 
@@ -113,10 +147,13 @@ function createCards() {
 
     });
 
+    inner.appendChild(seasonTag);
+
     inner.appendChild(diamondWrap);
 
     inner.appendChild(border);
     inner.appendChild(label);
+
     div.appendChild(inner);
 
     div.addEventListener("click", () => {
