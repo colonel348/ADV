@@ -280,51 +280,6 @@ body {
   opacity: 1;
 }
 
-/* ===== 戻るボタン ===== */
-#backBtn {
-  position: fixed;
-  left: 20px;
-  top: 20px;
-
-  width: 42px;
-  height: 42px;
-
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.92);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(0,0,0,.35);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .35s ease, transform .2s ease;
-  z-index: 30;
-
-  -webkit-appearance: none;
-  appearance: none;
-  padding: 0;
-}
-
-#viewport.start-mode #backBtn {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-#backBtn img {
-  width: 22px;
-  height: 22px;
-  display: block;
-}
-
-#backBtn:active {
-  transform: scale(0.92);
-}
-
 /* ===== TAP TO START オーバーレイ ===== */
 #startOverlay {
   position: fixed;
@@ -530,6 +485,26 @@ body {
   border-radius: 2px;
 }
 
+#chapterBadge.ext-A::before {
+  background: rgba(34, 221, 119, 0.4);
+}
+
+#chapterBadge.ext-B::before {
+  background: rgba(53, 201, 255, 0.4);
+}
+
+#chapterBadge.ext-C::before {
+  background: rgba(255, 204, 0, 0.4);
+}
+
+#chapterBadge.ext-D::before {
+  background: rgba(255, 74, 125, 0.4);
+}
+
+#chapterBadge.ext-E::before {
+  background: rgba(193, 60, 255, 0.4);
+}
+
 /* 文字 */
 #chapterText {
   position: absolute;
@@ -537,17 +512,13 @@ body {
   bottom: 254px;
   color: #333;
 
-  font-weight: 700;
+  font-weight: 900;
   font-size: 44px;
   line-height: 1.1;
   text-align: right;
 
-  text-shadow:
-    -2px -2px 0 rgba(255,255,255,0.55),
-     2px -2px 0 rgba(255,255,255,0.55),
-    -2px  2px 0 rgba(255,255,255,0.55),
-     2px  2px 0 rgba(255,255,255,0.55),
-     0    3px 8px rgba(255,255,255,0.55);
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.95);
+
 }
 
 /* キャラ選択モード */

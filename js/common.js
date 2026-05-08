@@ -29,7 +29,7 @@ function setParam() {
     if (urlParams.has('evtId')) {
         evtId = String(urlParams.get('evtId'));
     } else {
-        evtId = "AK-01";
+        evtId = "AK-P2-C1";
     }
 
     tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];

@@ -331,7 +331,6 @@ function touchAction() {
 
   // タッチ終了
   swipeArea.addEventListener("touchend", e => {
-    if (isStartMode) return;
     if (!isDragging) return;
     isDragging = false;
 
@@ -360,16 +359,31 @@ function touchAction() {
       }
       // 左→右（前のcpt）
       else {
-      
+
+        // ===== start mode解除 =====
+        if (isStartMode) {
+
+          isStartMode = false;
+
+          updateSelection(false);
+
+          applyMode();
+
+          return;
+        }
+
         // 先頭cptならキャラモードへ
         if (cptIdx === 0) {
+
           isCharacterMode = true;
           applyCharacterMode();
           updateCharHighlight();
+
           return;
         }
 
         if (cptIdx > 0) {
+
           cptIdx--;
           updateSelection(true, "right", "chapter");
         }
@@ -432,20 +446,6 @@ function touchAction() {
     goToEvent();
   });
 
-  document.getElementById("backBtn").addEventListener("click", (e) => {
-    // startOverlayのclickへ伝播して遷移しないように
-    e.stopPropagation();
-
-    if (isStartMode) {
-      // start → 通常へ
-      isStartMode = false;
-      updateSelection(false);
-      applyMode();
-      return;
-    }
-
-  });
-  
   document.querySelectorAll(".charItem").forEach((el, i) => {
 
     el.addEventListener("click", () => {
@@ -636,6 +636,25 @@ window.addEventListener('load', function() {
     if (chapterText) {
       chapterText.textContent = "Chapter " + tgtEvtData.cpt[cptIdx].cptId;
     }
+
+/* ===== startMode色同期 ===== */
+const chapterBadge =
+  document.getElementById("chapterBadge");
+
+  const extLv =
+    tgtEvtData.cpt[cptIdx].extLv;
+
+  // 既存ext-*削除
+  chapterBadge.classList.remove(
+    "ext-A",
+    "ext-B",
+    "ext-C",
+    "ext-D",
+    "ext-E"
+  );
+
+  // 新しいext追加
+  chapterBadge.classList.add(`ext-${extLv}`);
 
   } else {
     isStartMode = false;
