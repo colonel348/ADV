@@ -375,6 +375,26 @@ body {
   pointer-events: none;
 }
 
+.seasonTag.ssnLv-1 {
+  background: #a92fe0;
+}
+
+.seasonTag.ssnLv-2 {
+  background: #26b4e8;
+}
+
+.seasonTag.ssnLv-3 {
+  background: #e0b400;
+}
+
+.seasonTag.ssnLv-4 {
+  background: #e2872f;
+}
+
+.seasonTag.ssnLv-5 {
+  background: #e66498;
+}
+
 /* =========================
    チャプターダイヤ配置
 ========================= */

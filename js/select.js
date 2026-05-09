@@ -103,6 +103,13 @@ function createCards() {
 
     seasonTag.textContent = "シーズン" + seasonNo;
 
+    /* ===== シーズンLv取得 ===== */
+    const ssn = ssnData.find(ssn =>
+      data.evtId.startsWith(ssn.ssnId)
+    );
+
+    seasonTag.classList.add(`ssnLv-${ssn.ssnLv}`);
+
     const label = document.createElement("div");
     label.className = "label";
 

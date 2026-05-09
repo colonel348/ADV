@@ -1,0 +1,730 @@
+@charset "utf-8";
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  font-family: sans-serif;
+}
+
+/* ===== レイアウト全体 ===== */
+#viewport {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  opacity: 0;
+  transition: opacity 1s ease;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow: hidden;
+}
+
+/* ===== 背景 ===== */
+#bgWrap {
+  position: absolute;
+  inset: 0;
+}
+
+#bgImg {
+  width: auto;
+  height: 100dvh;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translate(-20px, -50%);
+  transition: opacity 0.4s ease, transform 0.4s ease, filter 0.45s ease;
+  will-change: transform, opacity, filter;
+}
+
+/* ===== サイドバー ===== */
+#sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 150px;
+  z-index: 10;
+  font-size: 9px;
+  background: transparent;
+  overflow: visible;
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.45s cubic-bezier(.16, 1, .3, 1), opacity 0.35s ease;
+}
+
+#sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  opacity: 1;
+  transition:
+    opacity .7s ease;
+
+  /* 黒グラデーション + 漫画トーン風ドット */
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px,
+    linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.42) 0%,
+      rgba(0, 0, 0, 0.34) 26%,
+      rgba(0, 0, 0, 0.22) 52%,
+      rgba(0, 0, 0, 0.10) 76%,
+      rgba(0, 0, 0, 0.00) 100%
+    );
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.96) 24%,
+    rgba(0, 0, 0, 0.78) 54%,
+    rgba(0, 0, 0, 0.40) 80%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.96) 24%,
+    rgba(0, 0, 0, 0.78) 54%,
+    rgba(0, 0, 0, 0.40) 80%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+#cardList {
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+  transition: transform 0.35s ease, margin-left .25s ease, opacity .2s ease;
+  overflow: visible;
+}
+
+/* サイドバー強制非表示（JSのスライドイン用） */
+#sidebar.force-hidden {
+  opacity: 0;
+  transform: translateX(-140px);
+}
+
+/* ===== カード ===== */
+.card {
+  position: relative;
+  width: 110px;
+  height: 66px;
+  margin: 40px 10px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.cardInner {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  overflow: visible;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1.2;
+  text-align: left;
+  padding: 4px 10px 4px 12px;
+
+  transform: scale(1);
+  transform-origin: left center;
+
+  transition:
+    transform .28s cubic-bezier(.2,.9,.2,1),
+    box-shadow .25s ease,
+    filter .25s ease;
+}
+
+/* 背景画像レイヤー */
+.cardInner::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 3px;
+  filter: brightness(0.85);
+  background-image: var(--card-bg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  z-index: 0;
+}
+
+/* 外黒枠 */
+.cardInner::after {
+  content: "";
+  position: absolute;
+  inset: 1.5px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  border: 3px solid #333;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 内白枠 */
+.cardInner .innerBorder {
+  position: absolute;
+  inset: 3px;
+  border: 2px solid #fff;
+  border-radius: 3px;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 文字 */
+.cardInner .label {
+  position: relative;
+  z-index: 4;
+}
+
+.card.active {
+  margin: 56px 10px;
+}
+
+.card.active .cardInner {
+  transform: scale(1.4);
+  filter: brightness(1.06);
+}
+
+/* 消える */
+.card-fade-out {
+  opacity: 0;
+}
+
+.card-fade-in-active {
+  opacity: 1;
+}
+
+/* ===== 決定ボタン ===== */
+#decideBtn {
+  right: 60px;
+  bottom: 80px;
+  padding: 12px 80px;
+  font-size: 16px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(180deg, #7fe7d9 0%, #69d8ca 100%);
+  color: #14343a;
+  font-weight: bold;
+  z-index: 20;
+
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+  transition: opacity 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+#viewport:not(.start-mode) #decideBtn {
+  transition-delay: 0.14s;
+}
+
+#decideBtn.pressed {
+  animation: decideGlow 0.45s ease-out forwards;
+}
+
+@keyframes decideGlow {
+  0% {
+    box-shadow:
+      0 0 0 rgba(255, 255, 255, 0),
+      0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
+
+  35% {
+    box-shadow:
+      0 0 18px rgba(255, 255, 255, 0.75),
+      0 0 36px rgba(255, 255, 255, 0.45);
+    filter: brightness(1.18);
+  }
+
+  100% {
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.18),
+      0 0 20px rgba(255, 255, 255, 0.1);
+    filter: brightness(1.05);
+  }
+}
+
+#decideBtn.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ===== 画面フェード ===== */
+#fade {
+  position: fixed;
+  inset: 0;
+  background: black;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  z-index: 30;
+}
+
+#fade.show {
+  opacity: 1;
+}
+
+/* ===== TAP TO START オーバーレイ ===== */
+#startOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 24;
+
+  opacity: 0;
+  pointer-events: none;
+}
+
+#tapText {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-size: 20px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
+
+  opacity:0;
+  transition:opacity .35s ease;
+
+  padding: 3px 50px;
+  background: rgba(0, 0, 0, 0.42);
+
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.45) 15%,
+    rgba(0,0,0,0.45) 85%,
+    rgba(0,0,0,0) 100%
+  );
+
+  animation: tapBlink 2.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes tapBlink {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ===== 決定エリア ===== */
+#decisionArea {
+  position: absolute;
+  right: 20px;   /* ← 今の決定ボタンの位置に合わせる */
+  bottom: 40px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ← ここが重要（中央揃え） */
+}
+
+/* =========================
+   シーズン
+========================= */
+.seasonTag {
+
+  position: absolute;
+
+  top: 4px;
+  left: 4px;
+
+  z-index: 3;
+
+  height: 13px;
+  line-height: 12px;
+
+  padding: 0 8px 0 5px;
+
+  background: rgba(255, 120, 170, 0.92);
+
+  color: white;
+
+  font-size: 6px;
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    calc(100% - 6px) 100%,
+    0 100%
+  );
+
+  pointer-events: none;
+}
+
+.seasonTag.ssnLv-1 {
+  background: #a92fe0;
+}
+
+.seasonTag.ssnLv-2 {
+  background: #26b4e8;
+}
+
+.seasonTag.ssnLv-3 {
+  background: #e0b400;
+}
+
+.seasonTag.ssnLv-4 {
+  background: #e2872f;
+}
+
+.seasonTag.ssnLv-5 {
+  background: #e66498;
+}
+
+/* =========================
+   チャプターダイヤ配置
+========================= */
+.cardChapterIcons {
+  position: absolute;
+
+  bottom: 10px;
+
+  display: flex;
+
+  z-index: 8;
+}
+
+
+/* =========================
+   未選択ダイヤ
+========================= */
+.chapterDiamond {
+
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+
+  transform: rotate(45deg);
+
+  opacity: 1;
+  margin-right: 5px;
+
+  /* 枠線はグレー */
+  border: 1px solid #ccc;
+
+  box-sizing: border-box;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background-color .25s ease,
+    border-color .25s ease;
+
+  z-index: 8;
+}
+
+
+/* =========================
+   未選択時カラー（くすみ色）
+========================= */
+
+/* A 緑 → 灰緑 */
+.chapterDiamond.ext-A {
+  background-color: #5d7c69;
+}
+
+/* B 水色 → 灰青 */
+.chapterDiamond.ext-B {
+  background-color: #617785;
+}
+
+/* C 黄 → 灰黄 */
+.chapterDiamond.ext-C {
+  background-color: #8a8460;
+}
+
+/* D 赤 → 灰赤 */
+.chapterDiamond.ext-D {
+  background-color: #8a646c;
+}
+
+/* E 紫 → 灰紫 */
+.chapterDiamond.ext-E {
+  background-color: #76687f;
+}
+
+
+/* =========================
+   選択中（今の鮮やか色を維持）
+========================= */
+.chapterDiamond.active {
+
+  transform:
+    rotate(45deg)
+    scale(1.2);
+
+  box-shadow:
+    0 0 5px currentColor,
+    0 0 10px currentColor;
+  z-index: 10;
+}
+
+
+/* A active（元の色） */
+.chapterDiamond.ext-A.active {
+  background-color: #22dd77;
+  border-color: #ffffff;
+}
+
+/* B active */
+.chapterDiamond.ext-B.active {
+  background-color: #35c9ff;
+  border-color: #ffffff;
+}
+
+/* C active */
+.chapterDiamond.ext-C.active {
+  background-color: #ffcc00;
+  border-color: #ffffff;
+}
+
+/* D active */
+.chapterDiamond.ext-D.active {
+  background-color: #ff4a7d;
+  border-color: #ffffff;
+}
+
+/* E active */
+.chapterDiamond.ext-E.active {
+  background-color: #c13cff;
+  border-color: #ffffff;
+}
+
+/* ===== startmode用 Chapter表示 ===== */
+#chapterBadge {
+  position: fixed;
+  right: -136px;
+  bottom: -208px;
+  width: 600px;
+  height: 280px;
+  z-index: 24;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease, transform .35s ease;
+  transform: translateY(10px);
+}
+
+/* 右下の斜め白パネル */
+#chapterBadge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.60);
+  transform: rotate(-28deg);
+  transform-origin: center;
+  border-radius: 2px;
+}
+
+#chapterBadge.ext-A::before {
+  background: rgba(34, 221, 119, 0.4);
+}
+
+#chapterBadge.ext-B::before {
+  background: rgba(53, 201, 255, 0.4);
+}
+
+#chapterBadge.ext-C::before {
+  background: rgba(255, 204, 0, 0.4);
+}
+
+#chapterBadge.ext-D::before {
+  background: rgba(255, 74, 125, 0.4);
+}
+
+#chapterBadge.ext-E::before {
+  background: rgba(193, 60, 255, 0.4);
+}
+
+/* 文字 */
+#chapterText {
+  position: absolute;
+  right: 180px;
+  bottom: 254px;
+  color: #333;
+
+  font-weight: 900;
+  font-size: 44px;
+  line-height: 1.1;
+  text-align: right;
+
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.95);
+
+}
+
+/* キャラ選択モード */
+#characterSelector {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 60px;
+
+  z-index: 12;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-40px);
+
+  transition: all .35s ease;
+}
+
+#characterSelector::before {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 90px; /* 左の幅（後で調整可） */
+
+  /* 少し透過したグレー */
+  background: rgba(40, 40, 40, 0.7);
+
+  z-index: 0;
+}
+
+/* 表示時 */
+#viewport.character-mode #characterSelector {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.nameGap {
+  display: inline-block;
+  height: 6px;
+}
+
+/* ハイライト本体 */
+#charHighlight {
+  position: absolute;
+
+  width: 48px; /* 文字より少し大きく */
+  height: 150px;
+
+  border-radius: 12px;
+
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: #ff6699; /* 初期（AK） */
+
+  z-index: 0;
+  
+  transition:
+    top .35s ease,
+    background-color .35s ease;
+}
+
+/* 縦文字 */
+.charItem {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+
+  padding: 12px 6px;
+  border-radius: 10px;
+
+  transition: all .25s ease;
+  
+  position: relative;
+  z-index: 1;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#viewport.character-mode #cardList {
+  margin-left: 100px;
+}
+
+/* ===== start-mode（TAP TO START） ===== */
+#viewport.start-mode #sidebar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-140px);
+  transition-delay: 0s;
+}
+
+#viewport:not(.start-mode) #sidebar {
+  transition-delay: 0.22s;
+}
+
+#viewport.start-mode #decideBtn {
+  opacity: 0;
+  transform: translateY(26px) scale(0.98);
+  pointer-events: none;
+  transition-delay: 0s;
+}
+
+#viewport.start-mode #backBtn {
+  display: flex;
+  opacity:1;
+}
+
+#viewport.start-mode #startOverlay {
+  opacity: 1;
+  pointer-events: auto;
+  background: none;
+}
+
+#viewport.start-mode #tapText{
+  opacity:1;
+}
+
+#viewport:not(.start-mode) #tapText {
+  animation: none;
+  transform: scale(0.96);
+  transition: transform 0.25s ease;
+}
+
+#viewport.start-mode #chapterBadge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#viewport.start-mode #chapterIcons {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* blurを止める */
+#sidebar.delay-blur::before {
+  opacity: 0;
+}
