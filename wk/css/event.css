@@ -70,13 +70,14 @@ html, body {
 #chrName {
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 #msgText {
   font-size: 18px;
   line-height: 1.6;
   min-height: 100px;
+  margin-left: 6px;
 }
 
 #msgText,
@@ -121,6 +122,7 @@ html, body {
   opacity: 1;
 
   animation:
+    noteFade 0.25s ease,
     noteFloat 0.9s ease-in-out infinite;
 
 }
@@ -139,10 +141,6 @@ html, body {
     transform: translateY(0px);
   }
 
-}
-
-#nextIcon.show {
-  opacity: 1;
 }
 
 @keyframes nextBlink {
@@ -166,5 +164,45 @@ html, body {
   opacity: 0;
 
   transition: opacity 0.25s ease;
+
+}
+
+.char {
+
+  display: inline-block;
+
+  opacity: 0;
+
+  animation: charFade 0.18s ease forwards;
+
+}
+
+@keyframes charFade {
+
+  to {
+
+    opacity: 1;
+
+  }
+
+}
+
+@keyframes noteFade {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(6px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
 
 }

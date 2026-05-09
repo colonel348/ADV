@@ -19,6 +19,89 @@ let isTyping = false;
 
 let fullText = "";
 
+const videoCache = {};
+
+/*************************************************
+ * 動画プリロード（iOS強化版）
+ *************************************************/
+function preloadMovies() {
+
+  const evtId = currentData.evtId;
+
+  const cptId = "1";
+
+  currentData.msgInfo.forEach(item => {
+
+    // 動画なしは除外
+    if (!item.movId) return;
+
+    const src =
+      `../data/${evtId}/CPT-${cptId}/${item.movId}.mp4`;
+
+    // 重複防止
+    if (videoCache[src]) return;
+
+    const v = document.createElement("video");
+
+    v.src = src;
+
+    v.preload = "auto";
+
+    v.muted = true;
+
+    v.playsInline = true;
+
+    // iOS対策
+    v.setAttribute("webkit-playsinline", "true");
+
+    // 読み込み開始
+    v.load();
+
+    // キャッシュ保存
+    videoCache[src] = v;
+
+    // -----------------------------
+    // iOS向け：事前デコード促進
+    // -----------------------------
+    const warmup = () => {
+
+      v.play()
+        .then(() => {
+
+          // 即停止
+          v.pause();
+
+          // 先頭へ戻す
+          v.currentTime = 0;
+
+        })
+        .catch(() => {
+
+          // iOSの自動再生制限で失敗しても無視
+
+        });
+
+    };
+
+    // metadata取得後にwarmup
+    if (v.readyState >= 1) {
+
+      warmup();
+
+    } else {
+
+      v.addEventListener(
+        "loadedmetadata",
+        warmup,
+        { once: true }
+      );
+
+    }
+
+  });
+
+}
+
 /*************************************************
  * 初期化
  *************************************************/
@@ -50,6 +133,9 @@ function init() {
     alert("データなし");
     return;
   }
+
+  // 動画事前読込
+  preloadMovies();
 
   // 初回だけ1秒待つ
   setTimeout(() => {
@@ -164,7 +250,7 @@ function startTyping(text) {
 
   fullText = text;
 
-  msgEl.innerText = "";
+  msgEl.innerHTML = "";
 
   isTyping = true;
 
@@ -172,18 +258,22 @@ function startTyping(text) {
 
   function type() {
 
-    const current =
-      fullText.substring(0, index);
-
-    msgEl.innerText = current;
-
     const char = fullText[index];
+
+    // 1文字span生成
+    const span =
+      document.createElement("span");
+
+    span.className = "char";
+
+    span.innerText = char;
+
+    msgEl.appendChild(span);
 
     index++;
 
-    if (index <= fullText.length) {
+    if (index < fullText.length) {
 
-      // 句読点ウェイト
       let wait = 35;
 
       if (char === "、") {
@@ -201,7 +291,12 @@ function startTyping(text) {
 
       isTyping = false;
 
-      nextIcon.classList.add("show");
+      // ♪表示
+      requestAnimationFrame(() => {
+
+        nextIcon.classList.add("show");
+
+      });
 
     }
 
@@ -218,8 +313,27 @@ function finishTyping() {
 
   clearTimeout(typingTimer);
 
-  document.getElementById("msgBody").innerText =
-    fullText;
+  const msgEl =
+    document.getElementById("msgBody");
+
+  msgEl.innerHTML = "";
+
+  for (const char of fullText) {
+
+    const span =
+      document.createElement("span");
+
+    span.className = "char";
+
+    span.style.opacity = 1;
+
+    span.style.transform = "translateY(0)";
+
+    span.innerText = char;
+
+    msgEl.appendChild(span);
+
+  }
 
   document
     .getElementById("nextIcon")
@@ -245,19 +359,55 @@ function playMovie(item) {
   // 動画なし
   if (!movId) {
 
+    isBusy = true;
+
     fadeOutVideo(() => {
 
       video.pause();
+
       video.removeAttribute("src");
 
+      video.load();
+
+      // テキスト消す
+      document.getElementById("chrName").innerText = "";
+
+      document.getElementById("msgBody").innerText = "";
+
+      document
+        .getElementById("nextIcon")
+        .classList.remove("show");
+
+      // 次メッセージへ
       setTimeout(() => {
+
         isBusy = false;
+
         nextStep();
-      }, 1000);
+
+        // メッセージfade復帰
+        requestAnimationFrame(() => {
+
+          document
+            .getElementById("chrName")
+            .classList.remove("msg-fade");
+
+          document
+            .getElementById("msgBody")
+            .classList.remove("msg-fade");
+
+          document
+            .getElementById("nextIcon")
+            .classList.remove("msg-fade");
+
+        });
+
+      }, 300);
 
     });
 
     return;
+
   }
 
   loopMin = Number(item.loopMin || 0);
@@ -294,7 +444,13 @@ function fadeInMovie(src) {
 
   setTimeout(() => {
 
-    video.src = src;
+    const cachedVideo = videoCache[src];
+
+    if (cachedVideo) {
+      video.src = cachedVideo.src;
+    } else {
+      video.src = src;
+    }
 
     video.currentTime = 0;
 
@@ -341,12 +497,24 @@ function fadeInMovie(src) {
 
 function fadeOutVideo(callback) {
 
-  const msgArea =
-    document.getElementById("msgArea");
+  const chrEl =
+    document.getElementById("chrName");
 
+  const msgBody =
+    document.getElementById("msgBody");
+
+  const nextIcon =
+    document.getElementById("nextIcon");
+
+  // 文字だけフェードアウト
+  chrEl.classList.add("msg-fade");
+  msgBody.classList.add("msg-fade");
+
+  nextIcon.classList.remove("show");
+  nextIcon.classList.add("msg-fade");
+
+  // 動画フェード
   fade.classList.add("show");
-
-  msgArea.classList.add("msg-hide");
 
   setTimeout(() => {
 
@@ -360,13 +528,21 @@ function fadeOutVideo(callback) {
  * ループ制御
  *************************************************/
 
-videoLoopWatch();
+window.addEventListener("load", () => {
+
+  video = document.getElementById("video");
+
+  init();
+
+  videoLoopWatch();
+
+});
 
 function videoLoopWatch() {
 
   requestAnimationFrame(videoLoopWatch);
 
-  if (!video.duration) return;
+  if (!video || !video.duration) return;
 
   if (loopMin <= 0) return;
 
