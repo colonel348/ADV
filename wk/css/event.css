@@ -239,3 +239,98 @@ html, body {
   }
 
 }
+
+#titleArea {
+
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  transition: opacity 0.35s ease;
+
+}
+
+#titleArea.show {
+
+  opacity: 1;
+
+}
+
+#titleText {
+
+  width: 70%;
+
+  padding: 12px 15px 15px;
+
+  box-sizing: border-box;
+
+  color: white;
+
+  font-size: 22px;
+
+  letter-spacing: 0.12em;
+
+  text-align: center;
+
+  border-radius: 4px;
+
+  line-height: 1.2;
+
+  background:
+    linear-gradient(
+      to right,
+      rgba(50,50,60,0),
+      rgba(50,50,60,0.2)  5%,
+      rgba(50,50,60,0.4) 15%,
+      rgba(50,50,60,0.5) 35%,
+      rgba(50,50,60,0.5) 65%,
+      rgba(50,50,60,0.4) 85%,
+      rgba(50,50,60,0.2) 95%,
+      rgba(50,50,60,0)
+    );
+
+  opacity: 1;
+
+  transform: translateX(0);
+
+  transition: opacity 0.35s ease;
+
+}
+
+/* 表示アニメ */
+#titleText.slide-in {
+
+  animation:
+    titleSlideIn 0.45s ease forwards;
+
+}
+
+@keyframes titleSlideIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateX(-40px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateX(0);
+
+  }
+
+}

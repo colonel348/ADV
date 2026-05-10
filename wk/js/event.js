@@ -23,10 +23,14 @@ let isTyping = false;
 
 let fullText = "";
 
+let isTitleShowing = false;
+
+let pendingLoop = false;
+
 const videoCache = {};
 
 /*************************************************
- * 動画プリロード（iOS強化版）
+ * 動画プリロード
  *************************************************/
 function preloadMovies() {
 
@@ -36,71 +40,81 @@ function preloadMovies() {
 
   currentData.msgInfo.forEach(item => {
 
-    // 動画なしは除外
-    if (!item.movId) return;
+    // 動画なし
+    if (
+      !item.movId ||
+      item.movId === "plg" ||
+      item.movId === "elg"
+    ) {
+      return;
+    }
 
-    const src =
-      `../data/${evtId}/CPT-${cptId}/${item.movId}.mp4`;
+    // A/L両方
+    const sources = [
 
-    // 重複防止
-    if (videoCache[src]) return;
+      `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
 
-    const v = document.createElement("video");
+      `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
 
-    v.src = src;
+    ];
 
-    v.preload = "auto";
+    sources.forEach(src => {
 
-    v.muted = true;
+      // 重複防止
+      if (videoCache[src]) return;
 
-    v.playsInline = true;
+      const v =
+        document.createElement("video");
 
-    // iOS対策
-    v.setAttribute("webkit-playsinline", "true");
+      v.src = src;
 
-    // 読み込み開始
-    v.load();
+      v.preload = "auto";
 
-    // キャッシュ保存
-    videoCache[src] = v;
+      v.muted = true;
 
-    // -----------------------------
-    // iOS向け：事前デコード促進
-    // -----------------------------
-    const warmup = () => {
+      v.playsInline = true;
 
-      v.play()
-        .then(() => {
-
-          // 即停止
-          v.pause();
-
-          // 先頭へ戻す
-          v.currentTime = 0;
-
-        })
-        .catch(() => {
-
-          // iOSの自動再生制限で失敗しても無視
-
-        });
-
-    };
-
-    // metadata取得後にwarmup
-    if (v.readyState >= 1) {
-
-      warmup();
-
-    } else {
-
-      v.addEventListener(
-        "loadedmetadata",
-        warmup,
-        { once: true }
+      v.setAttribute(
+        "webkit-playsinline",
+        "true"
       );
 
-    }
+      // preload開始
+      v.load();
+
+      // キャッシュ保存
+      videoCache[src] = v;
+
+      // iOS向けwarmup
+      const warmup = () => {
+
+        v.play()
+          .then(() => {
+
+            v.pause();
+
+            v.currentTime = 0;
+
+          })
+          .catch(() => {});
+
+      };
+
+      if (v.readyState >= 1) {
+
+        warmup();
+
+      } else {
+
+        v.addEventListener(
+          "loadedmetadata",
+          warmup,
+          { once: true }
+        );
+
+      }
+
+    });
 
   });
 
@@ -157,6 +171,28 @@ function init() {
 
 function nextStep() {
 
+  // タイトル表示中
+  if (isTitleShowing) {
+
+    isTitleShowing = false;
+
+    const area =
+      document.getElementById("titleArea");
+
+    area.classList.remove("show");
+
+    setTimeout(() => {
+
+      currentIndex++;
+
+      showCurrent();
+
+    }, 300);
+
+    return;
+
+  }
+
   // 動画切替中
   if (isBusy) return;
 
@@ -167,6 +203,23 @@ function nextStep() {
 
     return;
   }
+
+  // 現在メッセージを即fade-out
+  document
+    .getElementById("chrName")
+    .classList.add("msg-fade");
+
+  document
+    .getElementById("msgBody")
+    .classList.add("msg-fade");
+
+  document
+    .getElementById("nextIcon")
+    .classList.remove("show");
+
+  document
+    .getElementById("nextIcon")
+    .classList.add("msg-fade");
 
   currentIndex++;
 
@@ -188,22 +241,87 @@ function showCurrent() {
   const item = currentData.msgInfo[currentIndex];
 
   // メッセージ
-  if ("msg" in item) {
+  if ("msgTxt" in item) {
 
     changeMessage(
       item.chrNm || "",
-      item.msg || ""
+      item.msgTxt || ""
     );
 
     return;
+
   }
 
-  // 動画
+  // 動画系
   if ("movId" in item) {
 
+    // プロローグタイトル
+    if (item.movId === "plg") {
+
+      showTitle(item.title || "");
+
+      return;
+
+    }
+
+    // エピローグ暗転
+    if (item.movId === "elg") {
+
+      fadeOutVideo(() => {
+
+        setTimeout(() => {
+
+          isBusy = false;
+
+          nextStep();
+
+        }, 300);
+
+      }, false);
+
+      return;
+
+    }
+
+    // 通常動画
     playMovie(item);
 
   }
+
+}
+
+/*************************************************
+ * タイトル表示
+ *************************************************/
+function showTitle(title) {
+
+  isTitleShowing = true;
+
+  const area =
+    document.getElementById("titleArea");
+
+  const text =
+    document.getElementById("titleText");
+
+  text.innerText = title;
+
+  // animation再発火
+  text.classList.remove("slide-in");
+
+  // 強制reflow
+  void text.offsetWidth;
+
+  // 再付与
+  text.classList.add("slide-in");
+
+  // 暗転
+  fade.classList.add("show");
+
+  requestAnimationFrame(() => {
+
+    area.classList.add("show");
+
+  });
 
 }
 
@@ -226,6 +344,10 @@ function changeMessage(chrNm, msg) {
   msgBody.innerText = "";
 
   nextIcon.classList.remove("show");
+
+  chrEl.classList.remove("msg-fade");
+  msgBody.classList.remove("msg-fade");
+  nextIcon.classList.remove("msg-fade");
 
   // 一瞬待ってから表示開始
   requestAnimationFrame(() => {
@@ -370,8 +492,6 @@ function playMovie(item) {
 
         currentVideo.pause();
 
-        currentVideo.classList.remove("show");
-
       }
 
       setTimeout(() => {
@@ -382,7 +502,7 @@ function playMovie(item) {
 
       }, 300);
 
-    });
+    }, false);
 
     return;
 
@@ -407,6 +527,12 @@ function playSeamlessMovie(srcA, srcL) {
 
   setTimeout(() => {
 
+    videoA.classList.remove("show");
+    videoL.classList.remove("show");
+
+    videoA.style.display = "none";
+    videoL.style.display = "none";
+
     // 停止
     videoA.pause();
     videoL.pause();
@@ -424,10 +550,6 @@ function playSeamlessMovie(srcA, srcL) {
     // preload
     videoA.load();
     videoL.load();
-
-  }, 500);
-
-  setTimeout(() => {
 
     // --------------------
     // A表示
@@ -519,8 +641,6 @@ function playSeamlessMovie(srcA, srcL) {
               }, 250);
 
             });
-
-            currentVideo = videoL;
 
           });
 
@@ -624,8 +744,7 @@ function fadeInMovie(src) {
 /*************************************************
  * フェードアウト
  *************************************************/
-
-function fadeOutVideo(callback) {
+function fadeOutVideo(callback, hideMessage = true) {
 
   const chrEl =
     document.getElementById("chrName");
@@ -636,21 +755,46 @@ function fadeOutVideo(callback) {
   const nextIcon =
     document.getElementById("nextIcon");
 
-  // 文字だけフェードアウト
-  chrEl.classList.add("msg-fade");
-  msgBody.classList.add("msg-fade");
+  // --------------------
+  // メッセージfade-out
+  // --------------------
 
-  nextIcon.classList.remove("show");
-  nextIcon.classList.add("msg-fade");
+  if (hideMessage) {
 
-  // 動画フェード
+    chrEl.classList.add("msg-fade");
+    msgBody.classList.add("msg-fade");
+
+    nextIcon.classList.remove("show");
+    nextIcon.classList.add("msg-fade");
+
+  }
+
+  // --------------------
+  // 動画fade-out
+  // --------------------
+
+  if (currentVideo) {
+
+    currentVideo.classList.remove("show");
+
+  }
+
+  // 黒fade
   fade.classList.add("show");
 
   setTimeout(() => {
 
+    if (currentVideo) {
+
+      currentVideo.pause();
+
+      currentVideo.style.display = "none";
+
+    }
+
     callback();
 
-  }, 600);
+  }, 250);
 
 }
 
