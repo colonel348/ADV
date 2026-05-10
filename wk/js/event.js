@@ -221,7 +221,84 @@ function nextStep() {
     .getElementById("nextIcon")
     .classList.add("msg-fade");
 
+  // 現在行
+  const currentItem =
+    currentData.msgInfo[currentIndex];
+
+  // --------------------
+  // Lメッセージ待機中
+  // --------------------
+
+  if (
+    currentItem &&
+    currentItem.tmgId === "L" &&
+    currentVideo === videoA
+  ) {
+
+    return;
+
+  }
+
   currentIndex++;
+
+  const item =
+    currentData.msgInfo[currentIndex];
+
+  // Lテキスト
+  if (
+    item &&
+    item.tmgId === "L" &&
+    pendingLoop
+  ) {
+
+    pendingLoop = false;
+
+    // --------------------
+    // playSeamlessMovie と同じ
+    // L fade-in
+    // --------------------
+
+    videoL.style.display = "block";
+
+    videoL.currentTime = 0;
+
+    requestAnimationFrame(() => {
+
+      videoL.classList.add("show");
+
+      videoL.play().then(() => {
+
+        requestAnimationFrame(() => {
+
+          setTimeout(() => {
+
+            videoA.pause();
+
+            videoA.classList.remove("show");
+            videoA.style.display = "none";
+
+          }, 250);
+
+        });
+
+        currentVideo = videoL;
+
+        pendingLoop = false;
+
+        // Lメッセージ表示
+        setTimeout(() => {
+
+          showCurrent();
+
+        }, 120);
+
+      });
+
+    });
+
+    return;
+
+  }
 
   if (currentIndex >= currentData.msgInfo.length) {
     console.log("終了");
@@ -242,6 +319,48 @@ function showCurrent() {
 
   // メッセージ
   if ("msgTxt" in item) {
+
+    const tmgId =
+      item.tmgId || "Z";
+
+    // --------------------
+    // Lメッセージ待機
+    // --------------------
+
+    if (tmgId === "L") {
+
+      // A中なら待機
+      if (currentVideo === videoA) {
+
+        pendingLoop = true;
+
+        return;
+
+      }
+
+      // L未表示なら待機
+      if (currentVideo !== videoL) {
+
+        return;
+
+      }
+
+    }
+
+    // --------------------
+    // Aメッセージなのに
+    // A動画終了済み
+    // --------------------
+
+    if (
+      tmgId === "A" &&
+      currentVideo !== videoA &&
+      !pendingLoop
+    ) {
+
+      return;
+
+    }
 
     changeMessage(
       item.chrNm || "",
@@ -607,13 +726,65 @@ function playSeamlessMovie(srcA, srcL) {
       // 終了直前
       if (remain <= 0.15) {
 
-        // 二重防止
-        if (videoL.classList.contains("show")) {
-          return;
+        // 次movIdまでに
+        // Lメッセージがあるか確認
+        let hasLMessage = false;
+
+        for (
+          let i = currentIndex + 1;
+          i < currentData.msgInfo.length;
+          i++
+        ) {
+
+          const nextItem =
+            currentData.msgInfo[i];
+
+          // 次動画で終了
+          if ("movId" in nextItem) {
+            break;
+          }
+
+          // L発見
+          if (
+            nextItem.tmgId === "L"
+          ) {
+
+            hasLMessage = true;
+
+            break;
+
+          }
+
         }
 
         // --------------------
-        // Lを先に描画可能状態へ
+        // L待機あり
+        // --------------------
+
+        if (hasLMessage) {
+
+          pendingLoop = true;
+
+          // A fade-out
+          videoA.classList.remove("show");
+
+          setTimeout(() => {
+
+            videoA.pause();
+
+            videoA.style.display = "none";
+            videoL.style.display = "block";
+
+            currentVideo = null;
+
+          }, 250);
+
+          return;
+
+        }
+
+        // --------------------
+        // 通常L切替
         // --------------------
 
         videoL.style.display = "block";
@@ -622,13 +793,10 @@ function playSeamlessMovie(srcA, srcL) {
 
         requestAnimationFrame(() => {
 
-          // 先に表示
           videoL.classList.add("show");
 
-          // 再生開始
           videoL.play().then(() => {
 
-            // 次フレームでA消す
             requestAnimationFrame(() => {
 
               setTimeout(() => {
@@ -641,6 +809,21 @@ function playSeamlessMovie(srcA, srcL) {
               }, 250);
 
             });
+
+            currentVideo = videoL;
+
+            // L待機中メッセージ表示
+            if (pendingLoop) {
+
+              pendingLoop = false;
+
+              setTimeout(() => {
+
+                showCurrent();
+
+              }, 120);
+
+            }
 
           });
 

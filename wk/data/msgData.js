@@ -16,7 +16,7 @@ const msgData = [
     { chrNm: "Cさん", tmgId:"Z", msgTxt: "段落2テキスト3"}, 
 
   { movId: "elg"},
-    { chrNm: "Aさん", msg: "段落3テキスト1"}
+    { chrNm: "Aさん", tmgId:"Z", msgTxt: "段落3テキスト1"}
 
 ]}
 
