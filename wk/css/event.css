@@ -28,6 +28,39 @@ html, body {
   object-fit: cover;
 }
 
+#videoContainer {
+
+  position: absolute;
+
+  inset: 0;
+
+}
+
+.movie {
+
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  opacity: 0;
+
+  transition: opacity 0.25s linear;
+
+  pointer-events: none;
+
+}
+
+.movie.show {
+
+  opacity: 1;
+
+}
+
 #fade {
   position: absolute;
   inset: 0;

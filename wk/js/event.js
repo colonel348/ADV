@@ -6,7 +6,11 @@ let currentIndex = 0;
 
 let currentData = null;
 
-let video;
+let videoA;
+let videoL;
+
+let currentVideo = null;
+
 let fade;
 
 let isBusy = false;
@@ -108,7 +112,8 @@ function preloadMovies() {
 
 window.addEventListener("load", () => {
 
-  video = document.getElementById("video");
+  videoA = document.getElementById("videoA");
+  videoL = document.getElementById("videoL");
   fade = document.getElementById("fade");
 
   init();
@@ -359,48 +364,21 @@ function playMovie(item) {
   // 動画なし
   if (!movId) {
 
-    isBusy = true;
-
     fadeOutVideo(() => {
 
-      video.pause();
+      if (currentVideo) {
 
-      video.removeAttribute("src");
+        currentVideo.pause();
 
-      video.load();
+        currentVideo.classList.remove("show");
 
-      // テキスト消す
-      document.getElementById("chrName").innerText = "";
+      }
 
-      document.getElementById("msgBody").innerText = "";
-
-      document
-        .getElementById("nextIcon")
-        .classList.remove("show");
-
-      // 次メッセージへ
       setTimeout(() => {
 
         isBusy = false;
 
         nextStep();
-
-        // メッセージfade復帰
-        requestAnimationFrame(() => {
-
-          document
-            .getElementById("chrName")
-            .classList.remove("msg-fade");
-
-          document
-            .getElementById("msgBody")
-            .classList.remove("msg-fade");
-
-          document
-            .getElementById("nextIcon")
-            .classList.remove("msg-fade");
-
-        });
 
       }, 300);
 
@@ -410,12 +388,164 @@ function playMovie(item) {
 
   }
 
-  loopMin = Number(item.loopMin || 0);
+  const srcA =
+    `../data/${evtId}/CPT-${cptId}/${movId}-A.mp4`;
 
-  const src =
-    `../data/${evtId}/CPT-${cptId}/${movId}.mp4`;
+  const srcL =
+    `../data/${evtId}/CPT-${cptId}/${movId}-L.mp4`;
 
-  fadeInMovie(src);
+  playSeamlessMovie(srcA, srcL);
+
+}
+
+/*************************************************
+ * 動画シームレス再生
+ *************************************************/
+function playSeamlessMovie(srcA, srcL) {
+
+  fade.classList.add("show");
+
+  setTimeout(() => {
+
+    // 停止
+    videoA.pause();
+    videoL.pause();
+
+    // ソース設定
+    videoA.src = srcA;
+    videoL.src = srcL;
+
+    videoA.currentTime = 0;
+    videoL.currentTime = 0;
+
+    videoA.loop = false;
+    videoL.loop = true;
+
+    // preload
+    videoA.load();
+    videoL.load();
+
+  }, 500);
+
+  setTimeout(() => {
+
+    // --------------------
+    // A表示
+    // --------------------
+
+    videoA.style.display = "block";
+
+    requestAnimationFrame(() => {
+
+      videoA.classList.add("show");
+
+      currentVideo = videoA;
+
+      videoA.play().then(() => {
+
+        fade.classList.remove("show");
+
+        // 前動画をfade-out
+        if (currentVideo &&
+            currentVideo !== videoA) {
+
+          currentVideo.classList.remove("show");
+
+          setTimeout(() => {
+
+            currentVideo.pause();
+
+            currentVideo.style.display = "none";
+
+          }, 250);
+
+        }
+
+      });
+
+    });
+
+    // --------------------
+    // A終了監視
+    // --------------------
+
+    const watch = () => {
+
+      if (!videoA.duration) {
+
+        requestAnimationFrame(watch);
+
+        return;
+
+      }
+
+      const remain =
+        videoA.duration - videoA.currentTime;
+
+      // 終了直前
+      if (remain <= 0.15) {
+
+        // 二重防止
+        if (videoL.classList.contains("show")) {
+          return;
+        }
+
+        // --------------------
+        // Lを先に描画可能状態へ
+        // --------------------
+
+        videoL.style.display = "block";
+
+        videoL.currentTime = 0;
+
+        requestAnimationFrame(() => {
+
+          // 先に表示
+          videoL.classList.add("show");
+
+          // 再生開始
+          videoL.play().then(() => {
+
+            // 次フレームでA消す
+            requestAnimationFrame(() => {
+
+              setTimeout(() => {
+
+                videoA.pause();
+
+                videoA.classList.remove("show");
+                videoA.style.display = "none";
+
+              }, 250);
+
+            });
+
+            currentVideo = videoL;
+
+          });
+
+        });
+
+        return;
+
+      }
+
+      requestAnimationFrame(watch);
+
+    };
+
+    watch();
+
+    // 次メッセージ
+    setTimeout(() => {
+
+      isBusy = false;
+
+      nextStep();
+
+    }, 300);
+
+  }, 600);
 
 }
 
@@ -527,16 +657,6 @@ function fadeOutVideo(callback) {
 /*************************************************
  * ループ制御
  *************************************************/
-
-window.addEventListener("load", () => {
-
-  video = document.getElementById("video");
-
-  init();
-
-  videoLoopWatch();
-
-});
 
 function videoLoopWatch() {
 
