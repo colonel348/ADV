@@ -29,6 +29,8 @@ let pendingLoop = false;
 
 const videoCache = {};
 
+let moviePattern = "Z";
+
 /*************************************************
  * 動画プリロード
  *************************************************/
@@ -239,6 +241,45 @@ function nextStep() {
 
   }
 
+  // --------------------
+  // Aのみ最後待機
+  // --------------------
+
+  if (
+    moviePattern === "A" &&
+    currentVideo === videoA
+  ) {
+
+    // 次行確認
+    const nextItem =
+      currentData.msgInfo[currentIndex + 1];
+
+    // 次がmovIdなら
+    // 現在が最後A
+    if (
+      nextItem &&
+      "movId" in nextItem
+    ) {
+
+      // メッセージ消す
+      document
+        .getElementById("chrName")
+        .innerText = "";
+
+      document
+        .getElementById("msgBody")
+        .innerHTML = "";
+
+      document
+        .getElementById("nextIcon")
+        .classList.remove("show");
+
+      return;
+
+    }
+
+  }
+
   currentIndex++;
 
   const item =
@@ -327,36 +368,12 @@ function showCurrent() {
     // Lメッセージ待機
     // --------------------
 
-    if (tmgId === "L") {
-
-      // A中なら待機
-      if (currentVideo === videoA) {
-
-        pendingLoop = true;
-
-        return;
-
-      }
-
-      // L未表示なら待機
-      if (currentVideo !== videoL) {
-
-        return;
-
-      }
-
-    }
-
-    // --------------------
-    // Aメッセージなのに
-    // A動画終了済み
-    // --------------------
-
     if (
-      tmgId === "A" &&
-      currentVideo !== videoA &&
-      !pendingLoop
+      tmgId === "L" &&
+      currentVideo === videoA
     ) {
+
+      pendingLoop = true;
 
       return;
 
@@ -401,6 +418,11 @@ function showCurrent() {
       return;
 
     }
+
+    // movId単位で
+    // パターン解析
+    moviePattern =
+      detectMoviePattern(currentIndex);
 
     // 通常動画
     playMovie(item);
@@ -520,14 +542,14 @@ function startTyping(text) {
 
     if (index < fullText.length) {
 
-      let wait = 35;
+      let wait = 10;
 
       if (char === "、") {
-        wait = 120;
+        wait = 40;
       }
 
       if (char === "。") {
-        wait = 250;
+        wait = 60;
       }
 
       typingTimer =
@@ -627,12 +649,66 @@ function playMovie(item) {
 
   }
 
+  // --------------------
+  // Sのみ
+  // --------------------
+
+  if (moviePattern === "S") {
+
+    fadeOutVideo(() => {
+
+      currentVideo = null;
+
+      isBusy = false;
+
+      nextStep();
+
+    }, false);
+
+    return;
+
+  }
+
   const srcA =
     `../data/${evtId}/CPT-${cptId}/${movId}-A.mp4`;
 
   const srcL =
     `../data/${evtId}/CPT-${cptId}/${movId}-L.mp4`;
 
+  // Lのみ
+  if (moviePattern === "L") {
+
+    fade.classList.add("show");
+
+    videoL.src = srcL;
+
+    videoL.currentTime = 0;
+
+    videoL.style.display = "block";
+
+    requestAnimationFrame(() => {
+
+      videoL.classList.add("show");
+
+      currentVideo = videoL;
+
+      videoL.play().then(() => {
+
+        fade.classList.remove("show");
+
+        isBusy = false;
+
+        nextStep();
+
+      });
+
+    });
+
+    return;
+
+  }
+
+  // 通常
   playSeamlessMovie(srcA, srcL);
 
 }
@@ -726,42 +802,19 @@ function playSeamlessMovie(srcA, srcL) {
       // 終了直前
       if (remain <= 0.15) {
 
-        // 次movIdまでに
-        // Lメッセージがあるか確認
-        let hasLMessage = false;
+        // 現在行
+        const currentItem =
+          currentData.msgInfo[currentIndex];
 
-        for (
-          let i = currentIndex + 1;
-          i < currentData.msgInfo.length;
-          i++
+        // --------------------
+        // A→Lパターン
+        // --------------------
+
+        if (
+          moviePattern === "AL" &&
+          currentItem &&
+          currentItem.tmgId === "A"
         ) {
-
-          const nextItem =
-            currentData.msgInfo[i];
-
-          // 次動画で終了
-          if ("movId" in nextItem) {
-            break;
-          }
-
-          // L発見
-          if (
-            nextItem.tmgId === "L"
-          ) {
-
-            hasLMessage = true;
-
-            break;
-
-          }
-
-        }
-
-        // --------------------
-        // L待機あり
-        // --------------------
-
-        if (hasLMessage) {
 
           pendingLoop = true;
 
@@ -776,6 +829,55 @@ function playSeamlessMovie(srcA, srcL) {
             videoL.style.display = "block";
 
             currentVideo = null;
+
+          }, 250);
+
+          return;
+
+        }
+
+        // --------------------
+        // Aのみ
+        // --------------------
+
+        if (moviePattern === "A") {
+
+          // 次行確認
+          const nextItem =
+            currentData.msgInfo[currentIndex + 1];
+
+          // --------------------
+          // まだAテキスト残ってる
+          // --------------------
+
+          if (
+            nextItem &&
+            !("movId" in nextItem)
+          ) {
+
+            return;
+
+          }
+
+          // --------------------
+          // 最後A終了済み
+          // --------------------
+
+          videoA.classList.remove("show");
+
+          setTimeout(() => {
+
+            videoA.pause();
+
+            videoA.style.display = "none";
+
+            currentVideo = null;
+
+            isBusy = false;
+
+            currentIndex++;
+
+            showCurrent();
 
           }, 250);
 
@@ -1000,5 +1102,99 @@ function videoLoopWatch() {
     video.play().catch(() => {});
 
   }
+
+}
+
+/*************************************************
+ * movIdブロックの
+ * 動画パターン取得
+ *************************************************/
+function detectMoviePattern(startIndex) {
+
+  const tmgSet = new Set();
+
+  for (
+    let i = startIndex + 1;
+    i < currentData.msgInfo.length;
+    i++
+  ) {
+
+    const item =
+      currentData.msgInfo[i];
+
+    // 次movIdで終了
+    if ("movId" in item) {
+      break;
+    }
+
+    // tmg収集
+    if (item.tmgId) {
+
+      tmgSet.add(item.tmgId);
+
+    }
+
+  }
+
+  const patterns =
+    [...tmgSet];
+
+  // --------------------
+  // A→L
+  // --------------------
+
+  if (
+    patterns.includes("A") &&
+    patterns.includes("L")
+  ) {
+
+    return "AL";
+
+  }
+
+  // --------------------
+  // Aのみ
+  // --------------------
+
+  if (
+    patterns.length === 1 &&
+    patterns[0] === "A"
+  ) {
+
+    return "A";
+
+  }
+
+  // --------------------
+  // Lのみ
+  // --------------------
+
+  if (
+    patterns.length === 1 &&
+    patterns[0] === "L"
+  ) {
+
+    return "L";
+
+  }
+
+  // --------------------
+  // Sのみ
+  // --------------------
+
+  if (
+    patterns.length === 1 &&
+    patterns[0] === "S"
+  ) {
+
+    return "S";
+
+  }
+
+  // --------------------
+  // Zのみ
+  // --------------------
+
+  return "Z";
 
 }

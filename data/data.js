@@ -22,12 +22,12 @@ const evtData = [
     { cptId: "2", extLv: "C", ptnId: "V2", plcNm: "スタジオ"} // ★
   ]},
 
-  { evtId: "AK-S2-C2", evtNm: "デッサン編", cpt:[
+  { evtId: "AK-S2-C2", evtNm: "白いキャンバスに、熱を落として", cpt:[
     { cptId: "2", extLv: "B", ptnId: "V1", plcNm: "美術教室"}, // ●
     { cptId: "3", extLv: "C", ptnId: "L3", plcNm: "美術教室"} // ●
   ]},
 
-  { evtId: "AK-S3-E1", evtNm: "お届け編", cpt:[
+  { evtId: "AK-S3-E1", evtNm: "君への荷物", cpt:[
     { cptId: "1", extLv: "B", ptnId: "V3", plcNm: "こはねの部屋"}, // ★
     { cptId: "2", extLv: "E", ptnId: "V2", plcNm: "住宅街"} // ★
   ]},
