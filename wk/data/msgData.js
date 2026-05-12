@@ -1,27 +1,40 @@
 const msgData = [
 
-{ evtId: "AK-S2-C1", evtNm: "特訓編", msgInfo:[
+{ evtId: "AK-S3-E1", msgInfo:[
 
-  { movId: "plg", title: "ああああ"},
-    { chrNm: "Aさん", tmgId:"Z", msgTxt: "プロローグテキスト1"}, 
+  { movId: "plg", title: "こはねの部屋"},
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "「……あ、もうこんな時間。早く準備して、学校に行かなきゃ」"},
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "（あれっ、東雲くんから電話……？）"},
+    { tmgId:"L", chrNm: "こはね", msgTxt: "「おはよう、東雲くん。こんな朝早くから、どうしたの？」"},
 
-  { movId: "evt1"}, 
-    { chrNm: "Aさん", tmgId:"A", msgTxt: "段落1テキスト1、段落1テキスト1。段落1テあああああキスト1段落1テキスト1。段落1テあああああキスト1。"}, 
-    { chrNm: "Bさん", tmgId:"A", msgTxt: "段落1テキスト2"}, 
-    { chrNm: "Cさん", tmgId:"L", msgTxt: "段落1テキスト3"}, 
+  { movId: "evt1"},
+    { tmgId:"L", chrNm: "こはね", msgTxt: "「……えっ、特訓？…今から、やるの？」"},
+    { tmgId:"L", chrNm: "こはね", msgTxt: "「今日は宮女を休んで、神山高校まで来てほしいって……」"},
 
-//  { movId: "evt3"}, 
-//    { chrNm: "Aさん", tmgId:"S", msgTxt: "段落1テキスト1、段落1テキスト1。段落1テあああああキスト1段落1テキスト1。段落1テあああああキスト1。"}, 
-//    { chrNm: "Bさん", tmgId:"S", msgTxt: "段落1テキスト2"}, 
-//    { chrNm: "Cさん", tmgId:"S", msgTxt: "段落1テキスト3"}, 
+  { movId: "evt2"},
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "「えっ……！？ ぜ、全裸でそこまで歩いてこい、って……っ！？」"},
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "「で、でも……っ。夜とは違うよ……！ 今はもう明るいし、外には人がたくさんいるのに……っ！」"},
 
-  { movId: "evt2"}, 
-    { chrNm: "Aさん", tmgId:"Z", msgTxt: "段落2テキスト1"}, 
-    { chrNm: "Bさん", tmgId:"Z", msgTxt: "段落2テキスト2"}, 
-    { chrNm: "Cさん", tmgId:"Z", msgTxt: "段落2テキスト3"}, 
+  { movId: "evt3"},
+    { tmgId:"A", chrNm: "こはね", msgTxt: "「……あ、待って、まだ話が……！」"},
+    { tmgId:"A", chrNm: "こはね", msgTxt: "「……電話切れちゃった」"},
+
+  { movId: "spc"},
+    { tmgId:"S", chrNm: "こはね", msgTxt: "「はぁ……っ、はぁ……。どうしよう、本当に裸で外に出るんだ……」"},
+    { tmgId:"S", chrNm: "こはね", msgTxt: "「足の震えが止まらない……。でも、ここで諦めたら強くなんてなれないよね…」"},
+    { tmgId:"S", chrNm: "こはね", msgTxt: "（大丈夫。これは私が自分を変えるための、大切なステップなんだから……！）"},
+
+  { movId: "evt4"},
+    { tmgId:"A", chrNm: "こはね", msgTxt: "「……っ。全部脱がなきゃ。……今、外はもう通勤や通学の人たちがたくさん歩いてるんだよね……」"},
+    { tmgId:"A", chrNm: "こはね", msgTxt: "（……うぅ、裸で、あんなに人通りの多い道を歩くなんて……っ」"},
+    { tmgId:"L", chrNm: "こはね", msgTxt: "（この身体を……たくさんの人に見られちゃうんだ…。そう思うだけで、頭がくらくらする……っ）"},
+    { tmgId:"L", chrNm: "こはね", msgTxt: "（……っ、ダメ。弱気になっちゃダメだ。恥ずかしさに負けないくらい、心を鍛えるんだ）"},
+    { tmgId:"L", chrNm: "こはね", msgTxt: "「待っててね、東雲くん。私、逃げずに……今の自分を、変えてみせるから……っ！」"},
 
   { movId: "elg"},
-    { chrNm: "Aさん", tmgId:"Z", msgTxt: "段落3テキスト1"}
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "（……うぅ。廊下を歩くだけでも、……心臓が痛いよ……っ）"},
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "（心臓の音がすごくうるさい……。玄関のドアを開けたら、もう……後戻りはできないんだ……っ）"},
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "「……いって、きます……っ」"}
 
 ]}
 
