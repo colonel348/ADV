@@ -36,29 +36,86 @@ let moviePattern = "Z";
  *************************************************/
 function preloadMovies() {
 
-  const evtId = currentData.evtId;
-
-  const cptId = "1";
-
   currentData.msgInfo.forEach(item => {
 
     // 動画なし
     if (
       !item.movId ||
       item.movId === "plg" ||
+      item.movId === "spc" ||
       item.movId === "elg"
     ) {
       return;
     }
 
-    // A/L両方
-    const sources = [
+    // movIdごとの
+    // パターン取得
+    const pattern =
+      detectMoviePattern(
+        currentData.msgInfo.indexOf(item)
+      );
 
-      `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
+    let sources = [];
 
-      `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
+    // --------------------
+    // A→L
+    // --------------------
 
-    ];
+    if (pattern === "AL") {
+
+      sources = [
+
+        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
+
+        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
+
+      ];
+
+    }
+
+    // --------------------
+    // Aのみ
+    // --------------------
+
+    else if (pattern === "A") {
+
+      sources = [
+
+        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`
+
+      ];
+
+    }
+
+    // --------------------
+    // Lのみ
+    // --------------------
+
+    else if (pattern === "L") {
+
+      sources = [
+
+        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
+
+      ];
+
+    }
+
+    // --------------------
+    // Zのみ
+    // --------------------
+
+    else if (pattern === "Z") {
+
+      sources = [
+
+        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
+
+        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
+
+      ];
+
+    }
 
     sources.forEach(src => {
 
@@ -144,9 +201,7 @@ window.addEventListener("load", () => {
 
 function init() {
 
-  const params = new URLSearchParams(location.search);
-
-  const evtId = params.get("evtId");
+  setParam();
 
   currentData = msgData.find(v => v.evtId === evtId);
 
@@ -684,6 +739,8 @@ function playMovie(item) {
 
     videoL.currentTime = 0;
 
+    videoL.loop = true;
+
     videoL.style.display = "block";
 
     requestAnimationFrame(() => {
@@ -847,19 +904,6 @@ function playSeamlessMovie(srcA, srcL) {
             currentData.msgInfo[currentIndex + 1];
 
           // --------------------
-          // まだAテキスト残ってる
-          // --------------------
-
-          if (
-            nextItem &&
-            !("movId" in nextItem)
-          ) {
-
-            return;
-
-          }
-
-          // --------------------
           // 最後A終了済み
           // --------------------
 
@@ -874,6 +918,15 @@ function playSeamlessMovie(srcA, srcL) {
             currentVideo = null;
 
             isBusy = false;
+
+            if (
+              nextItem &&
+              !("movId" in nextItem)
+            ) {
+
+              return;
+
+            }
 
             currentIndex++;
 

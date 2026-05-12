@@ -14,10 +14,10 @@ function setParam() {
 
     var urlParams = new URLSearchParams(window.location.search);
 
-    if (urlParams.has('cptIdx')) {
-        cptIdx = Number(urlParams.get('cptIdx'));
+    if (urlParams.has('cptId')) {
+        cptId = Number(urlParams.get('cptId'));
     } else {
-        cptIdx = 0;
+        cptIdx = 1;
     }
 
     if (urlParams.has('chrId')) {
