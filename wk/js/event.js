@@ -203,7 +203,7 @@ function init() {
 
   setParam();
 
-  currentData = msgData.find(v => v.evtId === evtId);
+  currentData = msgData.find(v => v.evtId === evtId && v.cptId === cptId);
 
   if (!currentData) {
     alert("データなし");
@@ -397,11 +397,103 @@ function nextStep() {
   }
 
   if (currentIndex >= currentData.msgInfo.length) {
-    console.log("終了");
-    return;
+    
+    const nextCpt = getNextCpt();
+
+    // 画面遷移
+    setTimeout(() => {
+      location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId;
+    }, 520);
+
   }
 
   showCurrent();
+
+}
+
+
+/*************************************************
+ * 次のチャプター取得
+ *************************************************/
+ function getNextCpt() {
+
+  // 現在evtのindex
+  const evtIndex =
+    evtData.findIndex(
+      v => v.evtId === evtId
+    );
+
+  // 見つからない
+  if (evtIndex === -1) {
+    return null;
+  }
+
+  const currentEvt =
+    evtData[evtIndex];
+
+  // --------------------
+  // 同evt内の次cpt
+  // --------------------
+
+  const nextCpt =
+    currentEvt.cpt.find(
+      v => Number(v.cptId) === Number(cptId) + 1
+    );
+
+  // 次cpt存在
+  if (nextCpt) {
+
+    return {
+      evtId: currentEvt.evtId,
+      cptId: nextCpt.cptId
+    };
+
+  }
+
+  // 現evt先頭cpt
+  const firstCurrentCptId =
+    currentEvt.cpt[0].cptId;
+
+  // --------------------
+  // 次evt確認
+  // --------------------
+
+  const nextEvt =
+    evtData[evtIndex + 1];
+
+  // 次evtなし
+  if (!nextEvt) {
+
+    return {
+      evtId: currentEvt.evtId,
+      cptId: firstCurrentCptId
+    };
+
+  }
+
+  // 先頭2文字比較
+  const currentPrefix =
+    currentEvt.evtId.substring(0, 2);
+
+  const nextPrefix =
+    nextEvt.evtId.substring(0, 2);
+
+  // 別キャラなら
+  // 現evt先頭へ戻る
+  if (currentPrefix !== nextPrefix) {
+
+    return {
+      evtId: currentEvt.evtId,
+      cptId: firstCurrentCptId
+    };
+
+  }
+
+  // 次evt先頭cpt
+  return {
+    evtId: nextEvt.evtId,
+    cptId: nextEvt.cpt[0].cptId
+  };
 
 }
 
@@ -672,10 +764,6 @@ function finishTyping() {
 function playMovie(item) {
 
   isBusy = true;
-
-  const evtId = currentData.evtId;
-
-  const cptId = "1";
 
   const movId = item.movId;
 

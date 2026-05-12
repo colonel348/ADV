@@ -15,9 +15,9 @@ function setParam() {
     var urlParams = new URLSearchParams(window.location.search);
 
     if (urlParams.has('cptId')) {
-        cptId = Number(urlParams.get('cptId'));
+        cptId = String(urlParams.get('cptId'));
     } else {
-        cptIdx = 1;
+        cptId;
     }
 
     if (urlParams.has('chrId')) {
@@ -33,6 +33,8 @@ function setParam() {
     }
 
     tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];
+
+    cptIdx = tgtEvtData.cpt.findIndex(v => v.cptId === cptId);
 
 }
 
