@@ -91,8 +91,8 @@ html, body {
   background:
     linear-gradient(
       to top,
-      rgba(0,0,0,0.85),
-      rgba(0,0,0,0.5),
+      rgba(0,0,0,0.75),
+      rgba(0,0,0,0.3),
       transparent
     );
 
@@ -102,8 +102,8 @@ html, body {
 
 #chrName {
   font-size: 18px;
-  font-weight: bold;
   margin-bottom: 4px;
+  font-weight: bold;
 }
 
 #msgText {
@@ -124,6 +124,114 @@ html, body {
 
 .msg-show {
   opacity: 1;
+}
+
+/* --------------------
+ * 共通文字
+ * -------------------- */
+
+#chrName,
+#msgBody {
+
+  color: white;
+
+  text-shadow:
+    -1px -1px 0 #333,
+     1px -1px 0 #333,
+    -1px  1px 0 #333,
+     1px  1px 0 #333,
+     0px  1px 0 #333,
+     1px  0px 0 #333,
+    -1px  0px 0 #333,
+     0px -1px 0 #333;
+
+}
+
+/* --------------------
+ * キャラ名
+ * -------------------- */
+
+#chrName {
+
+  position: relative;
+
+  display: inline-block;
+
+  padding-bottom: 6px;
+
+  z-index: 1;
+
+}
+
+/* --------------------
+ * 下ライン共通
+ * -------------------- */
+
+#chrName::after {
+
+  content: "";
+
+  position: absolute;
+
+  z-index: -1;
+
+  left: -10px;
+  bottom: 5px;
+
+  width: 220px;
+  height: 10px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--line) 90%, transparent) 10%,
+      color-mix(in srgb, var(--line) 70%, transparent) 30%,
+      color-mix(in srgb, var(--line) 30%, transparent) 70%,
+      transparent 100%
+    );
+
+}
+
+/* --------------------
+ * こはね
+ * -------------------- */
+
+.name-kohane {
+  --line: #d96a98;
+}
+
+/* --------------------
+ * 杏
+ * -------------------- */
+
+.name-an {
+  --line: #5fb8d1;
+}
+
+/* --------------------
+ * 彰人
+ * -------------------- */
+
+.name-akito {
+  --line: #d08a52;
+}
+
+/* --------------------
+ * 冬弥
+ * -------------------- */
+
+.name-toya {
+  --line: #6c86c9;
+}
+
+/* --------------------
+ * デフォルト
+ * -------------------- */
+
+.name-default {
+  --line: #777777;
 }
 
 #nextIcon {
@@ -270,7 +378,7 @@ html, body {
 
   width: 70%;
 
-  padding: 12px 15px 15px;
+  padding: 12px 12px 12px;
 
   box-sizing: border-box;
 

@@ -548,17 +548,21 @@ function showCurrent() {
     }
 
     // エピローグ暗転
-    if (item.movId === "elg") {
+    if (
+      item.movId === "elg" ||
+      item.movId === "spc"
+    ) {
 
       fadeOutVideo(() => {
 
+        // 少し待機
         setTimeout(() => {
 
           isBusy = false;
 
           nextStep();
 
-        }, 300);
+        }, 500);
 
       }, false);
 
@@ -639,6 +643,54 @@ function changeMessage(chrNm, msg) {
 
   // 一瞬待ってから表示開始
   requestAnimationFrame(() => {
+
+const msgArea =
+  document.getElementById("msgArea");
+
+  // class初期化
+  chrEl.className = "";
+  msgBody.className = "";
+  msgArea.className = "";
+
+  // --------------------
+  // キャラ別
+  // --------------------
+
+  if (chrNm.includes("こはね")) {
+
+    chrEl.classList.add("name-kohane");
+    msgBody.classList.add("name-kohane");
+
+  }
+
+  else if (chrNm.includes("杏")) {
+
+    chrEl.classList.add("name-an");
+    msgBody.classList.add("name-an");
+
+  }
+
+  else if (chrNm.includes("彰人")) {
+
+    chrEl.classList.add("name-akito");
+    msgBody.classList.add("name-akito");
+
+  }
+
+  else if (chrNm.includes("冬弥")) {
+
+    chrEl.classList.add("name-toya");
+    msgBody.classList.add("name-toya");
+
+  }
+
+  // デフォルト
+  else {
+
+    chrEl.classList.add("name-default");
+    msgBody.classList.add("name-default");
+
+  }
 
     chrEl.innerText = chrNm;
 
