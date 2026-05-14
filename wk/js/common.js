@@ -14,10 +14,10 @@ function setParam() {
 
     var urlParams = new URLSearchParams(window.location.search);
 
-    if (urlParams.has('cptId')) {
-        cptId = String(urlParams.get('cptId'));
+    if (urlParams.has('cptIdx')) {
+        cptIdx = Number(urlParams.get('cptIdx'));
     } else {
-        cptId = '1';
+        cptIdx = 0;
     }
 
     if (urlParams.has('chrId')) {
@@ -33,8 +33,6 @@ function setParam() {
     }
 
     tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];
-
-    cptIdx = tgtEvtData.cpt.findIndex(v => v.cptId === cptId);
 
 }
 

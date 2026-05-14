@@ -6,58 +6,22 @@
     <link rel="stylesheet" href="../css/common.css" type="text/css">
     <link rel="stylesheet" href="../css/event.css" type="text/css">
     <script src="../js/common.js"></script>
+    <script src="../js/event.js"></script>
+    <script src="../data/data.js"></script>
     <title>event</title>
   </head>
-<body>
-  <div id="app">
-    <!-- 動画 -->
-    <div id="videoArea">
-      <div id="videoContainer">
-
-        <video
-          id="videoA"
-          class="movie"
-          playsinline
-          muted
-          webkit-playsinline
-          preload="auto">
-        </video>
-
-        <video
-          id="videoL1"
-          class="movie"
-          playsinline
-          muted
-          webkit-playsinline
-          preload="auto">
-        </video>
-
-        <video
-          id="videoL2"
-          class="movie"
-          playsinline
-          muted
-          webkit-playsinline
-          preload="auto">
-        </video>
-
-      </div>
-      <div id="fade"></div>
-    </div>
-    <!-- メッセージ -->
-    <div id="msgArea">
-      <div id="chrName"></div>
-      <div id="msgText">
-        <span id="msgBody"></span>
-        <span id="nextIcon">♪</span>
-      </div>
-    </div>
+  <body>
+<div id="videoWrap">
+  <video id="video" playsinline muted preload="auto"></video>
+</div>
+<div id="title-area" class="title-area">
+  <div id="title" class="title">
+    <span class="title-wrap">
+      <span id="title-txt" class="title-txt"></span>
+    </span>
   </div>
-  <div id="titleArea">
-    <div id="titleText"></div>
-  </div>
-  <script src="../data/evtData.js"></script>
-  <script src="../data/msgData.js"></script>
-  <script src="../js/event.js"></script>
-</body>
+</div>
+
+<div id="fade" class="show black"></div>
+  </body>
 </html>

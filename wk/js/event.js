@@ -1,1510 +1,508 @@
 /*************************************************
- * 状態
+ * 動画パターン定義（B:黒 / W:白）
  *************************************************/
+let videoPtn;
 
-let currentIndex = 0;
+const ptnV1 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "B" }
+];
 
-let currentData = null;
+const ptnL1 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" }
+];
 
-let videoA;
-let videoL1;
-let videoL2;
+const ptnV2 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt2", loop: true,  fadeIn: "W", fadeOut: "B" }
+];
 
-let activeLoopVideo = null;
-let standbyLoopVideo = null;
+const ptnL2 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "B" }
+];
 
-let currentVideo = null;
+const ptnV3 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt2", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt3", loop: false, fadeIn: "B", fadeOut: "B" }
+];
 
-let fade;
+const ptnL3 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt3", loop: true,  fadeIn: "W", fadeOut: "B" }
+];
 
-let isBusy = false;
+const ptnV4 = [
+  { src: "evt1", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt2", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt3", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt4", loop: true,  fadeIn: "W", fadeOut: "B" }
+];
 
-let loopMin = 0;
-
-let typingTimer = null;
-
-let isTyping = false;
-
-let fullText = "";
-
-let isTitleShowing = false;
-
-let pendingLoop = false;
-
-const videoCache = {};
-
-let moviePattern = "Z";
-
-let loopWatchActive = false;
-
-// L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.15;
-// 次L動画play後
-// fade開始まで待つms
-const LOOP_FADE_WAIT = 70;
-// fade時間
-const LOOP_FADE_TIME = 500;
+const ptnL4 = [
+  { src: "evt1", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt2", loop: false, fadeIn: "B", fadeOut: "W" },
+  { src: "evt3", loop: true,  fadeIn: "W", fadeOut: "B" },
+  { src: "evt4", loop: false, fadeIn: "B", fadeOut: "B" }
+];
 
 /*************************************************
- * 動画プリロード
+ * 状態管理
  *************************************************/
-function preloadMovies() {
+let currentIndex = 0;
+let loadedCount = 0;
+let isReady = false;
+let isTransitioning = false;
+let firstPlayDone = false;
+let timeUpdateHandler = null;
 
-  currentData.msgInfo.forEach(item => {
+let whiteFadeTimer = null;
+const WHITE_HOLD = 800; // 白フェード時のタメ(ms)
+const BLACK_HOLD = 200; // 黒フェード時のタメ(ms)
 
-    // 動画なし
-    if (
-      !item.movId ||
-      item.movId === "plg" ||
-      item.movId === "spc" ||
-      item.movId === "elg"
-    ) {
-      return;
-    }
+let video, fade, videoWrap;
+let loopRAF = null;
+const videoCache = [];
 
-    // movIdごとの
-    // パターン取得
-    const pattern =
-      detectMoviePattern(
-        currentData.msgInfo.indexOf(item)
-      );
+let pageStartTime = 0;
+const FIRST_PLAY_DELAY = 3000;
+let firstVideoStarted = false;
 
-    let sources = [];
+let fadeOutTriggered = false; // ★追加：早期フェード発火管理
+const EARLY_FADE_TIME = 0.8;  // ★動画終了何秒前にフェード開始
 
-    // --------------------
-    // A→L
-    // --------------------
+let longPressTimer = null;
+let isLongPressTriggered = false;
+const LONG_PRESS_TIME = 1000;
 
-    if (pattern === "AL") {
+/*************************************************
+ * ユーティリティ
+ *************************************************/
 
-      sources = [
+/** フェード色正規化 */
+function normalizeColor(c) {
+  if (!c) return "B";
+  const v = String(c).toUpperCase();
+  return (v === "W" || v === "WHITE") ? "W" : "B";
+}
 
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
+/** iOS判定 */
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
 
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
+/** 動画パス生成 */
+function buildSrc(name) {
+  return `../data/${tgtEvtData.evtId}/CPT-${tgtEvtData.cpt[cptIdx].cptId}/${name}.mp4`;
+}
 
-      ];
+/** 白遅延クリア */
+function clearWhiteDelay() {
+  if (whiteFadeTimer) {
+    clearTimeout(whiteFadeTimer);
+    whiteFadeTimer = null;
+  }
+}
 
-    }
+/*************************************************
+ * 動画パターン選択
+ *************************************************/
+function setVideo() {
+  if (tgtEvtData.cpt[cptIdx].ptnId == "V1") {
+    videoPtn = ptnV1;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L1") {
+    videoPtn = ptnL1;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "V2") {
+    videoPtn = ptnV2;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L2") {
+    videoPtn = ptnL2;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "V3") {
+    videoPtn = ptnV3;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L3") {
+    videoPtn = ptnL3;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "V4") {
+    videoPtn = ptnV4;
+  } else if (tgtEvtData.cpt[cptIdx].ptnId == "L4") {
+    videoPtn = ptnL4;
+  } 
+}
 
-    // --------------------
-    // Aのみ
-    // --------------------
+/*************************************************
+ * プリロード
+ *************************************************/
+function preloadVideos() {
+  videoPtn.forEach((item, index) => {
+    const v = document.createElement("video");
 
-    else if (pattern === "A") {
+    v.src = buildSrc(item.src);
+    v.preload = "auto";
+    v.muted = true;
+    v.playsInline = true;
 
-      sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`
-
-      ];
-
-    }
-
-    // --------------------
-    // Lのみ
-    // --------------------
-
-    else if (pattern === "L") {
-
-      sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
-
-      ];
-
-    }
-
-    // --------------------
-    // Zのみ
-    // --------------------
-
-    else if (pattern === "Z") {
-
-      sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
-
-      ];
-
-    }
-
-    sources.forEach(src => {
-
-      // 重複防止
-      if (videoCache[src]) return;
-
-      const v =
-        document.createElement("video");
-
-      v.src = src;
-
-      v.preload = "auto";
-
-      v.muted = true;
-
-      v.playsInline = true;
-
-      v.setAttribute(
-        "webkit-playsinline",
-        "true"
-      );
-
-      // preload開始
-      v.load();
-
-      // キャッシュ保存
-      videoCache[src] = v;
-
-      // iOS向けwarmup
-      const warmup = () => {
-
-        v.play()
-          .then(() => {
-
-            v.pause();
-
-            v.currentTime = 0;
-
-          })
-          .catch(() => {});
-
-      };
-
-      if (v.readyState >= 1) {
-
-        warmup();
-
-      } else {
-
-        v.addEventListener(
-          "loadedmetadata",
-          warmup,
-          { once: true }
-        );
-
+    v.addEventListener("loadeddata", () => {
+      loadedCount++;
+      if (loadedCount === videoPtn.length) {
+        isReady = true;
+        playVideo(0);
       }
-
     });
 
+    v.load();
+    videoCache[index] = v;
   });
-
 }
 
 /*************************************************
- * 初期化
+ * フェード色適用
  *************************************************/
-
-window.addEventListener("load", () => {
-
-  videoA = document.getElementById("videoA");
-  videoL1 = document.getElementById("videoL1");
-  videoL2 = document.getElementById("videoL2");
-
-  activeLoopVideo = videoL1;
-  standbyLoopVideo = videoL2;
-  
-  fade = document.getElementById("fade");
-
-  init();
-
-  document.body.addEventListener("click", nextStep);
-
-});
-
-/*************************************************
- * 開始
- *************************************************/
-
-function init() {
-
-  setParam();
-
-  currentData = msgData.find(v => v.evtId === evtId && v.cptId === cptId);
-
-  if (!currentData) {
-    alert("データなし");
-    return;
+function applyFadeColor(color) {
+  if (color === "B") {
+    fade.classList.add("black");
+  } else {
+    fade.classList.remove("black");
   }
-
-  // 動画事前読込
-  preloadMovies();
-
-  // 初回だけ1秒待つ
-  setTimeout(() => {
-
-    showCurrent();
-
-  }, 1000);
-
 }
 
 /*************************************************
- * 次へ
+ * メイン再生制御
  *************************************************/
+function playVideo(index) {
+  clearWhiteDelay();
 
-function nextStep() {
+  // ★ 初回動画だけ2.5秒制御
+  if (!firstVideoStarted && index === 0) {
+    const elapsed = performance.now() - pageStartTime;
+    const wait = FIRST_PLAY_DELAY - elapsed;
 
-  // タイトル表示中
-  if (isTitleShowing) {
-
-    isTitleShowing = false;
-
-    const area =
-      document.getElementById("titleArea");
-
-    area.classList.remove("show");
-
-    setTimeout(() => {
-
-      currentIndex++;
-
-      showCurrent();
-
-    }, 300);
-
-    return;
-
-  }
-
-  // 動画切替中
-  if (isBusy) return;
-
-  // 文字送り中なら全文表示だけ
-  if (isTyping) {
-
-    finishTyping();
-
-    return;
-  }
-
-  // 現在メッセージを即fade-out
-  document
-    .getElementById("chrName")
-    .classList.add("msg-fade");
-
-  document
-    .getElementById("msgBody")
-    .classList.add("msg-fade");
-
-  document
-    .getElementById("nextIcon")
-    .classList.remove("show");
-
-  document
-    .getElementById("nextIcon")
-    .classList.add("msg-fade");
-
-  // 現在行
-  const currentItem =
-    currentData.msgInfo[currentIndex];
-
-  // --------------------
-  // Lメッセージ待機中
-  // --------------------
-
-  if (
-    currentItem &&
-    currentItem.tmgId === "L" &&
-    currentVideo === videoA
-  ) {
-
-    return;
-
-  }
-
-  // --------------------
-  // Aのみ最後待機
-  // --------------------
-
-  if (
-    moviePattern === "A" &&
-    currentVideo === videoA
-  ) {
-
-    // 次行確認
-    const nextItem =
-      currentData.msgInfo[currentIndex + 1];
-
-    // 次がmovIdなら
-    // 現在が最後A
-    if (
-      nextItem &&
-      "movId" in nextItem
-    ) {
-
-      // メッセージ消す
-      document
-        .getElementById("chrName")
-        .innerText = "";
-
-      document
-        .getElementById("msgBody")
-        .innerHTML = "";
-
-      document
-        .getElementById("nextIcon")
-        .classList.remove("show");
-
+    if (wait > 0) {
+      firstVideoStarted = true;
+      setTimeout(() => playVideo(index), wait);
       return;
-
     }
-
+    firstVideoStarted = true;
   }
 
-  currentIndex++;
+  currentIndex = index;
+  isTransitioning = false;
+  stopSeamlessLoop();
 
-  const item =
-    currentData.msgInfo[currentIndex];
+  const data = videoPtn[index];
+  const fadeInColor = normalizeColor(data.fadeIn);
 
-  // Lテキスト
-  if (
-    item &&
-    item.tmgId === "L" &&
-    pendingLoop
-  ) {
+  // フェード色を先に確定
+  applyFadeColor(fadeInColor);
 
-    pendingLoop = false;
+  if (fadeInColor === "W") {
+    // ===== 白フェードイン =====
 
-    currentVideo = activeLoopVideo;
+    // 一度黒で完全遮蔽 → 白へ切替（チラ見防止）
+    fade.classList.add("black", "show");
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
+      applyFadeColor("W");
 
-      showCurrent();
+      requestAnimationFrame(() => {
+        startVideoCore(index, data, fadeInColor);
 
-    }, 120);
+        whiteFadeTimer = setTimeout(() => {
+          fade.classList.remove("show");
 
-    return;
+          requestAnimationFrame(() => {
+            videoWrap.style.transition = "transform 2s linear, filter 2.0s ease-out";
+            videoWrap.style.transform = "scale(1.0)";
+            videoWrap.style.filter = "blur(0px)";
+          });
+        }, WHITE_HOLD);
+      });
+    });
 
+  } else {
+    // ===== 黒フェードイン（遅延なし） =====
+
+    fade.classList.add("show");
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+
+        startVideoCore(index, data, fadeInColor);
+
+        // 黒タメ
+        blackFadeTimer = setTimeout(() => {
+          fade.classList.remove("show");
+        }, BLACK_HOLD);
+      });
+    });
   }
-
-  if (currentIndex >= currentData.msgInfo.length) {
-    
-    const nextCpt = getNextCpt();
-
-    // 画面遷移
-    setTimeout(() => {
-      location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId;
-    }, 520);
-
-  }
-
-  showCurrent();
-
 }
 
-
 /*************************************************
- * 次のチャプター取得
+ * 実際の動画ロード＆再生
  *************************************************/
- function getNextCpt() {
+function startVideoCore(index, data, fadeInColor) {
+  const src = buildSrc(data.src);
 
-  // 現在evtのindex
-  const evtIndex =
-    evtData.findIndex(
-      v => v.evtId === evtId
-    );
-
-  // 見つからない
-  if (evtIndex === -1) {
-    return null;
+  if (timeUpdateHandler) {
+    video.removeEventListener("timeupdate", timeUpdateHandler);
+    timeUpdateHandler = null;
   }
 
-  const currentEvt =
-    evtData[evtIndex];
+  // 初回は完全非表示（チラ見防止）
+  if (!firstPlayDone) {
+    video.style.display = "none";
+  }
 
-  // --------------------
-  // 同evt内の次cpt
-  // --------------------
+  video.style.visibility = "hidden";
+  video.style.opacity = "0";
 
-  const nextCpt =
-    currentEvt.cpt.find(
-      v => Number(v.cptId) === Number(cptId) + 1
-    );
+  if (video.src !== src) video.src = src;
+  video.currentTime = 0.001;
 
-  // 次cpt存在
-  if (nextCpt) {
+  // ズーム初期値
+  videoWrap.style.transition = "none";
 
-    return {
-      evtId: currentEvt.evtId,
-      cptId: nextCpt.cptId
+  if (fadeInColor === "W") {
+    videoWrap.style.transform = "scale(1.1)";
+    videoWrap.style.filter = "blur(6px)";
+  } else {
+    videoWrap.style.transform = "scale(1)";
+    videoWrap.style.filter = "blur(0px)";
+  }
+
+  // 再生開始
+  if (data.loop && isIOS()) {
+    startSeamlessLoop(video);
+  } else {
+    video.loop = data.loop;
+    video.play().catch(() => {});
+  }
+
+  // 早期フェード監視
+  fadeOutTriggered = false;
+
+  if (!data.loop) {
+    timeUpdateHandler = function () {
+      if (fadeOutTriggered) return;
+      if (!video.duration) return;
+
+      const remain = video.duration - video.currentTime;
+
+      if (remain <= EARLY_FADE_TIME) {
+        fadeOutTriggered = true;
+
+        video.removeEventListener("timeupdate", timeUpdateHandler);
+        timeUpdateHandler = null;
+
+        goNext();
+      }
     };
 
+    video.addEventListener("timeupdate", timeUpdateHandler);
   }
 
-  // 現evt先頭cpt
-  const firstCurrentCptId =
-    currentEvt.cpt[0].cptId;
-
-  // --------------------
-  // 次evt確認
-  // --------------------
-
-  const nextEvt =
-    evtData[evtIndex + 1];
-
-  // 次evtなし
-  if (!nextEvt) {
-
-    return {
-      evtId: currentEvt.evtId,
-      cptId: firstCurrentCptId
-    };
-
-  }
-
-  // 先頭2文字比較
-  const currentPrefix =
-    currentEvt.evtId.substring(0, 2);
-
-  const nextPrefix =
-    nextEvt.evtId.substring(0, 2);
-
-  // 別キャラなら
-  // 現evt先頭へ戻る
-  if (currentPrefix !== nextPrefix) {
-
-    return {
-      evtId: currentEvt.evtId,
-      cptId: firstCurrentCptId
-    };
-
-  }
-
-  // 次evt先頭cpt
-  return {
-    evtId: nextEvt.evtId,
-    cptId: nextEvt.cpt[0].cptId
+  // 最初のフレーム到達後に表示
+  const revealOnPlay = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!firstPlayDone) {
+          video.style.display = "block";
+          firstPlayDone = true;
+        }
+        video.style.visibility = "visible";
+        video.style.opacity = "1";
+      });
+    });
   };
 
+  video.addEventListener("playing", revealOnPlay, { once: true });
+
 }
 
 /*************************************************
- * 現在行表示
+ * iOSシームレスループ
  *************************************************/
+function startSeamlessLoop(v) {
+  const LOOP_MARGIN = 0.06;
 
-function showCurrent() {
-
-  const item = currentData.msgInfo[currentIndex];
-
-  // メッセージ
-  if ("msgTxt" in item) {
-
-    const tmgId =
-      item.tmgId || "Z";
-
-    // --------------------
-    // Lメッセージ待機
-    // --------------------
-
-    if (
-      tmgId === "L" &&
-      currentVideo === videoA
-    ) {
-
-      pendingLoop = true;
-
-      return;
-
+  function checkLoop() {
+    if (v.duration && v.currentTime >= v.duration - LOOP_MARGIN) {
+      v.currentTime = 0.001;
     }
-
-    changeMessage(
-      item.chrNm || "",
-      item.msgTxt || ""
-    );
-
-    return;
-
+    loopRAF = v.requestVideoFrameCallback(checkLoop);
   }
 
-  // 動画系
-  if ("movId" in item) {
+  v.currentTime = 0.001;
+  v.play().then(() => {
+    loopRAF = v.requestVideoFrameCallback(checkLoop);
+  }).catch(() => {});
+}
 
-    // プロローグタイトル
-    if (item.movId === "plg") {
+function stopSeamlessLoop() {
+  if (loopRAF) {
+    try { video.cancelVideoFrameCallback(loopRAF); } catch (e) {}
+    loopRAF = null;
+  }
+}
 
-      showTitle(item.title || "");
+/*************************************************
+ * 次動画へ
+ *************************************************/
+function goNext() {
+  if (!isReady || isTransitioning) return;
 
+  isTransitioning = true;
+
+  const data = videoPtn[currentIndex];
+  const fadeOutColor = normalizeColor(data.fadeOut);
+  const nextIndex = currentIndex + 1;
+
+  applyFadeColor(fadeOutColor);
+  fade.classList.add("show");
+
+  const FADE_TIME = 600; // CSSと一致させる
+
+  setTimeout(() => {
+    // 最後なら遷移
+    if (nextIndex >= videoPtn.length) {
+
+      // ① 同一evt内で次のcptがあるか？
+      const hasNextCpt = tgtEvtData?.cpt && (cptIdx + 1) < tgtEvtData.cpt.length;
+
+      if (hasNextCpt) {
+        // cptIdx = cptIdx+1, evtIdx(=evtIdx)は据え置き
+        window.location.href = `./select.html?chrId=${chrId}&evtId=${evtId}&cptIdx=${cptIdx + 1}`;
+        return;
+      }
+
+      //// ② 次のevtがあるか？
+      //const hasNextEvt = (evtIdx + 1) < evtData.length;
+
+      //if (hasNextEvt) {
+      //  // evtIdx=evtIdx+1, cptIdxは未設定（=パラメータを付けない）
+      //  window.location.href = `./select.html?chrId=${chrId}&evtId=${evtIdx + 1}`;
+      //   return;
+      //}
+
+      // ③ 次のevtも無い → evtIdxは据え置き、cptIdxは未設定
+      window.location.href = `./select.html?chrId=${chrId}&evtId=${evtId}`;
       return;
 
     }
 
-    // エピローグ暗転
-    if (
-      item.movId === "elg" ||
-      item.movId === "spc"
-    ) {
+    // 白のみ追加タメ
+    if (fadeOutColor === "W") {
+      setTimeout(() => playVideo(nextIndex), WHITE_HOLD);
+    } else {
+      playVideo(nextIndex);
+    }
+  }, FADE_TIME);
+}
 
-      fadeOutVideo(() => {
+/*************************************************
+ * ユーザー操作
+ *************************************************/
+function tapAction() {
+  video.addEventListener("click", goNext);
 
-        // 少し待機
+  // -------------------
+  // 長押し開始
+  // -------------------
+  function startLongPress() {
+    if (isTransitioning || isLongPressTriggered) return;
+    longPressTimer = setTimeout(() => {
+      forceExit();
+    }, LONG_PRESS_TIME);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  // iOS / Android
+  video.addEventListener("touchstart", startLongPress, { passive:true });
+  video.addEventListener("touchend", cancelLongPress);
+  video.addEventListener("touchcancel", cancelLongPress);
+
+  video.addEventListener("ended", () => {
+    if (videoPtn[currentIndex].loop) return;
+    if (isTransitioning) return;
+    if (fadeOutTriggered) return; // ★追加（超重要）
+
+    goNext();
+  });
+}
+
+/*************************************************
+ * タイトル表示
+ *************************************************/
+function dispTitle() {
+
+  // タイトル描画
+  document.querySelector('#title-txt').innerHTML = tgtEvtData.cpt[cptIdx].plcNm;
+
+  setTimeout(() => {
+    document.getElementById('title').classList.add('is-animated');
+    setTimeout(() => {
+      document.getElementById('title-txt').style.opacity = 1;
+      setTimeout(() => {
+        document.getElementById('title-txt').style.opacity = 0;
         setTimeout(() => {
-
-          isBusy = false;
-
-          nextStep();
-
+          document.getElementById('title').classList.remove('is-animated');
         }, 500);
-
-      }, false);
-
-      return;
-
-    }
-
-    // movId単位で
-    // パターン解析
-    moviePattern =
-      detectMoviePattern(currentIndex);
-
-    // 通常動画
-    playMovie(item);
-
-  }
+      }, 1500);
+    }, 600);
+  }, 400);
 
 }
 
 /*************************************************
  * タイトル表示
  *************************************************/
-function showTitle(title) {
+function forceExit() {
 
-  isTitleShowing = true;
+  if (isLongPressTriggered) return;
 
-  const area =
-    document.getElementById("titleArea");
+  isLongPressTriggered = true;
 
-  const text =
-    document.getElementById("titleText");
+  // 他の遷移と競合しないように止める
+  isTransitioning = true;
 
-  text.innerText = title;
+  clearWhiteDelay();
+  stopSeamlessLoop();
 
-  // animation再発火
-  text.classList.remove("slide-in");
+  if (timeUpdateHandler) {
+    video.removeEventListener("timeupdate", timeUpdateHandler);
+    timeUpdateHandler = null;
+  }
 
-  // 強制reflow
-  void text.offsetWidth;
-
-  // 再付与
-  text.classList.add("slide-in");
-
-  // 暗転
+  // 黒フェード
+  applyFadeColor("B");
   fade.classList.add("show");
 
-  requestAnimationFrame(() => {
-
-    area.classList.add("show");
-
-  });
-
-}
-
-/*************************************************
- * メッセージ変更
- *************************************************/
-function changeMessage(chrNm, msg) {
-
-  const chrEl =
-    document.getElementById("chrName");
-
-  const msgBody =
-    document.getElementById("msgBody");
-
-  const nextIcon =
-    document.getElementById("nextIcon");
-
-  // 前テキストを即消す
-  chrEl.innerText = "";
-  msgBody.innerText = "";
-
-  nextIcon.classList.remove("show");
-
-  chrEl.classList.remove("msg-fade");
-  msgBody.classList.remove("msg-fade");
-  nextIcon.classList.remove("msg-fade");
-
-  // 一瞬待ってから表示開始
-  requestAnimationFrame(() => {
-
-const msgArea =
-  document.getElementById("msgArea");
-
-  // class初期化
-  chrEl.className = "";
-  msgBody.className = "";
-  msgArea.className = "";
-
-  // --------------------
-  // キャラ別
-  // --------------------
-
-  if (chrNm.includes("こはね")) {
-
-    chrEl.classList.add("name-kohane");
-    msgBody.classList.add("name-kohane");
-
-  }
-
-  else if (chrNm.includes("杏")) {
-
-    chrEl.classList.add("name-an");
-    msgBody.classList.add("name-an");
-
-  }
-
-  else if (chrNm.includes("彰人")) {
-
-    chrEl.classList.add("name-akito");
-    msgBody.classList.add("name-akito");
-
-  }
-
-  else if (chrNm.includes("冬弥")) {
-
-    chrEl.classList.add("name-toya");
-    msgBody.classList.add("name-toya");
-
-  }
-
-  // デフォルト
-  else {
-
-    chrEl.classList.add("name-default");
-    msgBody.classList.add("name-default");
-
-  }
-
-    chrEl.innerText = chrNm;
-
-    startTyping(msg);
-
-  });
-
-}
-
-/*************************************************
- * メッセージ送り
- *************************************************/
-function startTyping(text) {
-
-  clearTimeout(typingTimer);
-
-  const msgEl =
-    document.getElementById("msgBody");
-
-  const nextIcon =
-    document.getElementById("nextIcon");
-
-  nextIcon.classList.remove("show");
-
-  fullText = text;
-
-  msgEl.innerHTML = "";
-
-  isTyping = true;
-
-  let index = 0;
-
-  function type() {
-
-    const char = fullText[index];
-
-    // 1文字span生成
-    const span =
-      document.createElement("span");
-
-    span.className = "char";
-
-    span.innerText = char;
-
-    msgEl.appendChild(span);
-
-    index++;
-
-    if (index < fullText.length) {
-
-      let wait = 10;
-
-      if (char === "、") {
-        wait = 40;
-      }
-
-      if (char === "。") {
-        wait = 60;
-      }
-
-      typingTimer =
-        setTimeout(type, wait);
-
-    } else {
-
-      isTyping = false;
-
-      // ♪表示
-      requestAnimationFrame(() => {
-
-        nextIcon.classList.add("show");
-
-      });
-
-    }
-
-  }
-
-  type();
-
-}
-
-/*************************************************
- * 全文表示
- *************************************************/
-function finishTyping() {
-
-  clearTimeout(typingTimer);
-
-  const msgEl =
-    document.getElementById("msgBody");
-
-  msgEl.innerHTML = "";
-
-  for (const char of fullText) {
-
-    const span =
-      document.createElement("span");
-
-    span.className = "char";
-
-    span.style.opacity = 1;
-
-    span.style.transform = "translateY(0)";
-
-    span.innerText = char;
-
-    msgEl.appendChild(span);
-
-  }
-
-  document
-    .getElementById("nextIcon")
-    .classList.add("show");
-
-  isTyping = false;
-
-}
-
-/*************************************************
- * 動画再生
- *************************************************/
-function playMovie(item) {
-
-  isBusy = true;
-
-  const movId = item.movId;
-
-  // 動画なし
-  if (!movId) {
-
-    fadeOutVideo(() => {
-
-      if (currentVideo) {
-
-        currentVideo.pause();
-
-      }
-
-      setTimeout(() => {
-
-        isBusy = false;
-
-        nextStep();
-
-      }, 300);
-
-    }, false);
-
-    return;
-
-  }
-
-  // --------------------
-  // Sのみ
-  // --------------------
-
-  if (moviePattern === "S") {
-
-    fadeOutVideo(() => {
-
-      currentVideo = null;
-
-      isBusy = false;
-
-      nextStep();
-
-    }, false);
-
-    return;
-
-  }
-
-  const srcA =
-    `../data/${evtId}/CPT-${cptId}/${movId}-A.mp4`;
-
-  const srcL =
-    `../data/${evtId}/CPT-${cptId}/${movId}-L.mp4`;
-
-  // Lのみ
-  if (moviePattern === "L") {
-
-    fade.classList.add("show");
-
-    startLoopDoubleBuffer(srcL);
-
-    currentVideo = activeLoopVideo;
-
-    setTimeout(() => {
-
-      fade.classList.remove("show");
-
-      isBusy = false;
-
-      nextStep();
-
-    }, 250);
-
-    return;
-
-  }
-
-  // 通常
-  playSeamlessMovie(srcA, srcL);
-
-}
-
-/*************************************************
- * L動画ダブルバッファループ
- *************************************************/
-function startLoopDoubleBuffer(srcL) {
-
-  // 初回
-  activeLoopVideo.src = srcL;
-  activeLoopVideo.currentTime = 0;
-
-  videoL1.classList.remove("show");
-  videoL2.classList.remove("show");
-
-  videoL1.pause();
-  videoL2.pause();
-
-  videoL1.style.display = "none";
-  videoL2.style.display = "none";
-
-  // activeだけ復帰
-  activeLoopVideo.style.display = "block";
-  activeLoopVideo.classList.add("front");
-
-  requestAnimationFrame(() => {
-
-    activeLoopVideo.classList.add("show");
-
-    activeLoopVideo.play();
-
-  });
-
+  // フェード後遷移
   setTimeout(() => {
 
-    videoA.classList.remove("show");
+    // 好きな遷移先に変更可
+    window.location.href = "./select.html";
 
-  }, 2000);
-
-  // 次待機
-  standbyLoopVideo.src = srcL;
-  standbyLoopVideo.load();
-
-  standbyLoopVideo.play()
-  .then(() => {
-
-    requestAnimationFrame(() => {
-
-      standbyLoopVideo.pause();
-
-      standbyLoopVideo.currentTime = 0;
-
-    });
-
-  })
-  .catch(() => {});
-
-  watchLoopSeamless(srcL);
-
+  }, 600); // goNextのFADE_TIMEと合わせる
 }
 
 /*************************************************
- * L動画シームレス監視
+ * 初期化
  *************************************************/
-function watchLoopSeamless(srcL) {
-
-  if (loopWatchActive) {
-    return;
-  }
-
-  loopWatchActive = true;
-
-  const watch = () => {
-
-    if (!activeLoopVideo.duration) {
-
-      requestAnimationFrame(watch);
-
-      return;
-
-    }
-
-    const remain =
-      activeLoopVideo.duration -
-      activeLoopVideo.currentTime;
-
-    // 終了直前
-    if (remain <= LOOP_SWITCH_BEFORE) {
-
-      switchLoopVideo(srcL);
-
-      return;
-
-    }
-
-    requestAnimationFrame(watch);
-
-  };
-
-  watch();
-
-}
-
-/*************************************************
- * L動画切替
- *************************************************/
-function switchLoopVideo(srcL) {
-
-  const current = activeLoopVideo;
-  const next = standbyLoopVideo;
-
-  next.pause();
-  next.currentTime = 0;
-
-  next.style.display = "block";
-
-  // 次動画を前面へ
-  next.classList.add("front");
-
-  // 現在動画を背面へ
-  current.classList.remove("front");
-
-  // --------------------
-  // ① 先にplay
-  // --------------------
-
-  next.play()
-    .then(() => {
-
-      // --------------------
-      // ② Safari decode待機
-      // --------------------
-
-      // 次を前面
-      next.classList.add("front");
-
-      setTimeout(() => {
-
-        loopWatchActive = false;
-
-        // 次表示
-        next.classList.add("show");
-
-        setTimeout(() => {
-
-          // 現在非表示
-          current.classList.remove("show");
-
-          current.pause();
-
-          current.style.display = "none";
-
-          // 現在を背面へ
-          current.classList.remove("front");
-
-        }, LOOP_FADE_TIME);
-
-        // swap
-        activeLoopVideo = next;
-        currentVideo = activeLoopVideo;
-        standbyLoopVideo = current;
-
-        watchLoopSeamless(srcL);
-
-      }, LOOP_FADE_WAIT);
-
-    })
-    .catch(() => {});
-}
-
-/*************************************************
- * 動画シームレス再生
- *************************************************/
-function playSeamlessMovie(srcA, srcL) {
-
-  fade.classList.add("show");
-
-  setTimeout(() => {
-
-    videoA.classList.remove("show");
-    videoL1.classList.remove("show");
-    videoL2.classList.remove("show");
-
-    videoA.style.display = "none";
-    videoL1.style.display = "none";
-    videoL2.style.display = "none";
-
-    // 停止
-    videoA.pause();
-    videoL1.pause();
-    videoL2.pause();
-
-    videoA.classList.remove("show");
-    videoA.style.display = "none";
-
-    // ソース設定
-    videoA.src = srcA;
-
-    videoA.currentTime = 0;
-
-    // preload
-    videoA.load();
-    videoL1.load();
-    videoL2.load();
-
-    // --------------------
-    // A表示
-    // --------------------
-
-    videoA.style.display = "block";
-
-    requestAnimationFrame(() => {
-
-      videoA.classList.add("show");
-
-      currentVideo = videoA;
-
-      videoA.play().then(() => {
-
-        fade.classList.remove("show");
-
-        // 前動画をfade-out
-        if (currentVideo &&
-            currentVideo !== videoA) {
-
-          currentVideo.classList.remove("show");
-
-          setTimeout(() => {
-
-            currentVideo.pause();
-
-            currentVideo.style.display = "none";
-
-          }, 250);
-
-        }
-
-      });
-
-    });
-
-    // --------------------
-    // A終了監視
-    // --------------------
-
-    const watch = () => {
-
-      if (!videoA.duration) {
-
-        requestAnimationFrame(watch);
-
-        return;
-
-      }
-
-      const remain =
-        videoA.duration - videoA.currentTime;
-
-      // 終了直前
-      if (remain <= 0.15) {
-
-        // 現在行
-        const currentItem =
-          currentData.msgInfo[currentIndex];
-
-        // --------------------
-        // A→Lパターン
-        // --------------------
-
-        if (
-          moviePattern === "AL" &&
-          currentItem &&
-          currentItem.tmgId === "A"
-        ) {
-
-          pendingLoop = true;
-
-          setTimeout(() => {
-
-            videoA.pause();
-           
-            videoA.classList.remove("show");
-
-            videoA.style.display = "none";
-  
-            videoA.currentTime = 0;
-
-          }, 2000);
-
-          startLoopDoubleBuffer(srcL);
-
-          currentVideo = activeLoopVideo;
-
-          return;
-
-        }
-
-        // --------------------
-        // Aのみ
-        // --------------------
-
-        if (moviePattern === "A") {
-
-          // 次行確認
-          const nextItem =
-            currentData.msgInfo[currentIndex + 1];
-
-          // --------------------
-          // 最後A終了済み
-          // --------------------
-
-          videoA.classList.remove("show");
-
-          setTimeout(() => {
-
-            videoA.pause();
-
-            videoA.style.display = "none";
-
-            currentVideo = null;
-
-            isBusy = false;
-
-            if (
-              nextItem &&
-              !("movId" in nextItem)
-            ) {
-
-              return;
-
-            }
-
-            currentIndex++;
-
-            showCurrent();
-
-          }, 250);
-
-          return;
-
-        }
-
-        // --------------------
-        // 通常L切替
-        // --------------------
-
-        startLoopDoubleBuffer(srcL);
-
-        currentVideo = activeLoopVideo;
-        
-        if (pendingLoop) {
-
-          pendingLoop = false;
-
-          requestAnimationFrame(() => {
-
-          showCurrent();
-
-          });
-
-        }
-
-        return;
-
-      }
-
-      requestAnimationFrame(watch);
-
-    };
-
-    watch();
-
-    // 次メッセージ
-    setTimeout(() => {
-
-      isBusy = false;
-
-      nextStep();
-
-    }, 300);
-
-  }, 600);
-
-}
-
-/*************************************************
- * フェードイン再生
- *************************************************/
-function fadeInMovie(src) {
-
-  const chrEl =
-    document.getElementById("chrName");
-
-  const msgBody =
-    document.getElementById("msgBody");
-
-  const nextIcon =
-    document.getElementById("nextIcon");
-
-  // メッセージフェードアウト
-  chrEl.classList.add("msg-fade");
-  msgBody.classList.add("msg-fade");
-  nextIcon.classList.remove("show");
-  nextIcon.classList.add("msg-fade");
-
-  // 動画フェード
-  fade.classList.add("show");
-
-  setTimeout(() => {
-
-    const cachedVideo = videoCache[src];
-
-    if (cachedVideo) {
-      video.src = cachedVideo.src;
-    } else {
-      video.src = src;
-    }
-
-    video.currentTime = 0;
-
-    video.play().catch(() => {});
-
-    video.onloadeddata = () => {
-
-      // 動画フェード解除
-      fade.classList.remove("show");
-
-      // テキストクリア
-      chrEl.innerText = "";
-      msgBody.innerText = "";
-
-      nextIcon.classList.remove("show");
-
-      // 次メッセージへ
-      setTimeout(() => {
-
-        isBusy = false;
-
-        nextStep();
-
-        // 次メッセージ表示時にフェード復帰
-        requestAnimationFrame(() => {
-
-          chrEl.classList.remove("msg-fade");
-          msgBody.classList.remove("msg-fade");
-          nextIcon.classList.remove("msg-fade");
-
-        });
-
-      }, 300);
-
-    };
-
-  }, 600);
-
-}
-
-/*************************************************
- * フェードアウト
- *************************************************/
-function fadeOutVideo(callback, hideMessage = true) {
-
-  const chrEl =
-    document.getElementById("chrName");
-
-  const msgBody =
-    document.getElementById("msgBody");
-
-  const nextIcon =
-    document.getElementById("nextIcon");
-
-  // --------------------
-  // メッセージfade-out
-  // --------------------
-
-  if (hideMessage) {
-
-    chrEl.classList.add("msg-fade");
-    msgBody.classList.add("msg-fade");
-
-    nextIcon.classList.remove("show");
-    nextIcon.classList.add("msg-fade");
-
-  }
-
-  // --------------------
-  // 動画fade-out
-  // --------------------
-
-  if (currentVideo) {
-
-    currentVideo.classList.remove("show");
-
-  }
-
-  // 黒fade
-  fade.classList.add("show");
-
-  setTimeout(() => {
-
-    if (currentVideo) {
-
-      currentVideo.pause();
-
-      currentVideo.style.display = "none";
-
-    }
-
-    callback();
-
-  }, 250);
-
-}
-
-/*************************************************
- * ループ制御
- *************************************************/
-
-function videoLoopWatch() {
-
-  requestAnimationFrame(videoLoopWatch);
-
-  if (!video || !video.duration) return;
-
-  if (loopMin <= 0) return;
-
-  if (video.currentTime >= video.duration - 0.05) {
-
-    video.currentTime = loopMin;
-
-    video.play().catch(() => {});
-
-  }
-
-}
-
-/*************************************************
- * movIdブロックの
- * 動画パターン取得
- *************************************************/
-function detectMoviePattern(startIndex) {
-
-  const tmgSet = new Set();
-
-  for (
-    let i = startIndex + 1;
-    i < currentData.msgInfo.length;
-    i++
-  ) {
-
-    const item =
-      currentData.msgInfo[i];
-
-    // 次movIdで終了
-    if ("movId" in item) {
-      break;
-    }
-
-    // tmg収集
-    if (item.tmgId) {
-
-      tmgSet.add(item.tmgId);
-
-    }
-
-  }
-
-  const patterns =
-    [...tmgSet];
-
-  // --------------------
-  // A→L
-  // --------------------
-
-  if (
-    patterns.includes("A") &&
-    patterns.includes("L")
-  ) {
-
-    return "AL";
-
-  }
-
-  // --------------------
-  // Aのみ
-  // --------------------
-
-  if (
-    patterns.length === 1 &&
-    patterns[0] === "A"
-  ) {
-
-    return "A";
-
-  }
-
-  // --------------------
-  // Lのみ
-  // --------------------
-
-  if (
-    patterns.length === 1 &&
-    patterns[0] === "L"
-  ) {
-
-    return "L";
-
-  }
-
-  // --------------------
-  // Sのみ
-  // --------------------
-
-  if (
-    patterns.length === 1 &&
-    patterns[0] === "S"
-  ) {
-
-    return "S";
-
-  }
-
-  // --------------------
-  // Zのみ
-  // --------------------
-
-  return "Z";
-
-}
+window.addEventListener("load", () => {
+  video = document.getElementById("video");
+  fade = document.getElementById("fade");
+  videoWrap = document.getElementById("videoWrap");
+
+  setParam();
+  setVideo();
+  dispTitle();
+  preloadVideos();
+  tapAction();
+});

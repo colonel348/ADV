@@ -2,124 +2,467 @@
 
 html, body {
   margin: 0;
-  background: #000;
+  padding: 0;
+  background: black;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+  font-family: sans-serif;
 }
 
-/* 動画表示エリア */
-#videoContainer {
+#app {
   position: relative;
   width: 100%;
-  height: 100dvh;
-  overflow: hidden;
+  height: 100%;
 }
 
-#videoWrap {
-  position: relative;
-  width: 100%;
-  height: 100dvh;
-  overflow: hidden;
-  will-change: transform, filter;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+#videoArea {
+  position: absolute;
+  inset: 0;
+  background: black;
 }
 
 #video {
   width: 100%;
-  height: 100dvh;
+  height: 100%;
   object-fit: cover;
 }
 
-/* フェード用 */
+#videoContainer {
+
+  position: absolute;
+
+  inset: 0;
+  
+  isolation: isolate;
+
+}
+
+.movie {
+
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  opacity: 0;
+
+  transition: opacity 0.12s linear;
+
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: opacity;
+
+  pointer-events: none;
+  
+  contain: paint;
+  
+  z-index: 1;
+
+}
+
+.movie.front {
+
+  z-index: 2;
+
+}
+
+.movie.show {
+
+  opacity: 1;
+
+}
+
 #fade {
   position: absolute;
   inset: 0;
-  background: white;
+  background: black;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.6s ease;
-  will-change: opacity;
-  z-index: 1000;
-}
-
-#fade.black {
-  background: black;
+  transition: opacity 0.6s;
+  z-index: 5;
 }
 
 #fade.show {
   opacity: 1;
 }
 
-/* タイトル */
-.title-area {
-  z-index: 1200;
+#msgArea {
+
   position: absolute;
-  top: 43%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
 
-.title-txt {
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.title .title-wrap {
-  position: relative;
-  display: inline-block;
-  margin-top: 5px;
-}
-
-.title.is-animated .title-wrap::before {
-  animation: title 3s cubic-bezier(0.3, 1, 0.7, 1) forwards;
-  background: #333333;
-  content: "";
-  position: absolute;
-  top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  transform-origin: left center;
-  clip-path: polygon(0% 100%, 12.5% 0%, 100% 0%, 87.5% 100%);
+  right: 0;
+  bottom: 0;
+
+  height: 180px;
+
+  padding: 24px;
+
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,0,0,0.75),
+      rgba(0,0,0,0.3),
+      transparent
+    );
+
+  color: white;
+  
+  position: absolute;
+  z-index: 10;
+
 }
 
-.title .title-wrap .title-txt {
-  color: #fff;
-  display: inline-block;
-  font-size: 16px;
+#chrName {
+  font-size: 18px;
+  margin-bottom: 4px;
   font-weight: bold;
-  width: 230px;
-  padding: 10px 20px 10px;
-  position: relative;
-  text-align: center;
 }
 
-@keyframes title {
+#msgText {
+  font-size: 18px;
+  line-height: 1.6;
+  min-height: 100px;
+  margin-left: 6px;
+}
+
+#msgText,
+#chrName {
+  transition: opacity 0.25s ease;
+}
+
+.msg-hide {
+  opacity: 0;
+}
+
+.msg-show {
+  opacity: 1;
+}
+
+/* --------------------
+ * 共通文字
+ * -------------------- */
+
+#chrName,
+#msgBody {
+
+  color: white;
+
+  text-shadow:
+    -1px -1px 0 #333,
+     1px -1px 0 #333,
+    -1px  1px 0 #333,
+     1px  1px 0 #333,
+     0px  1px 0 #333,
+     1px  0px 0 #333,
+    -1px  0px 0 #333,
+     0px -1px 0 #333;
+
+}
+
+/* --------------------
+ * キャラ名
+ * -------------------- */
+
+#chrName {
+
+  position: relative;
+
+  display: inline-block;
+
+  padding-bottom: 6px;
+
+  z-index: 1;
+
+}
+
+/* --------------------
+ * 下ライン共通
+ * -------------------- */
+
+#chrName::after {
+
+  content: "";
+
+  position: absolute;
+
+  z-index: -1;
+
+  left: -10px;
+  bottom: 5px;
+
+  width: 220px;
+  height: 10px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--line) 90%, transparent) 10%,
+      color-mix(in srgb, var(--line) 70%, transparent) 30%,
+      color-mix(in srgb, var(--line) 30%, transparent) 70%,
+      transparent 100%
+    );
+
+}
+
+/* --------------------
+ * こはね
+ * -------------------- */
+
+.name-kohane {
+  --line: #d96a98;
+}
+
+/* --------------------
+ * 杏
+ * -------------------- */
+
+.name-an {
+  --line: #5fb8d1;
+}
+
+/* --------------------
+ * 彰人
+ * -------------------- */
+
+.name-akito {
+  --line: #d08a52;
+}
+
+/* --------------------
+ * 冬弥
+ * -------------------- */
+
+.name-toya {
+  --line: #6c86c9;
+}
+
+/* --------------------
+ * デフォルト
+ * -------------------- */
+
+.name-default {
+  --line: #777777;
+}
+
+#nextIcon {
+
+  position: absolute;
+
+  right: 28px;
+  bottom: 20px;
+
+  font-size: 26px;
+
+  color: #69d8ca;
+
+  text-shadow:
+    0 0 8px rgba(105,216,202,0.8);
+
+  font-weight: bold;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transform: translateY(0);
+
+}
+
+#nextIcon.show {
+
+  opacity: 1;
+
+  animation:
+    noteFade 0.25s ease,
+    noteFloat 0.9s ease-in-out infinite;
+
+}
+
+@keyframes noteFloat {
+
   0% {
-    opacity: 0;
-    transform: scaleX(0) translateX(0);
+    transform: translateY(0px);
   }
 
-  20% {
-    transform: scaleX(1) translateX(0);
-  }
-
-  80% {
-    transform: scaleX(1) translateX(0);
+  50% {
+    transform: translateY(-6px);
   }
 
   100% {
-    transform: scaleX(0) translateX(0);
+    transform: translateY(0px);
   }
 
-  30%,
-  80% {
+}
+
+@keyframes nextBlink {
+
+  0% {
+    opacity: 0;
+  }
+
+  50% {
     opacity: 1;
   }
 
   100% {
     opacity: 0;
   }
+
 }
 
+.msg-fade {
+
+  opacity: 0;
+
+  transition: opacity 0.25s ease;
+
+}
+
+.char {
+
+  display: inline-block;
+
+  opacity: 0;
+
+  animation: charFade 0.18s ease forwards;
+
+}
+
+@keyframes charFade {
+
+  to {
+
+    opacity: 1;
+
+  }
+
+}
+
+@keyframes noteFade {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(6px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
+
+}
+
+#titleArea {
+
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  transition: opacity 0.35s ease;
+  
+  z-index: 20;
+
+}
+
+#titleArea.show {
+
+  opacity: 1;
+
+}
+
+#titleText {
+
+  width: 70%;
+
+  padding: 12px 12px 12px;
+
+  box-sizing: border-box;
+
+  color: white;
+
+  font-size: 22px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+
+  text-align: center;
+
+  border-radius: 4px;
+
+  line-height: 1.2;
+
+  background:
+    linear-gradient(
+      to right,
+      rgba(50,50,60,0),
+      rgba(50,50,60,0.2)  5%,
+      rgba(50,50,60,0.4) 15%,
+      rgba(50,50,60,0.5) 35%,
+      rgba(50,50,60,0.5) 65%,
+      rgba(50,50,60,0.4) 85%,
+      rgba(50,50,60,0.2) 95%,
+      rgba(50,50,60,0)
+    );
+
+  opacity: 1;
+
+  transform: translateX(0);
+
+  transition: opacity 0.35s ease;
+
+}
+
+/* 表示アニメ */
+#titleText.slide-in {
+
+  animation:
+    titleSlideIn 0.45s ease forwards;
+
+}
+
+@keyframes titleSlideIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateX(-40px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateX(0);
+
+  }
+
+}

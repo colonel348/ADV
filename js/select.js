@@ -317,7 +317,7 @@ function goToEvent() {
 
   // 画面遷移
   setTimeout(() => {
-    location.href = './event.html?chrId=' + chrId + '&evtId=' + tgtEvtData.evtId + '&cptIdx=' + cptIdx;
+    location.href = './event.html?chrId=' + chrId + '&evtId=' + tgtEvtData.evtId + '&cptId=' + tgtEvtData.cpt[cptIdx].cptId;
   }, 520);
 }
 
