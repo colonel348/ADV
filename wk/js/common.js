@@ -17,7 +17,7 @@ function setParam() {
     if (urlParams.has('cptId')) {
         cptId = String(urlParams.get('cptId'));
     } else {
-        cptId;
+        cptId = '1';
     }
 
     if (urlParams.has('chrId')) {
