@@ -916,7 +916,7 @@ function startLoopDoubleBuffer(srcL) {
 
     videoA.classList.remove("show");
 
-  }, 1000);
+  }, 2000);
 
   // 次待機
   standbyLoopVideo.src = srcL;
@@ -1156,8 +1156,6 @@ function playSeamlessMovie(srcA, srcL) {
 
           pendingLoop = true;
 
-          videoA.classList.remove("show");
-
           setTimeout(() => {
 
             videoA.pause();
@@ -1168,7 +1166,7 @@ function playSeamlessMovie(srcA, srcL) {
   
             videoA.currentTime = 0;
 
-          }, LOOP_FADE_TIME);
+          }, 2000);
 
           startLoopDoubleBuffer(srcL);
 
