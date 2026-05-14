@@ -7,7 +7,11 @@ let currentIndex = 0;
 let currentData = null;
 
 let videoA;
-let videoL;
+let videoL1;
+let videoL2;
+
+let activeLoopVideo = null;
+let standbyLoopVideo = null;
 
 let currentVideo = null;
 
@@ -30,6 +34,16 @@ let pendingLoop = false;
 const videoCache = {};
 
 let moviePattern = "Z";
+
+let loopWatchActive = false;
+
+// L動画終了何秒前に次を開始するか
+const LOOP_SWITCH_BEFORE = 0.2;
+// 次L動画play後
+// fade開始まで待つms
+const LOOP_FADE_WAIT = 70;
+// fade時間
+const LOOP_FADE_TIME = 500;
 
 /*************************************************
  * 動画プリロード
@@ -186,7 +200,12 @@ function preloadMovies() {
 window.addEventListener("load", () => {
 
   videoA = document.getElementById("videoA");
-  videoL = document.getElementById("videoL");
+  videoL1 = document.getElementById("videoL1");
+  videoL2 = document.getElementById("videoL2");
+
+  activeLoopVideo = videoL1;
+  standbyLoopVideo = videoL2;
+  
   fade = document.getElementById("fade");
 
   init();
@@ -349,48 +368,13 @@ function nextStep() {
 
     pendingLoop = false;
 
-    // --------------------
-    // playSeamlessMovie と同じ
-    // L fade-in
-    // --------------------
+    currentVideo = activeLoopVideo;
 
-    videoL.style.display = "block";
+    setTimeout(() => {
 
-    videoL.currentTime = 0;
+      showCurrent();
 
-    requestAnimationFrame(() => {
-
-      videoL.classList.add("show");
-
-      videoL.play().then(() => {
-
-        requestAnimationFrame(() => {
-
-          setTimeout(() => {
-
-            videoA.pause();
-
-            videoA.classList.remove("show");
-            videoA.style.display = "none";
-
-          }, 250);
-
-        });
-
-        currentVideo = videoL;
-
-        pendingLoop = false;
-
-        // Lメッセージ表示
-        setTimeout(() => {
-
-          showCurrent();
-
-        }, 120);
-
-      });
-
-    });
+    }, 120);
 
     return;
 
@@ -875,31 +859,19 @@ function playMovie(item) {
 
     fade.classList.add("show");
 
-    videoL.src = srcL;
+    startLoopDoubleBuffer(srcL);
 
-    videoL.currentTime = 0;
+    currentVideo = activeLoopVideo;
 
-    videoL.loop = true;
+    setTimeout(() => {
 
-    videoL.style.display = "block";
+      fade.classList.remove("show");
 
-    requestAnimationFrame(() => {
+      isBusy = false;
 
-      videoL.classList.add("show");
+      nextStep();
 
-      currentVideo = videoL;
-
-      videoL.play().then(() => {
-
-        fade.classList.remove("show");
-
-        isBusy = false;
-
-        nextStep();
-
-      });
-
-    });
+    }, 250);
 
     return;
 
@@ -908,6 +880,172 @@ function playMovie(item) {
   // 通常
   playSeamlessMovie(srcA, srcL);
 
+}
+
+/*************************************************
+ * L動画ダブルバッファループ
+ *************************************************/
+function startLoopDoubleBuffer(srcL) {
+
+  // 初回
+  activeLoopVideo.src = srcL;
+  activeLoopVideo.currentTime = 0;
+
+  videoL1.classList.remove("show");
+  videoL2.classList.remove("show");
+
+  videoL1.pause();
+  videoL2.pause();
+
+  videoL1.style.display = "none";
+  videoL2.style.display = "none";
+
+  // activeだけ復帰
+  activeLoopVideo.style.display = "block";
+
+  requestAnimationFrame(() => {
+
+    activeLoopVideo.classList.add("show");
+
+    activeLoopVideo.play();
+
+  });
+
+  setTimeout(() => {
+
+    videoA.classList.remove("show");
+
+  }, 1000);
+
+  // 次待機
+  standbyLoopVideo.src = srcL;
+  standbyLoopVideo.load();
+
+  standbyLoopVideo.play()
+  .then(() => {
+
+    requestAnimationFrame(() => {
+
+      standbyLoopVideo.pause();
+
+      standbyLoopVideo.currentTime = 0;
+
+    });
+
+  })
+  .catch(() => {});
+
+  watchLoopSeamless(srcL);
+
+}
+
+/*************************************************
+ * L動画シームレス監視
+ *************************************************/
+function watchLoopSeamless(srcL) {
+
+  if (loopWatchActive) {
+    return;
+  }
+
+  loopWatchActive = true;
+
+  const watch = () => {
+
+    if (!activeLoopVideo.duration) {
+
+      requestAnimationFrame(watch);
+
+      return;
+
+    }
+
+    const remain =
+      activeLoopVideo.duration -
+      activeLoopVideo.currentTime;
+
+    // 終了直前
+    if (remain <= LOOP_SWITCH_BEFORE) {
+
+      switchLoopVideo(srcL);
+
+      return;
+
+    }
+
+    requestAnimationFrame(watch);
+
+  };
+
+  watch();
+
+}
+
+/*************************************************
+ * L動画切替
+ *************************************************/
+function switchLoopVideo(srcL) {
+
+  const current = activeLoopVideo;
+  const next = standbyLoopVideo;
+
+  next.pause();
+  next.currentTime = 0;
+
+  next.style.display = "block";
+
+  // 次動画を前面へ
+  next.classList.add("front");
+
+  // 現在動画を背面へ
+  current.classList.remove("front");
+
+  // --------------------
+  // ① 先にplay
+  // --------------------
+
+  next.play()
+    .then(() => {
+
+      // --------------------
+      // ② Safari decode待機
+      // --------------------
+
+      // 次を前面
+      next.classList.add("front");
+
+      setTimeout(() => {
+
+        loopWatchActive = false;
+
+        // 次表示
+        next.classList.add("show");
+
+        setTimeout(() => {
+
+          // 現在非表示
+          current.classList.remove("show");
+
+          current.pause();
+
+          current.style.display = "none";
+
+          // 現在を背面へ
+          current.classList.remove("front");
+
+        }, LOOP_FADE_TIME);
+
+        // swap
+        activeLoopVideo = next;
+        currentVideo = activeLoopVideo;
+        standbyLoopVideo = current;
+
+        watchLoopSeamless(srcL);
+
+      }, LOOP_FADE_WAIT);
+
+    })
+    .catch(() => {});
 }
 
 /*************************************************
@@ -920,28 +1058,30 @@ function playSeamlessMovie(srcA, srcL) {
   setTimeout(() => {
 
     videoA.classList.remove("show");
-    videoL.classList.remove("show");
+    videoL1.classList.remove("show");
+    videoL2.classList.remove("show");
 
     videoA.style.display = "none";
-    videoL.style.display = "none";
+    videoL1.style.display = "none";
+    videoL2.style.display = "none";
 
     // 停止
     videoA.pause();
-    videoL.pause();
+    videoL1.pause();
+    videoL2.pause();
+
+    videoA.classList.remove("show");
+    videoA.style.display = "none";
 
     // ソース設定
     videoA.src = srcA;
-    videoL.src = srcL;
 
     videoA.currentTime = 0;
-    videoL.currentTime = 0;
-
-    videoA.loop = false;
-    videoL.loop = true;
 
     // preload
     videoA.load();
-    videoL.load();
+    videoL1.load();
+    videoL2.load();
 
     // --------------------
     // A表示
@@ -1015,19 +1155,23 @@ function playSeamlessMovie(srcA, srcL) {
 
           pendingLoop = true;
 
-          // A fade-out
           videoA.classList.remove("show");
 
           setTimeout(() => {
 
             videoA.pause();
+           
+            videoA.classList.remove("show");
 
             videoA.style.display = "none";
-            videoL.style.display = "block";
+  
+            videoA.currentTime = 0;
 
-            currentVideo = null;
+          }, LOOP_FADE_TIME);
 
-          }, 250);
+          startLoopDoubleBuffer(srcL);
+
+          currentVideo = activeLoopVideo;
 
           return;
 
@@ -1082,47 +1226,21 @@ function playSeamlessMovie(srcA, srcL) {
         // 通常L切替
         // --------------------
 
-        videoL.style.display = "block";
+        startLoopDoubleBuffer(srcL);
 
-        videoL.currentTime = 0;
+        currentVideo = activeLoopVideo;
+        
+        if (pendingLoop) {
 
-        requestAnimationFrame(() => {
+          pendingLoop = false;
 
-          videoL.classList.add("show");
+          requestAnimationFrame(() => {
 
-          videoL.play().then(() => {
-
-            requestAnimationFrame(() => {
-
-              setTimeout(() => {
-
-                videoA.pause();
-
-                videoA.classList.remove("show");
-                videoA.style.display = "none";
-
-              }, 250);
-
-            });
-
-            currentVideo = videoL;
-
-            // L待機中メッセージ表示
-            if (pendingLoop) {
-
-              pendingLoop = false;
-
-              setTimeout(() => {
-
-                showCurrent();
-
-              }, 120);
-
-            }
+          showCurrent();
 
           });
 
-        });
+        }
 
         return;
 
