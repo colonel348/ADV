@@ -40,12 +40,12 @@ let loopWatchActive = false;
 let currentSrcL = "";
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.30;
+const ACTION_SWITCH_BEFORE = 0.33;
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.20;
+const LOOP_SWITCH_BEFORE = 0.3;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 200;
+const LOOP_FADE_WAIT = 220;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
