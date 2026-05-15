@@ -37,6 +37,8 @@ let moviePattern = "Z";
 
 let loopWatchActive = false;
 
+let currentSrcL = "";
+
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.16;
 // 次L動画play後
@@ -302,20 +304,6 @@ function nextStep() {
     currentData.msgInfo[currentIndex];
 
   // --------------------
-  // Lメッセージ待機中
-  // --------------------
-
-  if (
-    currentItem &&
-    currentItem.tmgId === "L" &&
-    currentVideo === videoA
-  ) {
-
-    return;
-
-  }
-
-  // --------------------
   // Aのみ最後待機
   // --------------------
 
@@ -367,6 +355,8 @@ function nextStep() {
   ) {
 
     pendingLoop = false;
+
+    startLoopDoubleBuffer(currentSrcL);
 
     currentVideo = activeLoopVideo;
 
@@ -854,6 +844,8 @@ function playMovie(item) {
   const srcL =
     `../data/${evtId}/CPT-${cptId}/${movId}-L.mp4`;
 
+  currentSrcL = srcL;
+
   // Lのみ
   if (moviePattern === "L") {
 
@@ -909,19 +901,7 @@ function startLoopDoubleBuffer(srcL) {
     activeLoopVideo.classList.add("show");
 
     activeLoopVideo.play()
-    .then(() => {
-
-      requestAnimationFrame(() => {
-
-        activeLoopVideo.pause();
-
-        activeLoopVideo.currentTime = 0;
-
-        activeLoopVideo.play();
-
-      });
-
-    });
+    .catch(() => {});
 
   });
 
@@ -1168,22 +1148,18 @@ function playSeamlessMovie(srcA, srcL) {
         ) {
 
           pendingLoop = true;
+          
+          videoA.classList.remove("show");
 
           setTimeout(() => {
 
             videoA.pause();
-           
-            videoA.classList.remove("show");
 
             videoA.style.display = "none";
-  
+
             videoA.currentTime = 0;
 
-          }, 2000);
-
-          startLoopDoubleBuffer(srcL);
-
-          currentVideo = activeLoopVideo;
+          }, 500);
 
           return;
 
