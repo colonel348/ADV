@@ -45,7 +45,7 @@ const ACTION_SWITCH_BEFORE = 0.20;
 const LOOP_SWITCH_BEFORE = 0.20;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 80;
+const LOOP_FADE_WAIT = 90;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
@@ -917,14 +917,14 @@ function startLoopDoubleBuffer(srcL) {
 
   requestAnimationFrame(() => {
 
+    activeLoopVideo.play()
+    .catch(() => {});
+
     setTimeout(() => {
 
-      activeLoopVideo.play()
-      .catch(() => {});
+      activeLoopVideo.classList.add("show");
 
     }, 300);
-
-    activeLoopVideo.classList.add("show");
 
   });
 
