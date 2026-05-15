@@ -1372,12 +1372,6 @@ function fadeOutVideo(callback, hideMessage = true) {
   // 動画fade-out
   // --------------------
 
-  if (currentVideo) {
-
-    currentVideo.classList.remove("show");
-
-  }
-
   // 黒fade
   fade.classList.add("show");
 
@@ -1386,6 +1380,8 @@ function fadeOutVideo(callback, hideMessage = true) {
     if (currentVideo) {
 
       currentVideo.pause();
+      
+      currentVideo.classList.remove("show");
 
       currentVideo.style.display = "none";
 
@@ -1393,7 +1389,7 @@ function fadeOutVideo(callback, hideMessage = true) {
 
     callback();
 
-  }, 250);
+  }, 500);
 
 }
 
