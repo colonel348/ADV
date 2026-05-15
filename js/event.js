@@ -40,7 +40,7 @@ let loopWatchActive = false;
 let currentSrcL = "";
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.20;
+const ACTION_SWITCH_BEFORE = 0.30;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.20;
 // 次L動画play後
