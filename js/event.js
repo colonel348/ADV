@@ -908,7 +908,20 @@ function startLoopDoubleBuffer(srcL) {
 
     activeLoopVideo.classList.add("show");
 
-    activeLoopVideo.play();
+    activeLoopVideo.play()
+    .then(() => {
+
+      requestAnimationFrame(() => {
+
+        activeLoopVideo.pause();
+
+        activeLoopVideo.currentTime = 0;
+
+        activeLoopVideo.play();
+
+      });
+
+    });
 
   });
 
