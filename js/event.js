@@ -38,10 +38,10 @@ let moviePattern = "Z";
 let loopWatchActive = false;
 
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.20;
+const LOOP_SWITCH_BEFORE = 0.16;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 70;
+const LOOP_FADE_WAIT = 75;
 // fade時間
 const LOOP_FADE_TIME = 500;
 
