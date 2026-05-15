@@ -41,7 +41,7 @@ let loopWatchActive = false;
 const LOOP_SWITCH_BEFORE = 0.20;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 80;
+const LOOP_FADE_WAIT = 70;
 // fade時間
 const LOOP_FADE_TIME = 500;
 
