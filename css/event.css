@@ -58,9 +58,9 @@ html, body {
   will-change: opacity;
 
   pointer-events: none;
-  
+
   contain: paint;
-  
+
   z-index: 1;
 
 }

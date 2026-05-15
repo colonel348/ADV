@@ -39,8 +39,10 @@ let loopWatchActive = false;
 
 let currentSrcL = "";
 
+// A動画終了何秒前に次を開始するか
+const ACTION_SWITCH_BEFORE = 0.20;
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.17;
+const LOOP_SWITCH_BEFORE = 0.20;
 // 次L動画play後
 // fade開始まで待つms
 const LOOP_FADE_WAIT = 80;
@@ -48,7 +50,6 @@ const LOOP_FADE_WAIT = 80;
 const LOOP_FADE_TIME = 500;
 // fade時間
 const BLACK_FADE_TIME = 600;
-
 
 /*************************************************
  * 動画プリロード
@@ -916,10 +917,14 @@ function startLoopDoubleBuffer(srcL) {
 
   requestAnimationFrame(() => {
 
-    activeLoopVideo.classList.add("show");
+    setTimeout(() => {
 
-    activeLoopVideo.play()
-    .catch(() => {});
+      activeLoopVideo.play()
+      .catch(() => {});
+
+    }, 300);
+
+    activeLoopVideo.classList.add("show");
 
   });
 
@@ -1137,7 +1142,7 @@ function playSeamlessMovie(srcA, srcL) {
         videoA.duration - videoA.currentTime;
 
       // 終了直前
-      if (remain <= LOOP_SWITCH_BEFORE) {
+      if (remain <= ACTION_SWITCH_BEFORE) {
 
         // 現在行
         const currentItem =
