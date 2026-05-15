@@ -40,12 +40,15 @@ let loopWatchActive = false;
 let currentSrcL = "";
 
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.16;
+const LOOP_SWITCH_BEFORE = 0.17;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 75;
+const LOOP_FADE_WAIT = 80;
 // fade時間
 const LOOP_FADE_TIME = 500;
+// fade時間
+const BLACK_FADE_TIME = 600;
+
 
 /*************************************************
  * 動画プリロード
@@ -368,19 +371,19 @@ function nextStep() {
     pendingLoop
   ) {
 
-    fade.classList.remove("show");
+    startLoopDoubleBuffer(currentSrcL);
 
     pendingLoop = false;
 
     setTimeout(() => {
 
-      startLoopDoubleBuffer(currentSrcL);
+      fade.classList.remove("show");
 
       currentVideo = activeLoopVideo;
 
       showCurrent();
 
-    }, 120);
+    }, BLACK_FADE_TIME);
 
     return;
 
@@ -878,7 +881,7 @@ function playMovie(item) {
 
       nextStep();
 
-    }, 250);
+    }, BLACK_FADE_TIME);
 
     return;
 
@@ -1106,23 +1109,11 @@ function playSeamlessMovie(srcA, srcL) {
 
       videoA.play().then(() => {
 
-        fade.classList.remove("show");
+        setTimeout(() => {
 
-        // 前動画をfade-out
-        if (currentVideo &&
-            currentVideo !== videoA) {
+          fade.classList.remove("show");
 
-          currentVideo.classList.remove("show");
-
-          setTimeout(() => {
-
-            currentVideo.pause();
-
-            currentVideo.style.display = "none";
-
-          }, 250);
-
-        }
+        }, BLACK_FADE_TIME);
 
       });
 
@@ -1146,7 +1137,7 @@ function playSeamlessMovie(srcA, srcL) {
         videoA.duration - videoA.currentTime;
 
       // 終了直前
-      if (remain <= 0.16) {
+      if (remain <= LOOP_SWITCH_BEFORE) {
 
         // 現在行
         const currentItem =
@@ -1311,9 +1302,6 @@ function fadeInMovie(src) {
 
     video.onloadeddata = () => {
 
-      // 動画フェード解除
-      fade.classList.remove("show");
-
       // テキストクリア
       chrEl.innerText = "";
       msgBody.innerText = "";
@@ -1322,6 +1310,9 @@ function fadeInMovie(src) {
 
       // 次メッセージへ
       setTimeout(() => {
+
+        // 動画フェード解除
+        fade.classList.remove("show");
 
         isBusy = false;
 
@@ -1336,7 +1327,7 @@ function fadeInMovie(src) {
 
         });
 
-      }, 300);
+      }, BLACK_FADE_TIME);
 
     };
 
