@@ -45,7 +45,7 @@ const ACTION_SWITCH_BEFORE = 0.30;
 const LOOP_SWITCH_BEFORE = 0.20;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 150;
+const LOOP_FADE_WAIT = 200;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
@@ -901,6 +901,11 @@ function startLoopDoubleBuffer(srcL) {
   // 初回
   activeLoopVideo.src = srcL;
   activeLoopVideo.currentTime = 0;
+  activeLoopVideo.load();
+
+  standbyLoopVideo.src = srcL;
+  standbyLoopVideo.currentTime = 0;
+  standbyLoopVideo.load();
 
   videoL1.classList.remove("show");
   videoL2.classList.remove("show");
@@ -1045,17 +1050,17 @@ function switchLoopVideo(srcL) {
 
             requestAnimationFrame(() => {
 
-                  // 現在非表示
-                  current.classList.remove("show");
+              // 現在非表示
+              current.classList.remove("show");
 
-                  current.pause();
+              current.pause();
 
-                  current.currentTime = 0;
+              current.currentTime = 0;
 
-                  current.style.display = "none";
+              current.style.display = "none";
 
-                  // 現在を背面へ
-                  current.classList.remove("front");
+              // 現在を背面へ
+              current.classList.remove("front");
 
             });
 
