@@ -42,10 +42,10 @@ let currentSrcL = "";
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.30;
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.20;
+const LOOP_SWITCH_BEFORE = 0.22;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 110;
+const LOOP_FADE_WAIT = 120;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
@@ -1040,15 +1040,27 @@ function switchLoopVideo(srcL) {
 
         setTimeout(() => {
 
-          // 現在非表示
-          current.classList.remove("show");
+          current.play()
+          .then(() => {
 
-          current.pause();
+            requestAnimationFrame(() => {
 
-          current.style.display = "none";
+                  // 現在非表示
+                  current.classList.remove("show");
 
-          // 現在を背面へ
-          current.classList.remove("front");
+                  current.pause();
+
+                  current.currentTime = 0;
+
+                  current.style.display = "none";
+
+                  // 現在を背面へ
+                  current.classList.remove("front");
+
+            });
+
+          })
+          .catch(() => {});
 
         }, LOOP_FADE_TIME);
 
