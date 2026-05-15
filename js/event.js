@@ -304,6 +304,20 @@ function nextStep() {
     currentData.msgInfo[currentIndex];
 
   // --------------------
+  // Lメッセージ待機中
+  // --------------------
+
+  if (
+    currentItem &&
+    currentItem.tmgId === "L" &&
+    currentVideo === videoA
+  ) {
+
+    return;
+
+  }
+
+  // --------------------
   // Aのみ最後待機
   // --------------------
 
@@ -354,13 +368,15 @@ function nextStep() {
     pendingLoop
   ) {
 
+    fade.classList.remove("show");
+
     pendingLoop = false;
 
-    startLoopDoubleBuffer(currentSrcL);
-
-    currentVideo = activeLoopVideo;
-
     setTimeout(() => {
+
+      startLoopDoubleBuffer(currentSrcL);
+
+      currentVideo = activeLoopVideo;
 
       showCurrent();
 
@@ -384,7 +400,6 @@ function nextStep() {
   showCurrent();
 
 }
-
 
 /*************************************************
  * 次のチャプター取得
@@ -1131,7 +1146,7 @@ function playSeamlessMovie(srcA, srcL) {
         videoA.duration - videoA.currentTime;
 
       // 終了直前
-      if (remain <= 0.2) {
+      if (remain <= 0.16) {
 
         // 現在行
         const currentItem =
@@ -1148,10 +1163,12 @@ function playSeamlessMovie(srcA, srcL) {
         ) {
 
           pendingLoop = true;
-          
-          videoA.classList.remove("show");
+
+          fade.classList.add("show");
 
           setTimeout(() => {
+
+            videoA.classList.remove("show");
 
             videoA.pause();
 
@@ -1159,7 +1176,7 @@ function playSeamlessMovie(srcA, srcL) {
 
             videoA.currentTime = 0;
 
-          }, 500);
+          }, 1000);
 
           return;
 
@@ -1179,9 +1196,11 @@ function playSeamlessMovie(srcA, srcL) {
           // 最後A終了済み
           // --------------------
 
-          videoA.classList.remove("show");
+          fade.classList.add("show");
 
           setTimeout(() => {
+
+            videoA.classList.remove("show");
 
             videoA.pause();
 
