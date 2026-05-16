@@ -50,6 +50,8 @@ let longPressTimer = null;
 
 let isLongPress = false;
 
+let selectPressTimer = null;
+
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.32;
 // L動画終了何秒前に次を開始するか
@@ -267,6 +269,7 @@ window.addEventListener("load", () => {
     () => {
 
       clearTimeout(longPressTimer);
+      clearTimeout(selectPressTimer);
 
       // --------------------
       // AUTO切替
@@ -288,7 +291,7 @@ window.addEventListener("load", () => {
       // select遷移
       // --------------------
 
-      setTimeout(() => {
+      selectPressTimer = setTimeout(() => {
 
         // AUTO切替済なら
         if (!isLongPress) {
@@ -307,6 +310,7 @@ window.addEventListener("load", () => {
     () => {
 
       clearTimeout(longPressTimer);
+      clearTimeout(selectPressTimer);
 
     }
   );
@@ -316,6 +320,7 @@ window.addEventListener("load", () => {
     () => {
 
       clearTimeout(longPressTimer);
+      clearTimeout(selectPressTimer);
 
     }
   );
