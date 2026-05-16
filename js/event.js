@@ -53,12 +53,12 @@ let isLongPress = false;
 let selectPressTimer = null;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.32;
+const ACTION_SWITCH_BEFORE = 0.30;
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.32;
+const LOOP_SWITCH_BEFORE = 0.30;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 250;
+const LOOP_FADE_WAIT = 230;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
@@ -627,7 +627,7 @@ function refreshNextIcon() {
 
   if (isAutoMode) {
 
-    nextIcon.innerText = "▶AUTO";
+    nextIcon.innerText = "▷AUTO";
 
     nextIcon.classList.add("auto");
 
