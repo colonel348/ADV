@@ -65,7 +65,7 @@ const LOOP_FADE_TIME = 500;
 const BLACK_FADE_TIME = 500;
 
 // 次段落への時間
-const NEXT_EVT_TIME = 250;
+const NEXT_EVT_TIME = 300;
 // 次メッセージへの時間
 const NEXT_TEXT_TIME = 1500;
 
@@ -500,6 +500,24 @@ function nextStep() {
 
     return;
 
+  } else if (
+    item &&
+    item.msgId === "W" &&
+    pendingLoop
+  ) {
+
+    setTimeout(() => {
+
+      setFade(true, "W");
+
+      currentVideo = activeLoopVideo;
+
+      showCurrent();
+
+    }, BLACK_FADE_TIME);
+
+    return;
+
   }
 
   if (currentIndex >= currentData.msgInfo.length) {
@@ -740,7 +758,6 @@ function setFade(show, color = null) {
 /*************************************************
  * 現在行表示
  *************************************************/
-
 function showCurrent() {
 
   const item = currentData.msgInfo[currentIndex];
@@ -779,10 +796,6 @@ function showCurrent() {
       if (waitMovie) {
 
         playMovie(waitItem);
-
-      } else {
-
-        setFade(false);
 
       }
 
@@ -1474,26 +1487,54 @@ function playSeamlessMovie(srcA, srcL) {
 
       if (
         moviePattern === "AL" &&
-        currentItem.msgId === "A"
+        currentItem.msgId != "L"
       ) {
 
-        pendingLoop = true;
+        if (currentItem.msgId === "A") {
 
-        setFade(true);
+          pendingLoop = true;
 
-        setTimeout(() => {
+          setFade(true);
 
-          videoA.classList.remove("show");
+          setTimeout(() => {
 
-          videoA.pause();
+            videoA.classList.remove("show");
 
-          videoA.style.display = "none";
+            videoA.pause();
 
-          videoA.currentTime = 0;
+            videoA.style.display = "none";
 
-        }, 600);
+            videoA.currentTime = 0;
 
-        return;
+          }, 600);
+
+          return;
+
+        } else if (currentItem.msgId === "W") {
+
+          setFade(true, "W");
+
+          pendingLoop = true;
+
+          setTimeout(() => {
+
+            videoA.classList.remove("show");
+
+            videoA.pause();
+
+            videoA.style.display = "none";
+
+            currentVideo = null;
+
+            isBusy = false;
+
+            showCurrent();
+
+          }, 600);
+
+          return;
+
+        }
 
       }
 
