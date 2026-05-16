@@ -65,7 +65,7 @@ const LOOP_FADE_TIME = 500;
 const BLACK_FADE_TIME = 500;
 
 // 次段落への時間
-const NEXT_EVT_TIME = 300;
+const NEXT_EVT_TIME = 500;
 // 次メッセージへの時間
 const NEXT_TEXT_TIME = 1500;
 
