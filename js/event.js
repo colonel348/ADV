@@ -67,6 +67,11 @@ const NEXT_EVT_TIME = 250;
 // 次メッセージへの時間
 const NEXT_TEXT_TIME = 1500;
 
+// 長押しauto
+const AUTO_PRESS_TIME = 1000;
+// 長押し選択画面
+const SELECT_PRESS_TIME = 2000;
+
 /*************************************************
  * JS読込
  *************************************************/
@@ -263,6 +268,10 @@ window.addEventListener("load", () => {
 
       clearTimeout(longPressTimer);
 
+      // --------------------
+      // AUTO切替
+      // --------------------
+
       longPressTimer = setTimeout(() => {
 
         isLongPress = true;
@@ -271,13 +280,24 @@ window.addEventListener("load", () => {
 
         refreshNextIcon();
 
-        if (!isTyping) {
+        startAutoNext();
 
-          startAutoNext();
+      }, AUTO_PRESS_TIME);
 
+      // --------------------
+      // select遷移
+      // --------------------
+
+      setTimeout(() => {
+
+        // AUTO切替済なら
+        if (!isLongPress) {
+          return;
         }
 
-      }, 1200);
+        moveSelect();
+
+      }, SELECT_PRESS_TIME);
 
     }
   );
@@ -480,10 +500,16 @@ function nextStep() {
   if (currentIndex >= currentData.msgInfo.length) {
     
     const nextCpt = getNextCpt();
+    
+    if (isAutoMode) {
+      autoFlg = "1";
+    } else {
+      autoFlg = "0";
+    }
 
     // 画面遷移
     setTimeout(() => {
-      location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;;
+      location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
     }, 520);
 
   }
@@ -634,6 +660,26 @@ function startAutoNext() {
     nextStep();
 
   }, NEXT_TEXT_TIME);
+
+}
+
+/*************************************************
+ * select遷移
+ *************************************************/
+function moveSelect() {
+
+  setFade(true);
+
+  setTimeout(() => {
+
+    location.href =
+      './select.html'
+      + '?chrId=' + chrId
+      + '&evtId=' + evtId
+      + '&cptId=' + cptId
+      + '&autoFlg=0';
+
+  }, BLACK_FADE_TIME);
 
 }
 
