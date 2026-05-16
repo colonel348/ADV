@@ -49,7 +49,7 @@ const LOOP_FADE_WAIT = 260;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
-const BLACK_FADE_TIME = 600;
+const BLACK_FADE_TIME = 500;
 
 /*************************************************
  * 動画プリロード
