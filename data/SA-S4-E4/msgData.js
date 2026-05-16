@@ -6,15 +6,15 @@ window.msgData = [
 
 { cptId: "1", msgInfo:[
 
-  { movId: "plg", title: "ダンススタジオ"},
-    { tmgId:"Z", chrNm: "杏", msgTxt: "test"},
+  { movId: "plg", movPtn: "N", title: "ダンススタジオ"},
+    { msgId:"-", chrNm: "杏", msgTxt: "test"},
 
-  { movId: "evt1"},
-    { tmgId:"A", chrNm: "杏", msgTxt: "test1"},
-    { tmgId:"L", chrNm: "冬弥", msgTxt: "test2"},
+  { movId: "evt1", movPtn: "AL"},
+    { msgId:"A", chrNm: "杏", msgTxt: "test1"},
+    { msgId:"L", chrNm: "冬弥", msgTxt: "test2"},
 
-  { movId: "elg"},
-    { tmgId:"Z", chrNm: "杏", msgTxt: "test"}
+  { movId: "elg", movPtn: "N"},
+    { msgId:"-", chrNm: "杏", msgTxt: "test"}
 
 ]}
 

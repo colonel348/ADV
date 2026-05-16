@@ -33,23 +33,51 @@ let pendingLoop = false;
 
 const videoCache = {};
 
-let moviePattern = "Z";
+let moviePattern = "";
 
 let loopWatchActive = false;
+
+let waitMovie = false;
+let waitItem = null;
 
 let currentSrcL = "";
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.33;
+const ACTION_SWITCH_BEFORE = 0.32;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.32;
 // 次L動画play後
 // fade開始まで待つms
-const LOOP_FADE_WAIT = 260;
+const LOOP_FADE_WAIT = 250;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
 const BLACK_FADE_TIME = 500;
+
+// 次段落への時間
+const NEXT_EVT_TIME = 250;
+
+/*************************************************
+ * JS読込
+ *************************************************/
+function loadEvent() {
+
+  return new Promise((resolve, reject) => {
+
+    const script = document.createElement("script");
+
+    script.src = `../data/${evtId}/msgData.js`;
+
+    script.onload = () => {
+      resolve(window.msgData);
+    };
+
+    script.onerror = reject;
+
+    document.body.appendChild(script);
+
+  });
+}
 
 /*************************************************
  * 動画プリロード
@@ -61,19 +89,14 @@ function preloadMovies() {
     // 動画なし
     if (
       !item.movId ||
-      item.movId === "plg" ||
-      item.movId === "spc" ||
-      item.movId === "elg"
+      item.movPtn === "N"
     ) {
       return;
     }
 
     // movIdごとの
     // パターン取得
-    const pattern =
-      detectMoviePattern(
-        currentData.msgInfo.indexOf(item)
-      );
+    const pattern = item.movPtn;
 
     let sources = [];
 
@@ -114,22 +137,6 @@ function preloadMovies() {
     else if (pattern === "L") {
 
       sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
-
-      ];
-
-    }
-
-    // --------------------
-    // Zのみ
-    // --------------------
-
-    else if (pattern === "Z") {
-
-      sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
 
         `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
 
@@ -224,11 +231,13 @@ window.addEventListener("load", () => {
  * 開始
  *************************************************/
 
-function init() {
+async function init() {
 
   setParam();
 
-  currentData = msgData.find(v => v.evtId === evtId && v.cptId === cptId);
+  const msgData = await loadEvent();
+
+  currentData = msgData.find(v => v.cptId === cptId);
 
   if (!currentData) {
     alert("データなし");
@@ -313,7 +322,7 @@ function nextStep() {
 
   if (
     currentItem &&
-    currentItem.tmgId === "L" &&
+    currentItem.msgId === "L" &&
     currentVideo === videoA
   ) {
 
@@ -368,7 +377,7 @@ function nextStep() {
   // Lテキスト
   if (
     item &&
-    item.tmgId === "L" &&
+    item.msgId === "L" &&
     pendingLoop
   ) {
 
@@ -378,7 +387,7 @@ function nextStep() {
 
     setTimeout(() => {
 
-      fade.classList.remove("show");
+      setFade(false);
 
       currentVideo = activeLoopVideo;
 
@@ -491,6 +500,55 @@ function nextStep() {
 }
 
 /*************************************************
+ * fade制御
+ *************************************************/
+function setFade(show, color = null) {
+
+  // --------------------
+  // 色変更
+  // --------------------
+
+  if (color !== null) {
+
+    fade.classList.toggle(
+      "fade-white",
+      color === "W"
+    );
+
+  }
+
+  // --------------------
+  // 表示
+  // --------------------
+
+  if (show) {
+
+    fade.classList.add("show");
+
+    return;
+
+  }
+
+  // --------------------
+  // 非表示
+  // --------------------
+
+  if (fade.classList.contains("show")) {
+
+    fade.classList.remove("show");
+
+    // fade-out後に黒へ戻す
+    setTimeout(() => {
+
+        fade.classList.remove("fade-white");
+
+    }, BLACK_FADE_TIME);
+  
+  }
+
+}
+
+/*************************************************
  * 現在行表示
  *************************************************/
 
@@ -501,21 +559,43 @@ function showCurrent() {
   // メッセージ
   if ("msgTxt" in item) {
 
-    const tmgId =
-      item.tmgId || "Z";
+    const msgId = item.msgId;
 
     // --------------------
     // Lメッセージ待機
     // --------------------
 
     if (
-      tmgId === "L" &&
+      (msgId === "L" || msgId === "W") &&
       currentVideo === videoA
     ) {
 
       pendingLoop = true;
 
       return;
+
+    }
+
+    // --------------------
+    // フェードイン
+    // --------------------
+
+    if (msgId === "B" || msgId === "W") {
+
+      setFade(true, msgId);
+
+    } else {
+
+      // 動画表示待ちなら表示
+      if (waitMovie) {
+
+        playMovie(waitItem);
+
+      } else {
+
+        setFade(false);
+
+      }
 
     }
 
@@ -531,6 +611,9 @@ function showCurrent() {
   // 動画系
   if ("movId" in item) {
 
+    // フェード
+    setFade(true);
+
     // プロローグタイトル
     if (item.movId === "plg") {
 
@@ -540,36 +623,60 @@ function showCurrent() {
 
     }
 
-    // エピローグ暗転
-    if (
-      item.movId === "elg" ||
-      item.movId === "spc"
-    ) {
+    // 次段落
+    setTimeout(() => {
 
-      fadeOutVideo(() => {
+      // エピローグ暗転
+      if (item.movId === "elg") {
 
-        // 少し待機
+        fadeOutVideo(() => {
+
+          // 少し待機
+          setTimeout(() => {
+
+            isBusy = false;
+
+            nextStep();
+
+          }, BLACK_FADE_TIME);
+
+        }, false);
+
+        return;
+
+      }
+
+      // movId単位で
+      // パターン解析
+      moviePattern = item.movPtn;
+
+      const nextItem = currentData.msgInfo[currentIndex + 1];
+      const nextMsgId = nextItem.msgId;
+
+      // 次がフェードなら動画再生しない
+      if (nextMsgId === "B" || nextMsgId === "W") {
+
+        waitMovie = true;
+        waitItem = item;
+
+        // 次メッセージ
         setTimeout(() => {
-
-          isBusy = false;
 
           nextStep();
 
-        }, 500);
+        }, BLACK_FADE_TIME);
 
-      }, false);
+      } else {
 
-      return;
+        waitMovie = false;
+        waitItem = null;
 
-    }
+        // 通常動画
+        playMovie(item);
 
-    // movId単位で
-    // パターン解析
-    moviePattern =
-      detectMoviePattern(currentIndex);
+      }
 
-    // 通常動画
-    playMovie(item);
+    }, NEXT_EVT_TIME);
 
   }
 
@@ -600,7 +707,7 @@ function showTitle(title) {
   text.classList.add("slide-in");
 
   // 暗転
-  fade.classList.add("show");
+  setFade(true);
 
   requestAnimationFrame(() => {
 
@@ -827,7 +934,7 @@ function playMovie(item) {
 
         isBusy = false;
 
-        nextStep();
+        nextStep()
 
       }, 300);
 
@@ -838,10 +945,10 @@ function playMovie(item) {
   }
 
   // --------------------
-  // Sのみ
+  // 動画無し
   // --------------------
 
-  if (moviePattern === "S") {
+  if (moviePattern === "N") {
 
     fadeOutVideo(() => {
 
@@ -868,19 +975,25 @@ function playMovie(item) {
   // Lのみ
   if (moviePattern === "L") {
 
-    fade.classList.add("show");
-
     startLoopDoubleBuffer(srcL);
 
     currentVideo = activeLoopVideo;
 
     setTimeout(() => {
 
-      fade.classList.remove("show");
+      setFade(false);
 
       isBusy = false;
 
-      nextStep();
+      if (waitMovie) {
+
+        waitMovie = false;
+      
+      } else {
+
+        nextStep();
+
+      }
 
     }, BLACK_FADE_TIME);
 
@@ -1087,97 +1200,120 @@ function switchLoopVideo(srcL) {
  *************************************************/
 function playSeamlessMovie(srcA, srcL) {
 
-  fade.classList.add("show");
+  videoA.classList.remove("show");
+  videoL1.classList.remove("show");
+  videoL2.classList.remove("show");
 
-  setTimeout(() => {
+  videoA.style.display = "none";
+  videoL1.style.display = "none";
+  videoL2.style.display = "none";
 
-    videoA.classList.remove("show");
-    videoL1.classList.remove("show");
-    videoL2.classList.remove("show");
+  // 停止
+  videoA.pause();
+  videoL1.pause();
+  videoL2.pause();
 
-    videoA.style.display = "none";
-    videoL1.style.display = "none";
-    videoL2.style.display = "none";
+  videoA.classList.remove("show");
+  videoA.style.display = "none";
 
-    // 停止
-    videoA.pause();
-    videoL1.pause();
-    videoL2.pause();
+  // ソース設定
+  videoA.src = srcA;
 
-    videoA.classList.remove("show");
-    videoA.style.display = "none";
+  videoA.currentTime = 0;
 
-    // ソース設定
-    videoA.src = srcA;
+  // preload
+  videoA.load();
+  videoL1.load();
+  videoL2.load();
 
-    videoA.currentTime = 0;
+  // --------------------
+  // A表示
+  // --------------------
 
-    // preload
-    videoA.load();
-    videoL1.load();
-    videoL2.load();
+  videoA.style.display = "block";
 
-    // --------------------
-    // A表示
-    // --------------------
+  requestAnimationFrame(() => {
 
-    videoA.style.display = "block";
+    videoA.classList.add("show");
 
-    requestAnimationFrame(() => {
+    currentVideo = videoA;
 
-      videoA.classList.add("show");
+    videoA.play().then(() => {
 
-      currentVideo = videoA;
+      setTimeout(() => {
 
-      videoA.play().then(() => {
+        setFade(false);
 
-        setTimeout(() => {
-
-          fade.classList.remove("show");
-
-        }, BLACK_FADE_TIME);
-
-      });
+      }, BLACK_FADE_TIME);
 
     });
 
-    // --------------------
-    // A終了監視
-    // --------------------
+  });
 
-    const watch = () => {
+  // --------------------
+  // A終了監視
+  // --------------------
 
-      if (!videoA.duration) {
+  const watch = () => {
 
-        requestAnimationFrame(watch);
+    if (!videoA.duration) {
+
+      requestAnimationFrame(watch);
+
+      return;
+
+    }
+
+    const remain =
+      videoA.duration - videoA.currentTime;
+
+    // 終了直前
+    if (remain <= ACTION_SWITCH_BEFORE) {
+
+      // 現在行
+      const currentItem =
+        currentData.msgInfo[currentIndex];
+
+      // --------------------
+      // A→Lパターン
+      // --------------------
+
+      if (
+        moviePattern === "AL" &&
+        currentItem.msgId === "A"
+      ) {
+
+        pendingLoop = true;
+
+        setFade(true);
+
+        setTimeout(() => {
+
+          videoA.classList.remove("show");
+
+          videoA.pause();
+
+          videoA.style.display = "none";
+
+          videoA.currentTime = 0;
+
+        }, 600);
 
         return;
 
       }
 
-      const remain =
-        videoA.duration - videoA.currentTime;
+      // --------------------
+      // Aのみ
+      // --------------------
 
-      // 終了直前
-      if (remain <= ACTION_SWITCH_BEFORE) {
+      if (moviePattern === "A") {
 
-        // 現在行
-        const currentItem =
-          currentData.msgInfo[currentIndex];
+        if (currentItem.msgId === "W") {
 
-        // --------------------
-        // A→Lパターン
-        // --------------------
+          setFade(true, "W");
 
-        if (
-          moviePattern === "AL" &&
-          currentItem &&
-          currentItem.tmgId === "A"
-        ) {
-
-          pendingLoop = true;
-
-          fade.classList.add("show");
+          pendingLoop = false;
 
           setTimeout(() => {
 
@@ -1187,29 +1323,27 @@ function playSeamlessMovie(srcA, srcL) {
 
             videoA.style.display = "none";
 
-            videoA.currentTime = 0;
+            currentVideo = null;
 
-          }, 1000);
+            isBusy = false;
+
+            showCurrent();
+
+          }, 600);
 
           return;
 
-        }
-
-        // --------------------
-        // Aのみ
-        // --------------------
-
-        if (moviePattern === "A") {
-
-          // 次行確認
-          const nextItem =
-            currentData.msgInfo[currentIndex + 1];
+        } else {
 
           // --------------------
           // 最後A終了済み
           // --------------------
 
-          fade.classList.add("show");
+          // 次行確認
+          const nextItem =
+            currentData.msgInfo[currentIndex + 1];
+
+          setFade(true);
 
           setTimeout(() => {
 
@@ -1236,52 +1370,65 @@ function playSeamlessMovie(srcA, srcL) {
 
             showCurrent();
 
-          }, 250);
+          }, 600);
 
           return;
 
         }
 
-        // --------------------
-        // 通常L切替
-        // --------------------
+      }
 
-        startLoopDoubleBuffer(srcL);
+      // --------------------
+      // 通常L切替
+      // --------------------
 
-        currentVideo = activeLoopVideo;
-        
-        if (pendingLoop) {
+      startLoopDoubleBuffer(srcL);
 
-          pendingLoop = false;
+      currentVideo = activeLoopVideo;
+      
+      if (pendingLoop) {
 
-          requestAnimationFrame(() => {
+        pendingLoop = false;
 
-          showCurrent();
+        requestAnimationFrame(() => {
 
-          });
+          // 次メッセージ
+          setTimeout(() => {
 
-        }
+            showCurrent();
 
-        return;
+          }, 600);
+
+        });
 
       }
 
-      requestAnimationFrame(watch);
+      return;
 
-    };
+    }
 
-    watch();
+    requestAnimationFrame(watch);
 
-    // 次メッセージ
-    setTimeout(() => {
+  };
 
-      isBusy = false;
+  watch();
+
+  // 次メッセージ
+  setTimeout(() => {
+
+    isBusy = false;
+
+    if (waitMovie) {
+
+      waitMovie = false;
+    
+    } else {
 
       nextStep();
 
-    }, 300);
+    }
 
-  }, 600);
+  }, BLACK_FADE_TIME);
 
 }
 
@@ -1306,7 +1453,7 @@ function fadeInMovie(src) {
   nextIcon.classList.add("msg-fade");
 
   // 動画フェード
-  fade.classList.add("show");
+  setFade(true);
 
   setTimeout(() => {
 
@@ -1334,7 +1481,7 @@ function fadeInMovie(src) {
       setTimeout(() => {
 
         // 動画フェード解除
-        fade.classList.remove("show");
+        setFade(false);
 
         isBusy = false;
 
@@ -1390,7 +1537,7 @@ function fadeOutVideo(callback, hideMessage = true) {
   // --------------------
 
   // 黒fade
-  fade.classList.add("show");
+  setFade(true);
 
   setTimeout(() => {
 
@@ -1429,99 +1576,5 @@ function videoLoopWatch() {
     video.play().catch(() => {});
 
   }
-
-}
-
-/*************************************************
- * movIdブロックの
- * 動画パターン取得
- *************************************************/
-function detectMoviePattern(startIndex) {
-
-  const tmgSet = new Set();
-
-  for (
-    let i = startIndex + 1;
-    i < currentData.msgInfo.length;
-    i++
-  ) {
-
-    const item =
-      currentData.msgInfo[i];
-
-    // 次movIdで終了
-    if ("movId" in item) {
-      break;
-    }
-
-    // tmg収集
-    if (item.tmgId) {
-
-      tmgSet.add(item.tmgId);
-
-    }
-
-  }
-
-  const patterns =
-    [...tmgSet];
-
-  // --------------------
-  // A→L
-  // --------------------
-
-  if (
-    patterns.includes("A") &&
-    patterns.includes("L")
-  ) {
-
-    return "AL";
-
-  }
-
-  // --------------------
-  // Aのみ
-  // --------------------
-
-  if (
-    patterns.length === 1 &&
-    patterns[0] === "A"
-  ) {
-
-    return "A";
-
-  }
-
-  // --------------------
-  // Lのみ
-  // --------------------
-
-  if (
-    patterns.length === 1 &&
-    patterns[0] === "L"
-  ) {
-
-    return "L";
-
-  }
-
-  // --------------------
-  // Sのみ
-  // --------------------
-
-  if (
-    patterns.length === 1 &&
-    patterns[0] === "S"
-  ) {
-
-    return "S";
-
-  }
-
-  // --------------------
-  // Zのみ
-  // --------------------
-
-  return "Z";
 
 }
