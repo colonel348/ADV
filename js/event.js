@@ -42,6 +42,14 @@ let waitItem = null;
 
 let currentSrcL = "";
 
+let isAutoMode = false;
+
+let autoTimer = null;
+
+let longPressTimer = null;
+
+let isLongPress = false;
+
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.32;
 // L動画終了何秒前に次を開始するか
@@ -56,6 +64,8 @@ const BLACK_FADE_TIME = 500;
 
 // 次段落への時間
 const NEXT_EVT_TIME = 250;
+// 次メッセージへの時間
+const NEXT_TEXT_TIME = 1500;
 
 /*************************************************
  * JS読込
@@ -223,7 +233,72 @@ window.addEventListener("load", () => {
 
   init();
 
-  document.body.addEventListener("click", nextStep);
+  // --------------------
+  // click
+  // --------------------
+  document.body.addEventListener(
+    "click",
+    () => {
+
+      if (isLongPress) {
+
+        isLongPress = false;
+
+        return;
+
+      }
+
+      nextStep();
+
+    }
+  );
+
+  // --------------------
+  // long press
+  // --------------------
+
+  document.body.addEventListener(
+    "pointerdown",
+    () => {
+
+      clearTimeout(longPressTimer);
+
+      longPressTimer = setTimeout(() => {
+
+        isLongPress = true;
+
+        isAutoMode = !isAutoMode;
+
+        refreshNextIcon();
+
+        if (!isTyping) {
+
+          startAutoNext();
+
+        }
+
+      }, 1200);
+
+    }
+  );
+
+  document.body.addEventListener(
+    "pointerup",
+    () => {
+
+      clearTimeout(longPressTimer);
+
+    }
+  );
+
+  document.body.addEventListener(
+    "pointercancel",
+    () => {
+
+      clearTimeout(longPressTimer);
+
+    }
+  );
 
 });
 
@@ -243,6 +318,9 @@ async function init() {
     alert("データなし");
     return;
   }
+
+  // AUTO初期状態
+  isAutoMode = autoFlg === "1";
 
   // 動画事前読込
   preloadMovies();
@@ -405,7 +483,7 @@ function nextStep() {
 
     // 画面遷移
     setTimeout(() => {
-      location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId;
+      location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;;
     }, 520);
 
   }
@@ -496,6 +574,66 @@ function nextStep() {
     evtId: nextEvt.evtId,
     cptId: nextEvt.cpt[0].cptId
   };
+
+}
+
+/*************************************************
+ * next icon表示
+ *************************************************/
+function refreshNextIcon() {
+
+  const nextIcon =
+    document.getElementById("nextIcon");
+
+  nextIcon.classList.remove(
+    "show",
+    "auto"
+  );
+
+  // --------------------
+  // AUTO
+  // --------------------
+
+  if (isAutoMode) {
+
+    nextIcon.innerText = "▶AUTO";
+
+    nextIcon.classList.add("auto");
+
+    return;
+
+  }
+
+  // --------------------
+  // 通常
+  // --------------------
+
+  nextIcon.innerText = "♪";
+
+  if (!isTyping) {
+
+    nextIcon.classList.add("show");
+
+  }
+
+}
+
+/*************************************************
+ * AUTO進行
+ *************************************************/
+function startAutoNext() {
+
+  clearTimeout(autoTimer);
+
+  if (!isAutoMode) {
+    return;
+  }
+
+  autoTimer = setTimeout(() => {
+
+    nextStep();
+
+  }, NEXT_TEXT_TIME);
 
 }
 
@@ -713,6 +851,8 @@ function showTitle(title) {
 
     area.classList.add("show");
 
+    startAutoNext()
+
   });
 
 }
@@ -806,6 +946,7 @@ const msgArea =
 function startTyping(text) {
 
   clearTimeout(typingTimer);
+  clearTimeout(autoTimer);
 
   const msgEl =
     document.getElementById("msgBody");
@@ -858,12 +999,14 @@ function startTyping(text) {
 
       isTyping = false;
 
-      // ♪表示
+      // 表示
       requestAnimationFrame(() => {
 
-        nextIcon.classList.add("show");
+        refreshNextIcon();
 
       });
+
+      startAutoNext();
 
     }
 
@@ -902,11 +1045,11 @@ function finishTyping() {
 
   }
 
-  document
-    .getElementById("nextIcon")
-    .classList.add("show");
+  refreshNextIcon();
 
   isTyping = false;
+  
+  startAutoNext();
 
 }
 

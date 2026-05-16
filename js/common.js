@@ -5,6 +5,7 @@ var evtId;
 var chrId;
 var evtIdx;
 var cptIdx;
+var autoFlg;
 var tgtEvtData;
 
 //---------------
@@ -30,6 +31,12 @@ function setParam() {
         evtId = String(urlParams.get('evtId'));
     } else {
         evtId = "AK-P2-C1";
+    }
+
+    if (urlParams.has('autoFlg')) {
+        autoFlg = String(urlParams.get('autoFlg'));
+    } else {
+        autoFlg = '0';
     }
 
     tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];
