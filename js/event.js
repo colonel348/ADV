@@ -42,7 +42,8 @@ let currentSrcL = "";
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.33;
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.32;
+const LOOP_SWITCH_BEFORE = 0.30
+;
 // 次L動画play後
 // fade開始まで待つms
 const LOOP_FADE_WAIT = 260;
