@@ -627,7 +627,7 @@ function refreshNextIcon() {
 
   if (isAutoMode) {
 
-    nextIcon.innerText = "▷AUTO";
+    nextIcon.innerText = "► AUTO";
 
     nextIcon.classList.add("auto");
 
