@@ -72,7 +72,7 @@ const msgData = [
     { tmgId:"Z", chrNm: "こはね", msgTxt: "……はぁ、……はぁ、……はぁっ……！……くるしい、……身体が、熱くて……心臓が、壊れそう……っ。"},
     { tmgId:"Z", chrNm: "こはね", msgTxt: "……でも、……止まっちゃ、ダメなんだ……っ……！"},
     { tmgId:"Z", chrNm: "彰人", msgTxt: "……おい、こはね。そんなに肩で息して、ずいぶん必死じゃねえか。"},
-    { tmgId:"Z", chrNm: "こはね", msgTxt: "……っ！？ ……しの、のめ……くん……っ！？ ……な、なんで……っ！ どうして、東雲くんがここに……っ！"},
+    { tmgId:"Z", chrNm: "こはね", msgTxt: "……っ！？ ……しの、のめ……くん……っ！？ ……な、なんで……っ！ どうして、東雲くんがここに……っ！"}
 
 ]},
 
@@ -84,16 +84,10 @@ const msgData = [
     { tmgId:"Z", chrNm: "杏", msgTxt: "こはねが……頑張ってるんだもん……。相棒の私が、ここで……足踏みなんて、してられないわよ……っ！"},
 
   { movId: "evt1"},
-//    { tmgId:"Z", chrNm: "杏", msgTxt: "……はぁ、はぁ……っ。……はいっ、た……。ねえ、冬弥……。……苦しくない？"},
-//    { tmgId:"Z", chrNm: "冬弥", msgTxt: "ああ、俺は大丈夫だ。だが白石、お前の方こそ……そんなに震えて、本当に平気なのか？"},
-//    { tmgId:"Z", chrNm: "彰人", msgTxt: "……感傷に浸ってんじゃねえよ。さっさと腰を動かせ"},
-//    { tmgId:"Z", chrNm: "杏", msgTxt: "っ……！ ……分かってるわよ"},
-    { tmgId:"A", chrNm: "杏", msgTxt: "……冬弥、覚悟してなさいよ……っ"},
-    { tmgId:"A", chrNm: "杏", msgTxt: "あ、……はぁ、はぁっ！ ……っ、これ……すごく、奥まで……くるっ……！"},
-    { tmgId:"L", chrNm: "冬弥", msgTxt: "白石、……っ。そんなに顔を真っ赤にして……無理をしているんじゃないか……っ？"},
-    { tmgId:"L", chrNm: "こはね", msgTxt: "（……杏ちゃん、苦しそうなのに……すごく、綺麗……）"},
-    { tmgId:"L", chrNm: "杏", msgTxt: "っ……あ、あぁっ！……彰人、見てなさいよ……っ！"},
-
+    { tmgId:"Z", chrNm: "杏", msgTxt: "……はぁ、はぁ……っ。……はいっ、た……。ねえ、冬弥……。……苦しくない？"},
+    { tmgId:"Z", chrNm: "冬弥", msgTxt: "ああ、俺は大丈夫だ。だが白石、お前の方こそ……そんなに震えて、本当に平気なのか？"},
+    { tmgId:"Z", chrNm: "彰人", msgTxt: "……感傷に浸ってんじゃねえよ。さっさと腰を動かせ"},
+    { tmgId:"Z", chrNm: "杏", msgTxt: "っ……！ ……分かってるわよ"},
 
   { movId: "evt2"},
     { tmgId:"A", chrNm: "杏", msgTxt: "……冬弥、覚悟してなさいよ……っ"},
@@ -116,7 +110,21 @@ const msgData = [
   { movId: "elg"},
     { tmgId:"Z", chrNm: "杏", msgTxt: "……はぁ、……はぁ。……ごめん、冬弥……。ちょっと……もう、力が入らなくて……っ"},
     { tmgId:"Z", chrNm: "冬弥", msgTxt: "白石、そのまま休んでいろ。……彰人、今日はこのくらいにしないか。彼女の消耗が激しすぎる"},
-    { tmgId:"Z", chrNm: "彰人", msgTxt: "……チッ、一回イっただけでこれかよ。こんなザマで、本気でRAD WEEKENDを超えるつもりか？"},
+    { tmgId:"Z", chrNm: "彰人", msgTxt: "……チッ、一回イっただけでこれかよ。こんなザマで、本気でRAD WEEKENDを超えるつもりか？"}
+
+]},
+
+{ evtId: "SA-S4-E4", cptId: "1", msgInfo:[
+
+  { movId: "plg", title: "ダンススタジオ"},
+    { tmgId:"Z", chrNm: "杏", msgTxt: "test"},
+
+  { movId: "evt1"},
+    { tmgId:"A", chrNm: "杏", msgTxt: "test1"},
+    { tmgId:"L", chrNm: "冬弥", msgTxt: "test2"},
+
+  { movId: "elg"},
+    { tmgId:"Z", chrNm: "杏", msgTxt: "test"}
 
 ]}
 

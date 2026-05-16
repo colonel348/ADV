@@ -30,6 +30,10 @@ const evtData = [
   { evtId: "SA-S2-C1", evtNm: "練習編", cpt:[
     { cptId: "1", extLv: "C"},
     { cptId: "2", extLv: "C"}
+  ]},
+  
+  { evtId: "SA-S4-E4", evtNm: "test", cpt:[
+    { cptId: "1", extLv: "E"},
   ]}
 
 ];
