@@ -32,6 +32,12 @@ const evtData = [
     { cptId: "2", extLv: "C"}
   ]},
   
+
+  { evtId: "SA-S4-E1", evtNm: "決戦編", cpt:[
+    { cptId: "2", extLv: "E", },
+    { cptId: "3", extLv: "E", }
+  ]},
+
   { evtId: "SA-S4-E4", evtNm: "test", cpt:[
     { cptId: "1", extLv: "E"},
   ]}
