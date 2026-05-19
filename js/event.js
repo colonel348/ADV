@@ -67,7 +67,7 @@ const BLACK_FADE_TIME = 500;
 // 次段落への時間
 const NEXT_EVT_TIME = 500;
 // 次メッセージへの時間
-const NEXT_TEXT_TIME = 2000;
+const NEXT_TEXT_TIME = 4500;
 
 // 長押しauto
 const AUTO_PRESS_TIME = 1000;
