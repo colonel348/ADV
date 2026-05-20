@@ -4,8 +4,7 @@ const evtData = [
  * ホタル
  *************************************************/
 
-  { evtId: "FF-S2-C1", evtNm: "慰め編", cpt:[
-    { cptId: "1", extLv: "B"},
+  { evtId: "FF-S2-C1", evtNm: "記念撮影編", cpt:[
     { cptId: "2", extLv: "C"},
   ]},
 
