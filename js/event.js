@@ -67,7 +67,7 @@ const BLACK_FADE_TIME = 500;
 // 次段落への時間
 const NEXT_EVT_TIME = 500;
 // 次メッセージへの時間
-const NEXT_TEXT_TIME = 4500;
+const NEXT_TEXT_TIME = 4000;
 
 // 長押しauto
 const AUTO_PRESS_TIME = 1000;
@@ -281,6 +281,12 @@ window.addEventListener("load", () => {
 
         isAutoMode = !isAutoMode;
 
+        if (isAutoMode) {
+          autoFlg = "1";
+        } else {
+          autoFlg = "0";
+        }
+
         refreshNextIcon();
 
         startAutoNext();
@@ -398,34 +404,38 @@ function nextStep() {
     return;
   }
 
-  // 現在メッセージを即fade-out
-  document
-    .getElementById("chrName")
-    .classList.add("msg-fade");
-
-  document
-    .getElementById("msgBody")
-    .classList.add("msg-fade");
-
-  document
-    .getElementById("nextIcon")
-    .classList.remove("show");
-
-  document
-    .getElementById("nextIcon")
-    .classList.add("msg-fade");
-
   // 現在行
   const currentItem =
     currentData.msgInfo[currentIndex];
 
+  if (!isAutoMode || !currentItem.movId) {
+
+    // 現在メッセージを即fade-out
+    document
+      .getElementById("chrName")
+      .classList.add("msg-fade");
+
+    document
+      .getElementById("msgBody")
+      .classList.add("msg-fade");
+
+    document
+      .getElementById("nextIcon")
+      .classList.remove("show");
+
+    document
+      .getElementById("nextIcon")
+      .classList.add("msg-fade");
+  
+  }
+
+
   // --------------------
-  // Lメッセージ待機中
+  // A動画終了待機中
   // --------------------
 
   if (
-    currentItem &&
-    currentItem.msgId === "L" &&
+    ["L", "B", "W"].includes(currentItem.msgId) &&
     currentVideo === videoA
   ) {
 
@@ -502,13 +512,13 @@ function nextStep() {
 
   } else if (
     item &&
-    item.msgId === "W" &&
+    (item.msgId === "W" || item.msgId === "B") &&
     pendingLoop
   ) {
 
     setTimeout(() => {
 
-      setFade(true, "W");
+      setFade(true, item.msgId);
 
       currentVideo = activeLoopVideo;
 
@@ -523,12 +533,6 @@ function nextStep() {
   if (currentIndex >= currentData.msgInfo.length) {
     
     const nextCpt = getNextCpt();
-    
-    if (isAutoMode) {
-      autoFlg = "1";
-    } else {
-      autoFlg = "0";
-    }
 
     // 画面遷移
     setTimeout(() => {
@@ -645,9 +649,7 @@ function refreshNextIcon() {
 
   if (isAutoMode) {
 
-    nextIcon.innerText = "► AUTO";
-
-    nextIcon.classList.add("auto");
+    nextIcon.innerText = "";
 
     return;
 
@@ -772,7 +774,7 @@ function showCurrent() {
     // --------------------
 
     if (
-      (msgId === "L" || msgId === "W") &&
+      (msgId === "L" || msgId === "W" || msgId === "B") &&
       currentVideo === videoA
     ) {
 
@@ -1544,9 +1546,9 @@ function playSeamlessMovie(srcA, srcL) {
 
       if (moviePattern === "A") {
 
-        if (currentItem.msgId === "W") {
+        if (["B", "W"].includes(currentItem.msgId)) {
 
-          setFade(true, "W");
+          setFade(true, currentItem.msgId);
 
           pendingLoop = false;
 
