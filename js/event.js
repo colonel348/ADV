@@ -269,8 +269,6 @@ window.addEventListener("load", () => {
         isAutoMode
       );
 
-      refreshNextIcon();
-
       startAutoNext();
 
     }
@@ -413,6 +411,38 @@ async function init() {
     return;
   }
 
+  const chrName =
+    document.getElementById("chrName");
+
+  const msgArea =
+    document.getElementById("msgArea");
+
+  // 崩壊スターレイル
+  if (chrId === "FF") {
+
+    chrName.classList.add(
+      "chrName-hs"
+    );
+
+    msgArea.classList.add(
+      "msgArea-hs"
+    );
+
+  }
+
+  // プロジェクトセカイ
+  else {
+
+    chrName.classList.add(
+      "chrName-ps"
+    );
+
+    msgArea.classList.add(
+      "msgArea-ps"
+    );
+
+  }
+
   // AUTO初期状態
   isAutoMode = autoFlg === "1";
 
@@ -486,14 +516,6 @@ function nextStep() {
       .getElementById("msgBody")
       .classList.add("msg-fade");
 
-    document
-      .getElementById("nextIcon")
-      .classList.remove("show");
-
-    document
-      .getElementById("nextIcon")
-      .classList.add("msg-fade");
-  
   }
 
 
@@ -538,10 +560,6 @@ function nextStep() {
       document
         .getElementById("msgBody")
         .innerHTML = "";
-
-      document
-        .getElementById("nextIcon")
-        .classList.remove("show");
 
       return;
 
@@ -694,45 +712,6 @@ function nextStep() {
     evtId: nextEvt.evtId,
     cptId: nextEvt.cpt[0].cptId
   };
-
-}
-
-/*************************************************
- * next icon表示
- *************************************************/
-function refreshNextIcon() {
-
-  const nextIcon =
-    document.getElementById("nextIcon");
-
-  nextIcon.classList.remove(
-    "show",
-    "auto"
-  );
-
-  // --------------------
-  // AUTO
-  // --------------------
-
-  if (isAutoMode) {
-
-    nextIcon.innerText = "";
-
-    return;
-
-  }
-
-  // --------------------
-  // 通常
-  // --------------------
-
-  nextIcon.innerText = "♪";
-
-  if (!isTyping) {
-
-    nextIcon.classList.add("show");
-
-  }
 
 }
 
@@ -1003,9 +982,6 @@ function changeMessage(chrNm, msg) {
   const msgBody =
     document.getElementById("msgBody");
 
-  const nextIcon =
-    document.getElementById("nextIcon");
-
   const msgArea =
     document.getElementById("msgArea");
 
@@ -1013,19 +989,13 @@ function changeMessage(chrNm, msg) {
   chrEl.innerText = "";
   msgBody.innerText = "";
 
-  nextIcon.classList.remove("show");
-
   chrEl.classList.remove("msg-fade");
   msgBody.classList.remove("msg-fade");
-  nextIcon.classList.remove("msg-fade");
 
   // 一瞬待ってから表示開始
   requestAnimationFrame(() => {
 
     msgArea.style.opacity = 1;
-
-    chrEl.classList.add("name");
-    msgBody.classList.add("name");
 
     chrEl.innerText = chrNm;
 
@@ -1046,38 +1016,49 @@ function startTyping(text) {
   const msgEl =
     document.getElementById("msgBody");
 
-  const nextIcon =
-    document.getElementById("nextIcon");
-
-  nextIcon.classList.remove("show");
-
   fullText = text;
 
   msgEl.innerHTML = "";
 
   isTyping = true;
 
-  let index = 0;
+  // --------------------
+  // 先に全文生成
+  // --------------------
 
-  function type() {
+  const spans = [];
 
-    const char = fullText[index];
+  for (const char of fullText) {
 
-    // 1文字span生成
     const span =
       document.createElement("span");
 
     span.className = "char";
 
+    span.style.opacity = 0;
+
     span.innerText = char;
 
     msgEl.appendChild(span);
 
+    spans.push(span);
+
+  }
+
+  let index = 0;
+
+  function type() {
+
+    spans[index].style.opacity = 1;
+
     index++;
 
-    if (index < fullText.length) {
+    if (index < spans.length) {
 
       let wait = 10;
+
+      const char =
+        fullText[index - 1];
 
       if (char === "、") {
         wait = 40;
@@ -1093,13 +1074,6 @@ function startTyping(text) {
     } else {
 
       isTyping = false;
-
-      // 表示
-      requestAnimationFrame(() => {
-
-        refreshNextIcon();
-
-      });
 
       startAutoNext();
 
@@ -1139,8 +1113,6 @@ function finishTyping() {
     msgEl.appendChild(span);
 
   }
-
-  refreshNextIcon();
 
   isTyping = false;
   
@@ -1709,14 +1681,9 @@ function fadeInMovie(src) {
   const msgBody =
     document.getElementById("msgBody");
 
-  const nextIcon =
-    document.getElementById("nextIcon");
-
   // メッセージフェードアウト
   chrEl.classList.add("msg-fade");
   msgBody.classList.add("msg-fade");
-  nextIcon.classList.remove("show");
-  nextIcon.classList.add("msg-fade");
 
   // 動画フェード
   setFade(true);
@@ -1741,8 +1708,6 @@ function fadeInMovie(src) {
       chrEl.innerText = "";
       msgBody.innerText = "";
 
-      nextIcon.classList.remove("show");
-
       // 次メッセージへ
       setTimeout(() => {
 
@@ -1758,7 +1723,6 @@ function fadeInMovie(src) {
 
           chrEl.classList.remove("msg-fade");
           msgBody.classList.remove("msg-fade");
-          nextIcon.classList.remove("msg-fade");
 
         });
 
@@ -1781,9 +1745,6 @@ function fadeOutVideo(callback, hideMessage = true) {
   const msgBody =
     document.getElementById("msgBody");
 
-  const nextIcon =
-    document.getElementById("nextIcon");
-
   // --------------------
   // メッセージfade-out
   // --------------------
@@ -1792,9 +1753,6 @@ function fadeOutVideo(callback, hideMessage = true) {
 
     chrEl.classList.add("msg-fade");
     msgBody.classList.add("msg-fade");
-
-    nextIcon.classList.remove("show");
-    nextIcon.classList.add("msg-fade");
 
   }
 
