@@ -125,6 +125,20 @@ html, body {
   
   position: absolute;
   z-index: 10;
+  
+  transition:
+  transform 0.32s ease,
+  opacity 0.32s ease;
+  
+  opacity: 0;
+
+}
+
+#msgArea.msg-hidden {
+
+  transform: translateY(100%);
+
+  opacity: 0;
 
 }
 
@@ -214,52 +228,12 @@ html, body {
   background:
     linear-gradient(
       to right,
-      color-mix(in srgb, var(--line) 90%, transparent) 10%,
-      color-mix(in srgb, var(--line) 70%, transparent) 30%,
-      color-mix(in srgb, var(--line) 30%, transparent) 70%,
+      color-mix(in srgb, #777777 90%, transparent) 10%,
+      color-mix(in srgb, #777777 70%, transparent) 30%,
+      color-mix(in srgb, #777777 30%, transparent) 70%,
       transparent 100%
     );
 
-}
-
-/* --------------------
- * こはね
- * -------------------- */
-
-.name-kohane {
-  --line: #d96a98;
-}
-
-/* --------------------
- * 杏
- * -------------------- */
-
-.name-an {
-  --line: #5fb8d1;
-}
-
-/* --------------------
- * 彰人
- * -------------------- */
-
-.name-akito {
-  --line: #d08a52;
-}
-
-/* --------------------
- * 冬弥
- * -------------------- */
-
-.name-toya {
-  --line: #6c86c9;
-}
-
-/* --------------------
- * デフォルト
- * -------------------- */
-
-.name-default {
-  --line: #777777;
 }
 
 #nextIcon {
@@ -505,6 +479,195 @@ html, body {
     opacity: 1;
 
     transform: translateX(0);
+
+  }
+
+}
+
+/* --------------------
+ * 右上メニュー
+ * -------------------- */
+
+#controlArea {
+
+  position: absolute;
+
+  top: 30px;
+  right: 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
+
+  z-index: 30;
+
+  opacity: 0;
+
+  transform: translateX(24px);
+
+  pointer-events: none;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+}
+
+#controlArea.show {
+
+  opacity: 1;
+
+  transform: translateX(0);
+
+  pointer-events: auto;
+
+}
+
+/* --------------------
+ * ボタン
+ * -------------------- */
+
+.control-btn {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  width: 120px;
+
+  height: 36px;
+
+  padding: 0 14px;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background: rgba(255,255,255,0.95);
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.3);
+
+  font-size: 14px;
+
+  font-weight: 1000;
+
+  color: #3f3a63;
+
+  -webkit-tap-highlight-color: transparent;
+
+  transform: scale(1);
+
+  transition:
+    transform 0.14s ease,
+    background-color 0.22s ease,
+    color 0.22s ease,
+    box-shadow 0.22s ease;
+
+}
+
+/* 押下感 */
+.control-btn:active {
+
+  transform: scale(0.93);
+
+  background:
+    rgba(245,245,245,0.96);
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.18);
+
+}
+
+/* --------------------
+ * アイコン
+ * -------------------- */
+
+.control-icon {
+
+  width: 18px;
+
+  height: 18px;
+
+  object-fit: contain;
+
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(21%)
+    sepia(11%)
+    saturate(1200%)
+    hue-rotate(210deg);
+
+  transition:
+    filter 0.22s ease,
+    transform 0.14s ease;
+
+}
+
+.control-btn:active .control-icon {
+
+  transform: scale(0.9);
+
+}
+
+/* --------------------
+ * AUTO ON
+ * -------------------- */
+
+#autoBtn.active {
+
+  color: #ff5ca8;
+
+  background:
+    rgba(255,240,247,0.98);
+
+}
+
+#autoBtn.active .control-icon {
+
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(56%)
+    sepia(78%)
+    saturate(1864%)
+    hue-rotate(299deg)
+    brightness(102%)
+    contrast(102%);
+
+}
+
+#controlArea.show .control-btn {
+
+  animation:
+    controlShow 0.28s ease;
+
+}
+
+@keyframes controlShow {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateX(16px)
+      scale(0.96);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      scale(1);
 
   }
 

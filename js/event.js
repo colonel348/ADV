@@ -46,11 +46,7 @@ let isAutoMode = false;
 
 let autoTimer = null;
 
-let longPressTimer = null;
-
-let isLongPress = false;
-
-let selectPressTimer = null;
+let isSwipeMove = false;
 
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.30;
@@ -72,7 +68,7 @@ const NEXT_TEXT_TIME = 4000;
 // 長押しauto
 const AUTO_PRESS_TIME = 1000;
 // 長押し選択画面
-const SELECT_PRESS_TIME = 2000;
+const SELECT_PRESS_TIME = 12000;
 
 /*************************************************
  * JS読込
@@ -247,87 +243,154 @@ window.addEventListener("load", () => {
     "click",
     () => {
 
-      if (isLongPress) {
-
-        isLongPress = false;
-
-        return;
-
-      }
-
       nextStep();
 
     }
   );
 
-  // --------------------
-  // long press
-  // --------------------
+  const autoBtn =
+    document.getElementById("autoBtn");
 
-  document.body.addEventListener(
-    "pointerdown",
-    () => {
+  const skipBtn =
+    document.getElementById("skipBtn");
 
-      clearTimeout(longPressTimer);
-      clearTimeout(selectPressTimer);
+  autoBtn.addEventListener(
+    "click",
+    e => {
 
-      // --------------------
-      // AUTO切替
-      // --------------------
+      e.stopPropagation();
 
-      longPressTimer = setTimeout(() => {
+      isAutoMode = !isAutoMode;
 
-        isLongPress = true;
+      autoFlg = isAutoMode ? "1" : "0";
 
-        isAutoMode = !isAutoMode;
+      autoBtn.classList.toggle(
+        "active",
+        isAutoMode
+      );
 
-        if (isAutoMode) {
-          autoFlg = "1";
-        } else {
-          autoFlg = "0";
-        }
+      refreshNextIcon();
 
-        refreshNextIcon();
-
-        startAutoNext();
-
-      }, AUTO_PRESS_TIME);
-
-      // --------------------
-      // select遷移
-      // --------------------
-
-      selectPressTimer = setTimeout(() => {
-
-        // AUTO切替済なら
-        if (!isLongPress) {
-          return;
-        }
-
-        moveSelect();
-
-      }, SELECT_PRESS_TIME);
+      startAutoNext();
 
     }
   );
 
-  document.body.addEventListener(
-    "pointerup",
-    () => {
+  skipBtn.addEventListener(
+    "click",
+    e => {
 
-      clearTimeout(longPressTimer);
-      clearTimeout(selectPressTimer);
+      e.stopPropagation();
+
+      moveSelect();
 
     }
   );
 
+  // --------------------
+  // メッセージ表示切替
+  // --------------------
+
+  let touchStartY = 0;
+  let touchStartX = 0;
+
+  const controlArea =
+    document.getElementById(
+      "controlArea"
+    );
+
+  let menuVisible = false;
+
   document.body.addEventListener(
-    "pointercancel",
-    () => {
+    "touchstart",
+    e => {
 
-      clearTimeout(longPressTimer);
-      clearTimeout(selectPressTimer);
+      touchStartY =
+        e.touches[0].clientY;
 
+      touchStartX =
+        e.touches[0].clientX;
+
+    },
+    {
+      passive: true
+    }
+  );
+
+  document.body.addEventListener(
+    "touchend",
+    e => {
+
+      const dy =
+        e.changedTouches[0].clientY
+        - touchStartY;
+
+      const dx =
+        e.changedTouches[0].clientX
+        - touchStartX;
+
+      const msgArea =
+        document.getElementById(
+          "msgArea"
+        );
+
+      // --------------------
+      // 上 → 下
+      // --------------------
+
+      if (dy > 80) {
+
+        msgArea.classList.add(
+          "msg-hidden"
+        );
+
+      }
+
+      // --------------------
+      // 下 → 上
+      // --------------------
+
+      else if (dy < -80) {
+
+        msgArea.classList.remove(
+          "msg-hidden"
+        );
+
+      }
+
+      // --------------------
+      // 右 → 左
+      // --------------------
+
+      else if (
+        dx < -80 &&
+        Math.abs(dx) > Math.abs(dy)
+      ) {
+
+        menuVisible = true;
+
+        controlArea.classList.add("show");
+
+      }
+
+      // --------------------
+      // 左 → 右
+      // --------------------
+
+      else if (
+        dx > 80 &&
+        Math.abs(dx) > Math.abs(dy)
+      ) {
+
+        menuVisible = false;
+
+        controlArea.classList.remove("show");
+
+      }
+
+    },
+    {
+      passive: true
     }
   );
 
@@ -352,6 +415,10 @@ async function init() {
 
   // AUTO初期状態
   isAutoMode = autoFlg === "1";
+
+  if (isAutoMode) {
+    document.getElementById("autoBtn").classList.add("active");
+  }
 
   // 動画事前読込
   preloadMovies();
@@ -695,6 +762,8 @@ function moveSelect() {
 
   setFade(true);
 
+  document.getElementById("msgArea").style.opacity = 0;
+
   setTimeout(() => {
 
     location.href =
@@ -937,6 +1006,9 @@ function changeMessage(chrNm, msg) {
   const nextIcon =
     document.getElementById("nextIcon");
 
+  const msgArea =
+    document.getElementById("msgArea");
+
   // 前テキストを即消す
   chrEl.innerText = "";
   msgBody.innerText = "";
@@ -950,53 +1022,10 @@ function changeMessage(chrNm, msg) {
   // 一瞬待ってから表示開始
   requestAnimationFrame(() => {
 
-const msgArea =
-  document.getElementById("msgArea");
+    msgArea.style.opacity = 1;
 
-  // class初期化
-  chrEl.className = "";
-  msgBody.className = "";
-  msgArea.className = "";
-
-  // --------------------
-  // キャラ別
-  // --------------------
-
-  if (chrNm.includes("こはね")) {
-
-    chrEl.classList.add("name-kohane");
-    msgBody.classList.add("name-kohane");
-
-  }
-
-  else if (chrNm.includes("杏")) {
-
-    chrEl.classList.add("name-an");
-    msgBody.classList.add("name-an");
-
-  }
-
-  else if (chrNm.includes("彰人")) {
-
-    chrEl.classList.add("name-akito");
-    msgBody.classList.add("name-akito");
-
-  }
-
-  else if (chrNm.includes("冬弥")) {
-
-    chrEl.classList.add("name-toya");
-    msgBody.classList.add("name-toya");
-
-  }
-
-  // デフォルト
-  else {
-
-    chrEl.classList.add("name-default");
-    msgBody.classList.add("name-default");
-
-  }
+    chrEl.classList.add("name");
+    msgBody.classList.add("name");
 
     chrEl.innerText = chrNm;
 
