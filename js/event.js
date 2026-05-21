@@ -771,7 +771,7 @@ function moveSelect() {
       + '?chrId=' + chrId
       + '&evtId=' + evtId
       + '&cptId=' + cptId
-      + '&autoFlg=0';
+      + '&autoFlg=' + autoFlg;
 
   }, BLACK_FADE_TIME);
 
