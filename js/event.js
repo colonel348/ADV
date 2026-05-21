@@ -456,7 +456,7 @@ async function init() {
   // 初回だけ1秒待つ
   setTimeout(() => {
 
-    showCurrent();
+    showTitle(currentData.title);
 
   }, 1000);
 
@@ -616,13 +616,13 @@ function nextStep() {
   }
 
   if (currentIndex >= currentData.msgInfo.length) {
-    
+
     const nextCpt = getNextCpt();
 
     // 画面遷移
     setTimeout(() => {
       location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
-    }, 520);
+    }, BLACK_FADE_TIME);
 
   }
 
@@ -741,17 +741,18 @@ function moveSelect() {
 
   setFade(true);
 
-  document.getElementById("msgArea").style.opacity = 0;
-
   setTimeout(() => {
 
-    location.href =
-      './select.html'
-      + '?chrId=' + chrId
-      + '&evtId=' + evtId
-      + '&cptId=' + cptId
-      + '&autoFlg=' + autoFlg;
+    document.getElementById("msgArea").style.opacity = 0;
+    document.getElementById("controlArea").style.opacity = 0;
 
+  }, 300);
+
+  const nextCpt = getNextCpt();
+
+  // 画面遷移
+  setTimeout(() => {
+    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
   }, BLACK_FADE_TIME);
 
 }
@@ -865,15 +866,6 @@ function showCurrent() {
 
     // フェード
     setFade(true);
-
-    // プロローグタイトル
-    if (item.movId === "plg") {
-
-      showTitle(item.title || "");
-
-      return;
-
-    }
 
     // 次段落
     setTimeout(() => {

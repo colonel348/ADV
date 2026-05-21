@@ -4,9 +4,9 @@ window.msgData = [
  * CPT-3
  *************************************************/
 
-{ cptId: "3", msgInfo:[
+{ cptId: "3", title: "ビビッドストリート", msgInfo:[
 
-  { movId: "plg", movPtn: "N", title: "ビビッドストリート"},
+  { movId: "plg", movPtn: "N"},
     { msgId: "-", chrNm: "こはね", msgTxt: "っ、杏ちゃん！……やっぱり、杏ちゃんは凄い、な……っ！勝負してるのを忘れちゃうくらい、ドキドキしちゃった……！"},
     { msgId: "-", chrNm: "杏", msgTxt: "こはね……っ！あはは、そんなに勢いよく来たら、二人で倒れちゃうって。"},
 

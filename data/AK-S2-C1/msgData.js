@@ -4,9 +4,9 @@ window.msgData = [
  * CPT-2
  *************************************************/
 
-{ cptId: "1", msgInfo:[
+{ cptId: "1", title: "WEEKEND GARAGE", msgInfo:[
 
-  { movId: "plg", movPtn: "N", title: "WEEKEND GARAGE"},
+  { movId: "plg", movPtn: "N"},
     { msgId: "-", chrNm: "こはね", msgTxt: "ひゃっ……！？ し、東雲くん、何をするの……っ？ 後ろから急に……っ。"},
     { msgId: "-", chrNm: "こはね", msgTxt: "えっ、何があっても動じない特訓……？で…でも、これは…恥ずかしいよぅ……っ。"},
 

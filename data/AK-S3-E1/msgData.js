@@ -4,9 +4,9 @@ window.msgData = [
  * CPT-1
  *************************************************/
 
-{ cptId: "1", msgInfo:[
+{ cptId: "1", title:"こはねの部屋", msgInfo:[
 
-  { movId: "plg", movPtn: "N", title:"こはねの部屋"},
+  { movId: "plg", movPtn: "N"},
     { msgId: "-", chrNm: "こはね", msgTxt: "早く準備して学校に行かなきゃ。……あれ？ 東雲くんから電話……？"},
     { msgId: "-", chrNm: "こはね", msgTxt: "おはよう、東雲くん。こんな朝早くからどうしたの？"},
 
@@ -40,9 +40,9 @@ window.msgData = [
  * CPT-2
  *************************************************/
 
-{ cptId: "2", msgInfo:[
+{ cptId: "2", title: "住宅街", msgInfo:[
 
-  { movId: "plg", movPtn: "N", title: "住宅街"},
+  { movId: "plg", movPtn: "N"},
     { msgId: "-", chrNm: "こはね", msgTxt: "……つ、つめたっ……。……風が、全身に当たって……本当に何も着てないんだって、実感しちゃう……っ"},
     { msgId: "-", chrNm: "こはね", msgTxt: "（……心臓が、耳元で鳴ってるみたいにうるさいよ。いつも通ってる学校までの道が、今は遠く感じる……っ）"},
 
