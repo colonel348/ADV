@@ -101,7 +101,7 @@ html, body {
 
 #msgText {
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.8;
   min-height: 100px;
   margin-left: 6px;
   padding-top: 6px;
@@ -586,7 +586,7 @@ html, body {
 
   height: 10px;
 
-  bottom: -2px;
+  bottom: 2px;
 
   border-radius: 999px;
 
@@ -625,9 +625,9 @@ html, body {
 
   width: 350px;
 
-  bottom: -8px;
+  bottom: -6px;
 
-  height: 2px;
+  height: 1px;
 
   background:
     rgba(210, 190, 159, 0.45);
