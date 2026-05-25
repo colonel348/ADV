@@ -269,6 +269,8 @@ window.addEventListener("load", () => {
         isAutoMode
       );
 
+      refreshNextIcon();
+
       startAutoNext();
 
     }
@@ -516,6 +518,14 @@ function nextStep() {
       .getElementById("msgBody")
       .classList.add("msg-fade");
 
+    document
+      .getElementById("nextIcon")
+      .classList.remove("show");
+
+    document
+      .getElementById("nextIcon")
+      .classList.add("msg-fade");
+  
   }
 
 
@@ -560,6 +570,10 @@ function nextStep() {
       document
         .getElementById("msgBody")
         .innerHTML = "";
+
+      document
+        .getElementById("nextIcon")
+        .classList.remove("show");
 
       return;
 
@@ -715,6 +729,46 @@ function nextStep() {
 
 }
 
+
+/*************************************************
+ * next icon表示
+ *************************************************/
+function refreshNextIcon() {
+
+  const nextIcon =
+    document.getElementById("nextIcon");
+
+  nextIcon.classList.remove(
+    "show",
+    "auto"
+  );
+
+  // --------------------
+  // AUTO
+  // --------------------
+
+  if (isAutoMode) {
+
+    nextIcon.innerText = "";
+
+    return;
+
+  }
+
+  // --------------------
+  // 通常
+  // --------------------
+
+  nextIcon.innerText = "♪";
+
+  if (!isTyping) {
+
+    nextIcon.classList.add("show");
+
+  }
+
+}
+
 /*************************************************
  * AUTO進行
  *************************************************/
@@ -741,18 +795,17 @@ function moveSelect() {
 
   setFade(true);
 
+  document.getElementById("msgArea").style.opacity = 0;
+
   setTimeout(() => {
 
-    document.getElementById("msgArea").style.opacity = 0;
-    document.getElementById("controlArea").style.opacity = 0;
+    location.href =
+      './select.html'
+      + '?chrId=' + chrId
+      + '&evtId=' + evtId
+      + '&cptId=' + cptId
+      + '&autoFlg=' + autoFlg;
 
-  }, 300);
-
-  const nextCpt = getNextCpt();
-
-  // 画面遷移
-  setTimeout(() => {
-    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
   }, BLACK_FADE_TIME);
 
 }
@@ -867,6 +920,15 @@ function showCurrent() {
     // フェード
     setFade(true);
 
+    // プロローグタイトル
+    if (item.movId === "plg") {
+
+      showTitle(item.title || "");
+
+      return;
+
+    }
+
     // 次段落
     setTimeout(() => {
 
@@ -974,6 +1036,9 @@ function changeMessage(chrNm, msg) {
   const msgBody =
     document.getElementById("msgBody");
 
+  const nextIcon =
+    document.getElementById("nextIcon");
+
   const msgArea =
     document.getElementById("msgArea");
 
@@ -981,8 +1046,10 @@ function changeMessage(chrNm, msg) {
   chrEl.innerText = "";
   msgBody.innerText = "";
 
+  nextIcon.classList.remove("show");
   chrEl.classList.remove("msg-fade");
   msgBody.classList.remove("msg-fade");
+  nextIcon.classList.remove("msg-fade");
 
   // 一瞬待ってから表示開始
   requestAnimationFrame(() => {
@@ -1007,6 +1074,11 @@ function startTyping(text) {
 
   const msgEl =
     document.getElementById("msgBody");
+
+  const nextIcon =
+    document.getElementById("nextIcon");
+
+  nextIcon.classList.remove("show");
 
   fullText = text;
 
@@ -1067,6 +1139,13 @@ function startTyping(text) {
 
       isTyping = false;
 
+      // 表示
+      requestAnimationFrame(() => {
+
+        refreshNextIcon();
+
+      });
+
       startAutoNext();
 
     }
@@ -1105,6 +1184,8 @@ function finishTyping() {
     msgEl.appendChild(span);
 
   }
+
+  refreshNextIcon();
 
   isTyping = false;
   
@@ -1673,9 +1754,14 @@ function fadeInMovie(src) {
   const msgBody =
     document.getElementById("msgBody");
 
+  const nextIcon =
+    document.getElementById("nextIcon");
+
   // メッセージフェードアウト
   chrEl.classList.add("msg-fade");
   msgBody.classList.add("msg-fade");
+  nextIcon.classList.remove("show");
+  nextIcon.classList.add("msg-fade");
 
   // 動画フェード
   setFade(true);
@@ -1700,6 +1786,7 @@ function fadeInMovie(src) {
       chrEl.innerText = "";
       msgBody.innerText = "";
 
+      nextIcon.classList.remove("show");
       // 次メッセージへ
       setTimeout(() => {
 
@@ -1715,6 +1802,7 @@ function fadeInMovie(src) {
 
           chrEl.classList.remove("msg-fade");
           msgBody.classList.remove("msg-fade");
+          nextIcon.classList.remove("msg-fade");
 
         });
 
@@ -1737,6 +1825,8 @@ function fadeOutVideo(callback, hideMessage = true) {
   const msgBody =
     document.getElementById("msgBody");
 
+  const nextIcon =
+    document.getElementById("nextIcon");
   // --------------------
   // メッセージfade-out
   // --------------------
@@ -1746,6 +1836,8 @@ function fadeOutVideo(callback, hideMessage = true) {
     chrEl.classList.add("msg-fade");
     msgBody.classList.add("msg-fade");
 
+    nextIcon.classList.remove("show");
+    nextIcon.classList.add("msg-fade");
   }
 
   // --------------------

@@ -141,6 +141,56 @@ html, body {
 
 }
 
+#nextIcon {
+
+  position: absolute;
+
+  right: 28px;
+  bottom: 20px;
+
+  font-size: 26px;
+
+  color: #69d8ca;
+
+  text-shadow:
+    0 0 8px rgba(105,216,202,0.8);
+
+  font-weight: bold;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transform: translateY(0);
+
+}
+
+#nextIcon.auto {
+
+  opacity: 1;
+
+  animation:
+  autoFade 0.22s ease;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  letter-spacing: 0.08em;
+
+}
+
+#nextIcon.show {
+
+  opacity: 1;
+
+  animation:
+    noteFade 0.25s ease,
+    noteFloat 0.9s ease-in-out infinite;
+
+}
+
+
 @keyframes noteFloat {
 
   0% {
@@ -153,6 +203,22 @@ html, body {
 
   100% {
     transform: translateY(0px);
+  }
+
+}
+
+@keyframes nextBlink {
+
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
   }
 
 }
