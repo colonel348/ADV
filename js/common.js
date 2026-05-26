@@ -7,6 +7,7 @@ var evtIdx;
 var cptIdx;
 var autoFlg;
 var tgtEvtData;
+var debugMovId;
 
 //---------------
 // パラメタ設定
@@ -37,6 +38,12 @@ function setParam() {
         autoFlg = String(urlParams.get('autoFlg'));
     } else {
         autoFlg = '0';
+    }
+
+    if (urlParams.has('debugMovId')) {
+        debugMovId = String(urlParams.get('debugMovId'));
+    } else {
+        debugMovId = null;
     }
 
     tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];

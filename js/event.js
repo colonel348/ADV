@@ -44,6 +44,7 @@ let waitItem = null;
 let currentSrcL = "";
 
 let isAutoMode = false;
+let isNextReady = false;
 
 let autoTimer = null;
 
@@ -246,6 +247,13 @@ window.addEventListener("load", () => {
   document.body.addEventListener(
     "click",
     () => {
+
+      // 押下待ち以外は無効
+      if (!isNextReady) {
+        return;
+      }
+
+      isNextReady = false;
 
       nextStep();
 
@@ -459,12 +467,38 @@ async function init() {
   // 動画事前読込
   preloadMovies();
 
-  // 初回だけ1秒待つ
-  setTimeout(() => {
+  // デバッグ開始位置
+  if (debugMovId) {
 
-    showTitle(currentData.title);
+    const movIndex =
+      findMovIndex(debugMovId);
 
-  }, 1000);
+    if (movIndex >= 0) {
+
+      currentIndex = movIndex;
+
+    }
+
+  }
+
+  // デバッグ開始
+  if (debugMovId) {
+
+    showCurrent();
+
+  }
+
+  // 通常開始
+  else {
+
+    // 初回だけ1秒待つ
+    setTimeout(() => {
+
+      showTitle(currentData.title);
+
+    }, 1000);
+
+  }
 
 }
 
@@ -679,6 +713,18 @@ function nextStep() {
 }
 
 /*************************************************
+ * movId位置取得
+ *************************************************/
+function findMovIndex(movId) {
+
+  return currentData.msgInfo.findIndex(
+    item =>
+      item.movId === movId
+  );
+
+}
+
+/*************************************************
  * 次のチャプター取得
  *************************************************/
  function getNextCpt() {
@@ -777,6 +823,8 @@ function refreshNextIcon() {
     "auto"
   );
 
+  isNextReady = false;
+
   // 自動進行メッセージ
   if (!isWaitMessage()) {
 
@@ -790,11 +838,9 @@ function refreshNextIcon() {
 
   if (!isTyping) {
 
-    autoTimer = setTimeout(() => {
+    isNextReady = true;
 
-      nextIcon.classList.add("show");
-
-    }, 200);
+    nextIcon.classList.add("show");
 
   }
 
@@ -838,9 +884,28 @@ function startAutoNext() {
   // AUTO時のみ進行
   if (isWaitMessage()) {
 
-    if (!isAutoMode) {
+    // AUTOなら自動進行
+    if (isAutoMode) {
+
+      autoTimer = setTimeout(() => {
+
+        nextStep();
+
+      }, NEXT_TEXT_TIME);
+
       return;
+
     }
+
+    // 通常モードなら
+    // 一定時間後にアイコン表示
+    autoTimer = setTimeout(() => {
+
+      refreshNextIcon();
+
+    }, NEXT_TEXT_TIME);
+
+    return;
 
   }
 
@@ -1266,6 +1331,20 @@ function startTyping(text) {
 
   for (const char of fullText) {
 
+    // 句点なら改行
+    if (char === "。") {
+
+      const br =
+        document.createElement("br");
+
+      msgEl.appendChild(br);
+
+      spans.push(br);
+
+      continue;
+
+    }
+
     const span =
       document.createElement("span");
 
@@ -1285,7 +1364,11 @@ function startTyping(text) {
 
   function type() {
 
-    spans[index].style.opacity = 1;
+    if (
+      spans[index].tagName !== "BR"
+    ) {
+      spans[index].style.opacity = 1;
+    }
 
     index++;
 
@@ -1310,13 +1393,6 @@ function startTyping(text) {
     } else {
 
       isTyping = false;
-
-      // 表示
-      requestAnimationFrame(() => {
-
-        refreshNextIcon();
-
-      });
 
       startAutoNext();
 
@@ -1351,7 +1427,19 @@ function finishTyping() {
 
     span.style.transform = "translateY(0)";
 
-    span.innerText = char;
+    if (char === "。") {
+
+      msgEl.appendChild(
+        document.createElement("br")
+      );
+
+      continue;
+
+    } else {
+
+      span.innerText = char;
+
+    }
 
     msgEl.appendChild(span);
 
