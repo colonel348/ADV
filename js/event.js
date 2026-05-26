@@ -28,6 +28,7 @@ let isTyping = false;
 let fullText = "";
 
 let isTitleShowing = false;
+let isAfterTitle = false;
 
 let pendingLoop = false;
 
@@ -49,9 +50,9 @@ let autoTimer = null;
 let isSwipeMove = false;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.30;
+const ACTION_SWITCH_BEFORE = 0.28;
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.30;
+const LOOP_SWITCH_BEFORE = 0.28;
 // 次L動画play後
 // fade開始まで待つms
 const LOOP_FADE_WAIT = 230;
@@ -63,7 +64,10 @@ const BLACK_FADE_TIME = 500;
 // 次段落への時間
 const NEXT_EVT_TIME = 500;
 // 次メッセージへの時間
-const NEXT_TEXT_TIME = 4000;
+//const NEXT_TEXT_TIME = 4000;
+const NEXT_TEXT_TIME = 3600;
+// タイトル後の時間
+const NEXT_TITLE_TIME = 2000;
 
 // 長押しauto
 const AUTO_PRESS_TIME = 1000;
@@ -109,7 +113,7 @@ function preloadMovies() {
 
     // movIdごとの
     // パターン取得
-    const pattern = item.movPtn;
+    const pattern =  getMoviePattern(currentData.msgInfo.indexOf(item));
 
     let sources = [];
 
@@ -470,6 +474,36 @@ async function init() {
 
 function nextStep() {
 
+  // 非表示状態なら
+  if (
+    msgArea.classList.contains(
+      "msg-hidden"
+    )
+  ) {
+
+    msgArea.style.opacity = 0;
+    
+    setTimeout(() => {
+
+      msgArea.classList.remove("msg-hidden");
+
+      setTimeout(() => {
+
+        msgArea.style.opacity = 1;
+
+      }, 400);
+
+    }, 400);
+
+    // style初期化
+    requestAnimationFrame(() => {
+
+      msgArea.style.transform = "";
+
+    });
+
+  }
+
   // タイトル表示中
   if (isTitleShowing) {
 
@@ -743,11 +777,8 @@ function refreshNextIcon() {
     "auto"
   );
 
-  // --------------------
-  // AUTO
-  // --------------------
-
-  if (isAutoMode) {
+  // 自動進行メッセージ
+  if (!isWaitMessage()) {
 
     nextIcon.innerText = "";
 
@@ -755,17 +786,44 @@ function refreshNextIcon() {
 
   }
 
-  // --------------------
-  // 通常
-  // --------------------
-
   nextIcon.innerText = "♪";
 
   if (!isTyping) {
 
-    nextIcon.classList.add("show");
+    autoTimer = setTimeout(() => {
+
+      nextIcon.classList.add("show");
+
+    }, 200);
 
   }
+
+}
+
+/*************************************************
+ * クリック待ち判定
+ *************************************************/
+function isWaitMessage() {
+
+  // 現在行
+  const currentItem =
+    currentData.msgInfo[currentIndex];
+
+  // 次行
+  const nextItem =
+    currentData.msgInfo[currentIndex + 1];
+
+  // 最終メッセージ
+  if (!nextItem) {
+    return true;
+  }
+
+  // 次が動画
+  if ("movId" in nextItem) {
+    return true;
+  }
+
+  return false;
 
 }
 
@@ -776,15 +834,28 @@ function startAutoNext() {
 
   clearTimeout(autoTimer);
 
-  if (!isAutoMode) {
-    return;
+  // 停止メッセージなら
+  // AUTO時のみ進行
+  if (isWaitMessage()) {
+
+    if (!isAutoMode) {
+      return;
+    }
+
   }
+
+  const waitTime =
+    isAfterTitle
+    ? NEXT_TITLE_TIME
+    : NEXT_TEXT_TIME;
+
+  isAfterTitle = false;
 
   autoTimer = setTimeout(() => {
 
     nextStep();
 
-  }, NEXT_TEXT_TIME);
+  }, waitTime);
 
 }
 
@@ -856,6 +927,87 @@ function setFade(show, color = null) {
     }, BLACK_FADE_TIME);
   
   }
+
+}
+
+/*************************************************
+ * movPtn取得
+ *************************************************/
+function getMoviePattern(startIndex) {
+
+  let hasA = false;
+  let hasL = false;
+  let hasN = false;
+
+  // 次行から確認
+  for (
+    let i = startIndex + 1;
+    i < currentData.msgInfo.length;
+    i++
+  ) {
+
+    const item =
+      currentData.msgInfo[i];
+
+    // 次movIdで終了
+    if ("movId" in item) {
+      break;
+    }
+
+    // msg以外無視
+    if (!item.msgId) {
+      continue;
+    }
+
+    // --------------------
+    // A
+    // --------------------
+
+    if (item.msgId === "A") {
+
+      hasA = true;
+
+    }
+
+    // --------------------
+    // L
+    // --------------------
+
+    else if (item.msgId === "L") {
+
+      hasL = true;
+
+    }
+
+    // --------------------
+    // N
+    // --------------------
+
+    else if (item.msgId === "N") {
+
+      hasN = true;
+
+    }
+
+  }
+
+  // --------------------
+  // 判定
+  // --------------------
+
+  if (hasA && hasL) {
+    return "AL";
+  }
+
+  if (hasA) {
+    return "A";
+  }
+
+  if (hasL) {
+    return "L";
+  }
+
+  return "N";
 
 }
 
@@ -954,7 +1106,7 @@ function showCurrent() {
 
       // movId単位で
       // パターン解析
-      moviePattern = item.movPtn;
+      moviePattern = getMoviePattern(currentIndex);
 
       const nextItem = currentData.msgInfo[currentIndex + 1];
       const nextMsgId = nextItem.msgId;
@@ -1019,6 +1171,8 @@ function showTitle(title) {
 
     area.classList.add("show");
 
+    isAfterTitle = true;
+
     startAutoNext()
 
   });
@@ -1057,6 +1211,24 @@ function changeMessage(chrNm, msg) {
     msgArea.style.opacity = 1;
 
     chrEl.innerText = chrNm;
+    
+    // 心の声
+    if (
+      msg.startsWith("（") &&
+      msg.endsWith("）")
+    ) {
+
+      msgBody.classList.add(
+        "msg-thought"
+      );
+
+    } else {
+
+      msgBody.classList.remove(
+        "msg-thought"
+      );
+
+    }
 
     startTyping(msg);
 

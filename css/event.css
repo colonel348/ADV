@@ -120,6 +120,13 @@ html, body {
   opacity: 1;
 }
 
+.msg-thought {
+
+  color:
+    rgba(210,225,255,0.85) !important;
+
+}
+
 /* --------------------
  * 共通文字
  * -------------------- */
@@ -162,6 +169,8 @@ html, body {
   pointer-events: none;
 
   transform: translateY(0);
+
+  transition: opacity 0.25s ease;
 
 }
 
