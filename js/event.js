@@ -51,9 +51,9 @@ let autoTimer = null;
 let isSwipeMove = false;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.28;
+const ACTION_SWITCH_BEFORE = 0.3;
 // L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.28;
+const LOOP_SWITCH_BEFORE = 0.3;
 // 次L動画play後
 // fade開始まで待つms
 const LOOP_FADE_WAIT = 230;
