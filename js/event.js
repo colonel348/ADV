@@ -1928,19 +1928,6 @@ function playSeamlessMovie(srcA, srcL) {
 
             isBusy = false;
 
-            if (
-              nextItem &&
-              !("movId" in nextItem)
-            ) {
-
-              return;
-
-            }
-
-            currentIndex++;
-
-            showCurrent();
-
           }, 600);
 
           return;
