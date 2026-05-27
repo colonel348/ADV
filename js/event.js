@@ -706,6 +706,8 @@ function nextStep() {
       location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
     }, BLACK_FADE_TIME);
 
+    return;
+
   }
 
   showCurrent();
@@ -825,6 +827,15 @@ function refreshNextIcon() {
 
   isNextReady = false;
 
+  if (moviePattern === "A" &&
+      currentVideo === videoA) {
+
+    nextIcon.innerText = "";
+
+    return;
+  }
+
+
   // 自動進行メッセージ
   if (!isWaitMessage()) {
 
@@ -866,7 +877,22 @@ function isWaitMessage() {
 
   // 次が動画
   if ("movId" in nextItem) {
-    return true;
+
+    if (moviePattern === "A" &&
+      currentVideo === videoA) {
+
+      const remain =
+      videoA.duration - videoA.currentTime;
+
+      // 終了直前
+      if (remain <= 1.0) {
+        return true;
+      }
+
+    } else {
+      return true;
+    }
+
   }
 
   return false;
@@ -1276,24 +1302,6 @@ function changeMessage(chrNm, msg) {
     msgArea.style.opacity = 1;
 
     chrEl.innerText = chrNm;
-    
-    // 心の声
-    if (
-      msg.startsWith("（") &&
-      msg.endsWith("）")
-    ) {
-
-      msgBody.classList.add(
-        "msg-thought"
-      );
-
-    } else {
-
-      msgBody.classList.remove(
-        "msg-thought"
-      );
-
-    }
 
     startTyping(msg);
 
@@ -1329,10 +1337,17 @@ function startTyping(text) {
 
   const spans = [];
 
+  let inNote = false;
+
   for (const char of fullText) {
 
-    // 句点なら改行
-    if (char === "。") {
+    // （ 開始
+    if (char === "（") {
+      inNote = true;
+    }
+
+    // スぺースなら改行
+    if (char === "　") {
 
       const br =
         document.createElement("br");
@@ -1348,7 +1363,9 @@ function startTyping(text) {
     const span =
       document.createElement("span");
 
-    span.className = "char";
+    // 通常 or 注釈
+    span.className =
+      inNote ? "char noteChar" : "char";
 
     span.style.opacity = 0;
 
@@ -1357,6 +1374,11 @@ function startTyping(text) {
     msgEl.appendChild(span);
 
     spans.push(span);
+
+    // ） 終了
+    if (char === "）") {
+      inNote = false;
+    }
 
   }
 
@@ -1383,7 +1405,7 @@ function startTyping(text) {
         wait = 40;
       }
 
-      if (char === "。") {
+      if (char === "　") {
         wait = 60;
       }
 
@@ -1427,7 +1449,7 @@ function finishTyping() {
 
     span.style.transform = "translateY(0)";
 
-    if (char === "。") {
+    if (char === "　") {
 
       msgEl.appendChild(
         document.createElement("br")
@@ -1842,7 +1864,7 @@ function playSeamlessMovie(srcA, srcL) {
 
             videoA.currentTime = 0;
 
-          }, 600);
+          }, BLACK_FADE_TIME);
 
           return;
 
@@ -1866,7 +1888,7 @@ function playSeamlessMovie(srcA, srcL) {
 
             showCurrent();
 
-          }, 600);
+          }, BLACK_FADE_TIME);
 
           return;
 
@@ -1900,7 +1922,7 @@ function playSeamlessMovie(srcA, srcL) {
 
             showCurrent();
 
-          }, 600);
+          }, BLACK_FADE_TIME);
 
           return;
 
@@ -1909,10 +1931,6 @@ function playSeamlessMovie(srcA, srcL) {
           // --------------------
           // 最後A終了済み
           // --------------------
-
-          // 次行確認
-          const nextItem =
-            currentData.msgInfo[currentIndex + 1];
 
           setFade(true);
 
@@ -1928,7 +1946,9 @@ function playSeamlessMovie(srcA, srcL) {
 
             isBusy = false;
 
-          }, 600);
+            refreshNextIcon();
+
+          }, BLACK_FADE_TIME);
 
           return;
 
@@ -1955,7 +1975,7 @@ function playSeamlessMovie(srcA, srcL) {
 
             showCurrent();
 
-          }, 600);
+          }, BLACK_FADE_TIME);
 
         });
 
@@ -2108,7 +2128,7 @@ function fadeOutVideo(callback, hideMessage = true) {
 
     callback();
 
-  }, 500);
+  }, BLACK_FADE_TIME);
 
 }
 

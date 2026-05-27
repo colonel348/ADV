@@ -120,7 +120,7 @@ html, body {
   opacity: 1;
 }
 
-.msg-thought {
+.noteChar {
 
   color:
     rgba(210,225,255,0.85) !important;
@@ -170,7 +170,7 @@ html, body {
 
   transform: translateY(0);
 
-  transition: opacity 0.25s ease;
+  transition: opacity 0.15s ease;
 
 }
 

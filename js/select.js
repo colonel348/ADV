@@ -169,6 +169,12 @@ function createCards() {
         momentumTimer = null;
       }
 
+      if (isCharacterMode) {
+        isCharacterMode = false;
+        applyCharacterMode();
+        requestAnimationFrame(updateCharHighlight);
+      }
+
       if (evtIdx === i) return;
 
       evtIdx = i;
@@ -317,7 +323,7 @@ function goToEvent() {
 
   // 画面遷移
   setTimeout(() => {
-    location.href = './event.html?chrId=' + chrId + '&evtId=' + tgtEvtData.evtId + '&cptId=' + tgtEvtData.cpt[cptIdx].cptId + '&autoFlg=' + autoFlg;
+    location.href = './event.html?chrId=' + chrId + '&evtId=' + tgtEvtData.evtId + '&cptId=' + tgtEvtData.cpt[cptIdx].cptId + '&autoFlg=' + autoFlg + '&debugMovId=';
   }, 520);
 }
 
