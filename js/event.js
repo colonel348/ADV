@@ -46,9 +46,12 @@ let currentSrcL = "";
 let isAutoMode = false;
 let isNextReady = false;
 
+let aTextTimer = null;
+
 let autoTimer = null;
 
 let isSwipeMove = false;
+
 
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.3;
@@ -65,8 +68,7 @@ const BLACK_FADE_TIME = 500;
 // 次段落への時間
 const NEXT_EVT_TIME = 500;
 // 次メッセージへの時間
-//const NEXT_TEXT_TIME = 4000;
-const NEXT_TEXT_TIME = 3600;
+const NEXT_TEXT_TIME = 4000;
 // タイトル後の時間
 const NEXT_TITLE_TIME = 2000;
 
@@ -508,6 +510,8 @@ async function init() {
 
 function nextStep() {
 
+  clearATextTimer();
+
   // 非表示状態なら
   if (
     msgArea.classList.contains(
@@ -577,22 +581,7 @@ function nextStep() {
 
   if (!isAutoMode || !currentItem.movId) {
 
-    // 現在メッセージを即fade-out
-    document
-      .getElementById("chrName")
-      .classList.add("msg-fade");
-
-    document
-      .getElementById("msgBody")
-      .classList.add("msg-fade");
-
-    document
-      .getElementById("nextIcon")
-      .classList.remove("show");
-
-    document
-      .getElementById("nextIcon")
-      .classList.add("msg-fade");
+    fadeOutCurrentMessage();
   
   }
 
@@ -877,26 +866,42 @@ function isWaitMessage() {
 
   // 次が動画
   if ("movId" in nextItem) {
-
-    if (moviePattern === "A" &&
-      currentVideo === videoA) {
-
-      const remain =
-      videoA.duration - videoA.currentTime;
-
-      // 終了直前
-      if (remain <= 1.0) {
-        return true;
-      }
-
-    } else {
       return true;
-    }
-
   }
 
   return false;
 
+}
+
+function clearATextTimer() {
+  clearTimeout(aTextTimer);
+  aTextTimer = null;
+}
+
+function isLongAVideo() {
+  return videoA && videoA.duration >= 6;
+}
+
+function getAStageInfo() {
+  const currentItem = currentData.msgInfo[currentIndex];
+  if (!currentItem || currentItem.msgId !== "A") return null;
+  if (currentVideo !== videoA) return null;
+
+  const prevItem = currentData.msgInfo[currentIndex - 1];
+  const nextItem = currentData.msgInfo[currentIndex + 1];
+
+  return {
+    isFirstA: !(prevItem && prevItem.msgId === "A"),
+    hasNextA: !!(nextItem && nextItem.msgId === "A"),
+    isLongA: isLongAVideo()
+  };
+}
+
+function fadeOutCurrentMessage() {
+  document.getElementById("chrName").classList.add("msg-fade");
+  document.getElementById("msgBody").classList.add("msg-fade");
+  document.getElementById("nextIcon").classList.remove("show");
+  document.getElementById("nextIcon").classList.add("msg-fade");
 }
 
 /*************************************************
@@ -905,49 +910,94 @@ function isWaitMessage() {
 function startAutoNext() {
 
   clearTimeout(autoTimer);
+  clearATextTimer();
 
-  // 停止メッセージなら
-  // AUTO時のみ進行
-  if (isWaitMessage()) {
+  const currentItem =
+    currentData.msgInfo[currentIndex];
 
-    // AUTOなら自動進行
-    if (isAutoMode) {
+  // --------------------
+  // Aメッセージだけ別制御
+  // --------------------
+  if (
+    currentItem &&
+    currentItem.msgId === "A" &&
+    currentVideo === videoA
+  ) {
 
-      autoTimer = setTimeout(() => {
+    const aInfo = getAStageInfo();
+    if (!aInfo) return;
 
-        nextStep();
-
-      }, NEXT_TEXT_TIME);
-
+    // 5秒Aは何もしない
+    if (!aInfo.isLongA) {
       return;
-
     }
 
-    // 通常モードなら
-    // 一定時間後にアイコン表示
-    autoTimer = setTimeout(() => {
+    // 2個目のAは動画終了までそのまま
+    if (!aInfo.isFirstA) {
+      return;
+    }
 
-      refreshNextIcon();
+    aTextTimer = setTimeout(() => {
+
+      const nowItem =
+        currentData.msgInfo[currentIndex];
+
+      // 途中で場面が変わっていたら何もしない
+      if (
+        !nowItem ||
+        nowItem.msgId !== "A" ||
+        currentVideo !== videoA
+      ) {
+        return;
+      }
+
+      // 2個目のAがあるなら次のAへ
+      if (aInfo.hasNextA) {
+        currentIndex++;
+        showCurrent();
+        return;
+      }
+
+      // 1個だけなら非表示にする
+      fadeOutCurrentMessage();
 
     }, NEXT_TEXT_TIME);
 
     return;
+  }
 
+  // --------------------
+  // 停止メッセージなら
+  // AUTO時のみ進行
+  // --------------------
+  if (isWaitMessage()) {
+
+    if (isAutoMode) {
+
+      autoTimer = setTimeout(() => {
+        nextStep();
+      }, NEXT_TEXT_TIME);
+
+      return;
+    }
+
+    autoTimer = setTimeout(() => {
+      refreshNextIcon();
+    }, NEXT_TEXT_TIME);
+
+    return;
   }
 
   const waitTime =
     isAfterTitle
-    ? NEXT_TITLE_TIME
-    : NEXT_TEXT_TIME;
+      ? NEXT_TITLE_TIME
+      : NEXT_TEXT_TIME;
 
   isAfterTitle = false;
 
   autoTimer = setTimeout(() => {
-
     nextStep();
-
   }, waitTime);
-
 }
 
 /*************************************************
@@ -1835,42 +1885,19 @@ function playSeamlessMovie(srcA, srcL) {
     // 終了直前
     if (remain <= ACTION_SWITCH_BEFORE) {
 
-      // 現在行
-      const currentItem =
-        currentData.msgInfo[currentIndex];
+      // 次行
+      const nextItem =
+        currentData.msgInfo[currentIndex + 1];
 
       // --------------------
       // A→Lパターン
       // --------------------
 
-      if (
-        moviePattern === "AL" &&
-        currentItem.msgId != "L"
-      ) {
+      if (moviePattern === "AL") {
 
-        if (currentItem.msgId === "A") {
+        if (["B", "W"].includes(nextItem.msgId)) {
 
-          pendingLoop = true;
-
-          setFade(true);
-
-          setTimeout(() => {
-
-            videoA.classList.remove("show");
-
-            videoA.pause();
-
-            videoA.style.display = "none";
-
-            videoA.currentTime = 0;
-
-          }, BLACK_FADE_TIME);
-
-          return;
-
-        } else if (currentItem.msgId === "W") {
-
-          setFade(true, "W");
+          setFade(true, nextItem.msgId);
 
           pendingLoop = true;
 
@@ -1886,9 +1913,34 @@ function playSeamlessMovie(srcA, srcL) {
 
             isBusy = false;
 
+            ++currentIndex;
+
             showCurrent();
 
           }, BLACK_FADE_TIME);
+
+          return;
+
+        } else {
+
+          startLoopDoubleBuffer(srcL);
+
+          currentVideo = activeLoopVideo;
+
+          pendingLoop = false;
+
+          requestAnimationFrame(() => {
+
+            // 次メッセージ
+            setTimeout(() => {
+
+              ++currentIndex;
+
+              showCurrent();
+
+            }, BLACK_FADE_TIME);
+
+          });
 
           return;
 
@@ -1902,9 +1954,9 @@ function playSeamlessMovie(srcA, srcL) {
 
       if (moviePattern === "A") {
 
-        if (["B", "W"].includes(currentItem.msgId)) {
+        if (["B", "W"].includes(nextItem.msgId)) {
 
-          setFade(true, currentItem.msgId);
+          setFade(true, nextItem.msgId);
 
           pendingLoop = false;
 
@@ -1920,6 +1972,8 @@ function playSeamlessMovie(srcA, srcL) {
 
             isBusy = false;
 
+            ++currentIndex;
+
             showCurrent();
 
           }, BLACK_FADE_TIME);
@@ -1927,10 +1981,6 @@ function playSeamlessMovie(srcA, srcL) {
           return;
 
         } else {
-
-          // --------------------
-          // 最後A終了済み
-          // --------------------
 
           setFade(true);
 
@@ -1955,33 +2005,6 @@ function playSeamlessMovie(srcA, srcL) {
         }
 
       }
-
-      // --------------------
-      // 通常L切替
-      // --------------------
-
-      startLoopDoubleBuffer(srcL);
-
-      currentVideo = activeLoopVideo;
-      
-      if (pendingLoop) {
-
-        pendingLoop = false;
-
-        requestAnimationFrame(() => {
-
-          // 次メッセージ
-          setTimeout(() => {
-
-            showCurrent();
-
-          }, BLACK_FADE_TIME);
-
-        });
-
-      }
-
-      return;
 
     }
 
