@@ -42,13 +42,13 @@ const evtData = [
  * 白石杏
  *************************************************/
 
-//  { evtId: "SA-S1-B1", evtNm: "挑発編", cpt:[
+  { evtId: "SA-S1-B1", evtNm: "挑発編", cpt:[
 // ▲   { cptId: "1", extLv: "B", ptnId: "V3", plcNm: "体育倉庫"},
-// ▲   { cptId: "2", extLv: "B", ptnId: "L4", plcNm: "体育倉庫"}
-//  ]},
+   { cptId: "2", extLv: "B", ptnId: "L4", plcNm: "体育倉庫"}
+  ]},
 
   { evtId: "SA-S2-C1", evtNm: "練習編", cpt:[
-//    { cptId: "1", extLv: "C"},
+// ▲   { cptId: "1", extLv: "C"},
     { cptId: "2", extLv: "C"}
   ]},
 
