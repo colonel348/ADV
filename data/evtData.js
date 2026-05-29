@@ -58,7 +58,7 @@ const evtData = [
 //  ]},
 
   { evtId: "SA-S4-E1", evtNm: "決戦編", cpt:[
-// ▲   { cptId: "2", extLv: "E"},
+    { cptId: "2", extLv: "E"},
     { cptId: "3", extLv: "E"}
   ]}
 
