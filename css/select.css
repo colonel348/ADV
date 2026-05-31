@@ -187,8 +187,18 @@ body {
 
 /* 文字 */
 .cardInner .label {
-  position: relative;
+  position: absolute;
   z-index: 4;
+
+  left: 8px;
+  padding: 2px 4px;
+  bottom: 8px;
+
+  background: rgba(60, 60, 89, 0.78);
+
+  color: #fff;
+  font-size: 9px;
+
 }
 
 .card.active {
@@ -197,7 +207,6 @@ body {
 
 .card.active .cardInner {
   transform: scale(1.4);
-  filter: brightness(1.06);
 }
 
 /* 消える */
@@ -401,7 +410,7 @@ body {
 .cardChapterIcons {
   position: absolute;
 
-  bottom: 10px;
+  bottom: 27px;
 
   display: flex;
 

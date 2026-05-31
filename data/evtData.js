@@ -4,7 +4,7 @@ const evtData = [
  * ホタル
  *************************************************/
 
-  { evtId: "FF-S2-C1", evtNm: "記念撮影編", cpt:[
+  { evtId: "FF-S2-C1", evtNm: "内緒の記念撮影", cpt:[
     { cptId: "2", extLv: "C"},
   ]},
 
@@ -17,17 +17,17 @@ const evtData = [
  * 小豆沢こはね
  *************************************************/
 
-  { evtId: "AK-S2-C1", evtNm: "特訓編", cpt:[
+  { evtId: "AK-S2-C1", evtNm: "快感に抗う試練", cpt:[
     { cptId: "1", extLv: "B"},
-// ▲   { cptId: "2", extLv: "C"}
+    { cptId: "2", extLv: "C"}
   ]},
 
-  { evtId: "AK-S2-C2", evtNm: "デッサン編", cpt:[
+  { evtId: "AK-S2-C2", evtNm: "描かれる私の身体", cpt:[
     { cptId: "2", extLv: "B"},
     { cptId: "3", extLv: "C"}
   ]},
 
-  { evtId: "AK-S3-E1", evtNm: "登校編", cpt:[
+  { evtId: "AK-S3-E1", evtNm: "恥辱の通学路", cpt:[
     { cptId: "1", extLv: "B"},
     { cptId: "2", extLv: "E"}
   ]},
@@ -42,12 +42,12 @@ const evtData = [
  * 白石杏
  *************************************************/
 
-  { evtId: "SA-S1-B1", evtNm: "挑発編", cpt:[
+  { evtId: "SA-S1-B1", evtNm: "強がりの限界", cpt:[
 // ▲   { cptId: "1", extLv: "B", ptnId: "V3", plcNm: "体育倉庫"},
    { cptId: "2", extLv: "B", ptnId: "L4", plcNm: "体育倉庫"}
   ]},
 
-  { evtId: "SA-S2-C1", evtNm: "練習編", cpt:[
+  { evtId: "SA-S2-C1", evtNm: "魅了への第一歩", cpt:[
 // ▲   { cptId: "1", extLv: "C"},
     { cptId: "2", extLv: "C"}
   ]},
@@ -57,7 +57,7 @@ const evtData = [
 // ▲   { cptId: "2", extLv: "D", ptnId: "V3", plcNm: "教室"}
 //  ]},
 
-  { evtId: "SA-S4-E1", evtNm: "決戦編", cpt:[
+  { evtId: "SA-S4-E1", evtNm: "裸心の絶唱", cpt:[
     { cptId: "2", extLv: "E"},
     { cptId: "3", extLv: "E"}
   ]}
