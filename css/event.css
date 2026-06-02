@@ -148,9 +148,42 @@ html, body {
 
 }
 
+/* =========================
+ * nextIcon 共通
+ * ========================= */
 #nextIcon {
 
   position: absolute;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  font-weight: bold;
+
+  transition: opacity 0.15s ease;
+
+}
+
+#nextIcon.auto {
+
+  opacity: 1;
+
+  animation:
+    autoFade 0.22s ease;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  letter-spacing: 0.08em;
+
+}
+
+/* =========================
+ * PS版
+ * ========================= */
+.msgArea-ps #nextIcon {
 
   right: 28px;
   bottom: 5px;
@@ -162,34 +195,11 @@ html, body {
   text-shadow:
     0 0 8px rgba(105,216,202,0.8);
 
-  font-weight: bold;
-
-  opacity: 0;
-
-  pointer-events: none;
-
   transform: translateY(0);
 
-  transition: opacity 0.15s ease;
-
 }
 
-#nextIcon.auto {
-
-  opacity: 1;
-
-  animation:
-  autoFade 0.22s ease;
-
-  color: #ffffff;
-
-  font-size: 15px;
-
-  letter-spacing: 0.08em;
-
-}
-
-#nextIcon.show {
+.msgArea-ps #nextIcon.show {
 
   opacity: 1;
 
@@ -199,37 +209,63 @@ html, body {
 
 }
 
+/* =========================
+ * HR版
+ * ========================= */
+.msgArea-hs #nextIcon {
+  position: absolute;
 
-@keyframes noteFloat {
+  left: 50%;
+  bottom: 16px;
 
-  0% {
-    transform: translateY(0px);
-  }
+  width: 16px;
+  height: 10px;
 
-  50% {
-    transform: translateY(-6px);
-  }
+  transform: translateX(-50%);
 
-  100% {
-    transform: translateY(0px);
-  }
+  overflow: hidden;
+}
+
+.msgArea-hs #nextIcon::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+
+  top: -5px;
+
+  width: 8px;
+  height: 8px;
+
+  border-right: 4px solid rgba(210,190,159,1);
+  border-bottom: 4px solid rgba(210,190,159,1);
+
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+}
+
+.msgArea-hs #nextIcon.show {
+
+  opacity: 1;
+
+  animation:
+    hrArrowBlink 1.8s ease-in-out infinite;
 
 }
 
-@keyframes nextBlink {
+@keyframes noteFloat {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
 
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-
+@keyframes hrArrowBlink {
+  0%   { opacity: .25; }
+  50%  { opacity: 1; }
+  100% { opacity: .25; }
 }
 
 .msg-fade {

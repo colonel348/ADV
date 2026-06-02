@@ -7,6 +7,7 @@ let startX = 0;
 let cardList;
 let bgImg;
 let fade;
+let decideBtn;
 
 let isDragging = false;
 let velocityY = 0;
@@ -19,6 +20,8 @@ let isCharacterMode = false;
 let chrList = ["FF", "AK", "SA"];
 let chrIdx = 1; // AK
 let filteredEvtData = [];
+let preloadPromise = null;
+const imageCache = {};
 
 /*************************************************
  * シーズンカラー
@@ -49,27 +52,45 @@ const ssnData = [
 /*************************************************
  * 画像プリロード
  *************************************************/
-let preloadPromise = null;
-
 function preloadAllImages() {
+
   if (preloadPromise) return preloadPromise;
 
   const urls = [];
+
   evtData.forEach(evt => {
     evt.cpt.forEach(cpt => {
-      urls.push('../data/' + evt.evtId + '/CPT-' + cpt.cptId + '/sel.png');
+
+      urls.push(
+        '../data/' +
+        evt.evtId +
+        '/CPT-' +
+        cpt.cptId +
+        '/sel.png'
+      );
+
     });
   });
 
   preloadPromise = Promise.all(
+
     urls.map(url => {
+
       return new Promise(resolve => {
+
         const img = new Image();
+
+        imageCache[url] = img; // ←保持
+
         img.onload = resolve;
         img.onerror = resolve;
+
         img.src = url;
+
       });
+
     })
+
   );
 
   return preloadPromise;
@@ -277,6 +298,7 @@ function applyMode() {
     viewport.classList.remove("start-mode");
     // 通常へ戻るときサイドバーを左からスライドイン
     sidebar.classList.add("force-hidden");
+    decideBtn.classList.add("decideBtn-fade-out");
 
     /* blur開始を一旦止める */
     sidebar.classList.add("delay-blur");
@@ -289,6 +311,7 @@ function applyMode() {
       /* 少し遅れてblur解放 */
       setTimeout(() => {
         sidebar.classList.remove("delay-blur");
+        decideBtn.classList.remove("decideBtn-fade-out");
       }, 450);
 
     });
@@ -603,7 +626,6 @@ function updateFilteredEvents() {
  *************************************************/
 function changeCharacter(dir) {
 
-
   if (chrIdx + dir < 0 || chrIdx + dir > 2) {
     return;
   }
@@ -621,11 +643,13 @@ function changeCharacter(dir) {
 
   /* ===== フェードアウト ===== */
   cardList.classList.add("card-fade-out");
+  decideBtn.classList.add("decideBtn-fade-out");
 
   setTimeout(() => {
 
     /* ===== 中身更新（今まで通り） ===== */
     updateFilteredEvents();
+    updateDecideButton();
 
     cardList.innerHTML = "";
     createCards();
@@ -637,14 +661,17 @@ function changeCharacter(dir) {
 
     /* ===== フェードイン準備 ===== */
     cardList.classList.remove("card-fade-out");
+    decideBtn.classList.remove("decideBtn-fade-out");
 
     requestAnimationFrame(() => {
 
       /* ===== フェードイン実行 ===== */
       cardList.classList.add("card-fade-in-active");
+      decideBtn.classList.add("decideBtn-fade-in-active");
 
       setTimeout(() => {
         cardList.classList.remove("card-fade-in-active");
+        decideBtn.classList.remove("decideBtn-fade-in-active");
       }, 250);
 
     });
@@ -668,6 +695,24 @@ function initCharacterActive() {
 }
 
 /*************************************************
+ * ボタン変更
+ *************************************************/
+function updateDecideButton() {
+
+  decideBtn.classList.remove(
+    "decideBtn-hs",
+    "decideBtn-ps"
+  );
+
+  if (chrId === "FF") {
+    decideBtn.classList.add("decideBtn-hs");
+  } else {
+    decideBtn.classList.add("decideBtn-ps");
+  }
+
+}
+
+/*************************************************
  * 初期化
  *************************************************/
 window.addEventListener('load', function() {
@@ -675,9 +720,12 @@ window.addEventListener('load', function() {
   cardList = document.getElementById("cardList");
   bgImg = document.getElementById("bgImg");
   fade = document.getElementById("fade");
+  decideBtn = document.getElementById("decideBtn");
 
   // パラメタ取得
   setParam();
+
+  updateDecideButton();
 
   if (cptIdx >= 1) {
     isStartMode = true;

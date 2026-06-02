@@ -688,14 +688,8 @@ function nextStep() {
 
   if (currentIndex >= currentData.msgInfo.length) {
 
-    const nextCpt = getNextCpt();
-
     // 画面遷移
-    setTimeout(() => {
-      location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
-    }, BLACK_FADE_TIME);
-
-    return;
+    moveSelect();
 
   }
 
@@ -834,7 +828,17 @@ function refreshNextIcon() {
 
   }
 
-  nextIcon.innerText = "♪";
+  if (chrId === "FF") {
+
+    // HR版
+    nextIcon.innerHTML = "";
+
+  } else {
+
+    // PS版
+    nextIcon.innerHTML = "♪";
+
+  }
 
   if (!isTyping) {
 
@@ -1009,14 +1013,11 @@ function moveSelect() {
 
   document.getElementById("msgArea").style.opacity = 0;
 
+  const nextCpt = getNextCpt();
+
   setTimeout(() => {
 
-    location.href =
-      './select.html'
-      + '?chrId=' + chrId
-      + '&evtId=' + evtId
-      + '&cptId=' + cptId
-      + '&autoFlg=' + autoFlg;
+    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
 
   }, BLACK_FADE_TIME);
 

@@ -9,7 +9,6 @@ const evtData = [
   ]},
 
 //  { evtId: "FF-S2-C2", evtNm: "慰め編", cpt:[
-// ▲    { cptId: "1", extLv: "B"},
 // ▲    { cptId: "2", extLv: "C"},
 //  ]},
 
@@ -44,7 +43,7 @@ const evtData = [
 
   { evtId: "SA-S1-B1", evtNm: "強がりの限界", cpt:[
 // ▲   { cptId: "1", extLv: "B", ptnId: "V3", plcNm: "体育倉庫"},
-   { cptId: "2", extLv: "B", ptnId: "L4", plcNm: "体育倉庫"}
+   { cptId: "2", extLv: "B"}
   ]},
 
   { evtId: "SA-S2-C1", evtNm: "魅了への第一歩", cpt:[
@@ -52,12 +51,11 @@ const evtData = [
     { cptId: "2", extLv: "C"}
   ]},
 
-//  { evtId: "SA-S2-D1", evtNm: "補習編", cpt:[
-// ▲   { cptId: "1", extLv: "A", ptnId: "L2", plcNm: "教室"},
-// ▲   { cptId: "2", extLv: "D", ptnId: "V3", plcNm: "教室"}
-//  ]},
+  { evtId: "SA-S3-D1", evtNm: "補習編", cpt:[
+    { cptId: "2", extLv: "D"}
+  ]},
 
-  { evtId: "SA-S4-E1", evtNm: "裸心の絶唱", cpt:[
+  { evtId: "SA-S4-E1", evtNm: "	", cpt:[
     { cptId: "2", extLv: "E"},
     { cptId: "3", extLv: "E"}
   ]}
