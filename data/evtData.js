@@ -8,9 +8,9 @@ const evtData = [
     { cptId: "2", extLv: "C"},
   ]},
 
-//  { evtId: "FF-S2-C2", evtNm: "慰め編", cpt:[
-// ▲    { cptId: "2", extLv: "C"},
-//  ]},
+  { evtId: "FF-S3-D1", evtNm: "背伸びの誘惑", cpt:[
+    { cptId: "2", extLv: "D"},
+  ]},
 
 /*************************************************
  * 小豆沢こはね
@@ -51,11 +51,11 @@ const evtData = [
     { cptId: "2", extLv: "C"}
   ]},
 
-  { evtId: "SA-S3-D1", evtNm: "補習編", cpt:[
+  { evtId: "SA-S3-D1", evtNm: "教室に溢れる熱", cpt:[
     { cptId: "2", extLv: "D"}
   ]},
 
-  { evtId: "SA-S4-E1", evtNm: "	", cpt:[
+  { evtId: "SA-S4-E1", evtNm: "裸心の絶唱", cpt:[
     { cptId: "2", extLv: "E"},
     { cptId: "3", extLv: "E"}
   ]}
