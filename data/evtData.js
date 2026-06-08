@@ -31,11 +31,11 @@ const evtData = [
     { cptId: "2", extLv: "E"}
   ]},
 
-//  { evtId: "AK-S4-E1", evtNm: "アメリカ編", cpt:[
-// ▲   { cptId: "1", extLv: "B"},
+  { evtId: "AK-S4-E1", evtNm: "アメリカ編", cpt:[
+    { cptId: "1", extLv: "B"},
 // ▲   { cptId: "2", extLv: "E"},
 // ▲   { cptId: "3", extLv: "E"}
-//  ]},
+  ]},
 
 /*************************************************
  * 白石杏
