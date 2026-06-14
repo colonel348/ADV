@@ -64,13 +64,9 @@ function preloadAllImages() {
   evtData.forEach(evt => {
     evt.cpt.forEach(cpt => {
 
-      urls.push(
-        '../data/' +
-        evt.evtId +
-        '/CPT-' +
-        cpt.cptId +
-        '/sel.png'
-      );
+      urls.push('../data/' + evt.evtId + '/bnr.png');
+
+      urls.push('../data/' + evt.evtId + '/CPT-' + cpt.cptId + '/sel.png');
 
     });
   });

@@ -727,16 +727,16 @@ body {
 
 /* キャラ選択モード時 */
 #viewport.character-mode #characterSelector {
-  width: 220px;
+  width: 210px;
 }
 
 #viewport.character-mode #characterSelector::before {
-  width: 220px;
+  width: 210px;
 }
 
 /* cardListも同じ速度で横移動 */
 #viewport.character-mode #cardList {
-  margin-left: 220px;
+  margin-left: 210px;
 }
 
 /* 矢印反転 */
@@ -794,8 +794,9 @@ body {
 #charHighlight {
   position: absolute;
 
-  width: 160px;
+  width: 150px;
   height: 44px;
+  line-height: 1;
 
   border-radius: 12px;
 

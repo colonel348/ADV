@@ -52,6 +52,7 @@ let autoTimer = null;
 
 let isSwipeMove = false;
 
+let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.3;
@@ -76,6 +77,9 @@ const NEXT_TITLE_TIME = 2000;
 const AUTO_PRESS_TIME = 1000;
 // 長押し選択画面
 const SELECT_PRESS_TIME = 12000;
+
+const FIRST_LOOP_WHITE_WAIT = 1500;
+const FIRST_LOOP_EFFECT_TIME = 1500;
 
 /*************************************************
  * JS読込
@@ -1591,27 +1595,45 @@ function playMovie(item) {
   // Lのみ
   if (moviePattern === "L") {
 
-    startLoopDoubleBuffer(srcL);
+    if (isFirstLoopPlay) {
 
-    currentVideo = activeLoopVideo;
+      isFirstLoopPlay = false;
 
-    setTimeout(() => {
+      startFirstLoopDoubleBuffer(srcL);
 
-      setFade(false);
+      setTimeout(() => {
 
-      isBusy = false;
+        isBusy = false;
 
-      if (waitMovie) {
+        if (waitMovie) {
+          waitMovie = false;
+        } else {
+          nextStep();
+        }
 
-        waitMovie = false;
-      
-      } else {
+      }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME);
 
-        nextStep();
+    } else {
 
-      }
+      startLoopDoubleBuffer(srcL);
 
-    }, BLACK_FADE_TIME);
+      currentVideo = activeLoopVideo;
+
+      setTimeout(() => {
+
+        setFade(false);
+
+        isBusy = false;
+
+        if (waitMovie) {
+          waitMovie = false;
+        } else {
+          nextStep();
+        }
+
+      }, BLACK_FADE_TIME);
+
+    }
 
     return;
 
@@ -1623,9 +1645,33 @@ function playMovie(item) {
 }
 
 /*************************************************
+ * L動画初回ダブルバッファループ
+ *************************************************/
+function startFirstLoopDoubleBuffer(srcL) {
+
+  // 白フェード
+  setFade(true, "W");
+
+  setTimeout(() => {
+
+    startLoopDoubleBuffer(srcL, true);
+
+    currentVideo = activeLoopVideo;
+
+    setTimeout(() => {
+
+      setFade(false);
+
+    }, 100);
+
+  }, FIRST_LOOP_WHITE_WAIT);
+
+}
+
+/*************************************************
  * L動画ダブルバッファループ
  *************************************************/
-function startLoopDoubleBuffer(srcL) {
+function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   // 初回
   activeLoopVideo.src = srcL;
@@ -1649,16 +1695,40 @@ function startLoopDoubleBuffer(srcL) {
   activeLoopVideo.style.display = "block";
   activeLoopVideo.classList.add("front");
 
+  if (firstEffect) {
+
+    activeLoopVideo.style.transition = "none";
+    activeLoopVideo.style.transform = "scale(1.1)";
+    activeLoopVideo.style.filter = "blur(8px)";
+
+  } else {
+
+    activeLoopVideo.style.transition = "";
+    activeLoopVideo.style.transform = "";
+    activeLoopVideo.style.filter = "";
+
+  }
+
   requestAnimationFrame(() => {
 
     activeLoopVideo.play()
-    .catch(() => {});
+      .catch(() => {});
 
-    setTimeout(() => {
+    activeLoopVideo.classList.add("show");
 
-      activeLoopVideo.classList.add("show");
+    if (firstEffect) {
 
-    }, 300);
+      requestAnimationFrame(() => {
+
+        activeLoopVideo.style.transition =
+          "transform 3.0s ease, filter 3.0s ease";
+
+        activeLoopVideo.style.transform = "scale(1)";
+        activeLoopVideo.style.filter = "blur(0px)";
+
+      });
+
+    }
 
   });
 
@@ -1924,9 +1994,21 @@ function playSeamlessMovie(srcA, srcL) {
 
         } else {
 
-          startLoopDoubleBuffer(srcL);
+          if (isFirstLoopPlay) {
 
-          currentVideo = activeLoopVideo;
+            isFirstLoopPlay = false;
+
+            startFirstLoopDoubleBuffer(srcL);
+
+            currentVideo = activeLoopVideo;
+
+          } else {
+
+            startLoopDoubleBuffer(srcL);
+
+            currentVideo = activeLoopVideo;
+
+          }
 
           pendingLoop = false;
 
