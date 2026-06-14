@@ -35,7 +35,7 @@ const evtData = [
     { cptId: "2", extLv: "E"}
   ]},
 
-  { evtId: "AK-N1", evtNm: "アメリカ編", cpt:[
+  { evtId: "AK-N1", evtNm: "裸で示す成長", cpt:[
     { cptId: "1", extLv: "B"},
     { cptId: "2", extLv: "E"},
 // ▲   { cptId: "3", extLv: "E"}
