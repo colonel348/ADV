@@ -58,6 +58,9 @@ function preloadAllImages() {
 
   const urls = [];
 
+  const preloadStage =
+    document.getElementById("preloadImageStage");
+
   evtData.forEach(evt => {
     evt.cpt.forEach(cpt => {
 
@@ -80,12 +83,29 @@ function preloadAllImages() {
 
         const img = new Image();
 
-        imageCache[url] = img; // ←保持
+        imageCache[url] = img;
 
-        img.onload = resolve;
+        img.onload = async () => {
+          try {
+            if (img.decode) {
+              await img.decode();
+            }
+          } catch (e) {
+          }
+
+          resolve();
+        };
+
         img.onerror = resolve;
 
         img.src = url;
+
+        img.alt = "";
+        img.dataset.preloadSrc = url;
+
+        if (preloadStage) {
+          preloadStage.appendChild(img);
+        }
 
       });
 
