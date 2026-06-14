@@ -1721,7 +1721,7 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
       requestAnimationFrame(() => {
 
         activeLoopVideo.style.transition =
-          "transform 3.0s ease, filter 3.0s ease";
+          "transform 2.0s ease, filter 2.0s ease";
 
         activeLoopVideo.style.transform = "scale(1)";
         activeLoopVideo.style.filter = "blur(0px)";
