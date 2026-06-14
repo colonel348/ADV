@@ -101,7 +101,11 @@ body {
   position: absolute;
   width: 100%;
   z-index: 1;
-  transition: transform 0.35s ease, margin-left .25s ease, opacity .2s ease;
+  margin-left: 40px;
+  transition:
+    transform 0.35s ease,
+    margin-left .35s ease,
+    opacity .2s ease;
   overflow: visible;
 }
 
@@ -641,95 +645,169 @@ body {
   top: 0;
   bottom: 0;
 
-  width: 90px;
+  width: 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-  gap: 60px;
+  align-items: flex-start;
+  gap: 34px;
 
   z-index: 12;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+  overflow: hidden;
 
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-40px);
-
-  transition: all .35s ease;
+  transition: width .35s ease;
 }
 
 #characterSelector::before {
   content: "";
+  position: absolute;
+  inset: 0;
+  width: 40px;
+  background: rgba(40, 40, 50, 0.7);
+  z-index: 0;
+  transition: width .35s ease;
+}
+
+#charModeToggle {
+  position: absolute;
+
+  right: -10px;
+  top: 50%;
+
+  width: 60px;
+  height: 100%;
+
+  transform: translateY(-50%);
+
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: transform .35s ease;
+}
+
+/* 上側の線 */
+#charModeToggle::before {
+  content: "";
 
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
 
-  width: 90px; /* 左の幅（後で調整可） */
+  width: 14px;
+  height: 4px;
 
-  /* 少し透過したグレー */
-  background: rgba(40, 40, 40, 0.7);
+  background: rgba(255,255,255,.95);
+  border-radius: 999px;
 
-  z-index: 0;
+  transform:
+    translateY(-4px)
+    rotate(45deg);
+}
+
+/* 下側の線 */
+#charModeToggle::after {
+  content: "";
+
+  position: absolute;
+
+  width: 14px;
+  height: 4px;
+
+  background: rgba(255,255,255,.95);
+  border-radius: 999px;
+
+  transform:
+    translateY(4px)
+    rotate(-45deg);
+}
+
+/* キャラ選択モード時 */
+#viewport.character-mode #characterSelector {
+  width: 220px;
+}
+
+#viewport.character-mode #characterSelector::before {
+  width: 220px;
+}
+
+/* cardListも同じ速度で横移動 */
+#viewport.character-mode #cardList {
+  margin-left: 220px;
+}
+
+/* 矢印反転 */
+#viewport.character-mode #charModeToggle {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* 通常時は名前・ハイライト非表示 */
+.charItem,
+#charHighlight {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* 表示時 */
-#viewport.character-mode #characterSelector {
+#viewport.character-mode .charItem,
+#viewport.character-mode #charHighlight {
   opacity: 1;
-  transform: translateX(0);
   pointer-events: auto;
 }
 
-.nameGap {
-  display: inline-block;
-  height: 6px;
-}
-
-/* ハイライト本体 */
-#charHighlight {
-  position: absolute;
-
-  width: 48px; /* 文字より少し大きく */
-  height: 150px;
-
-  border-radius: 12px;
-
-  left: 50%;
-  transform: translateX(-50%);
-
-  background: #ff6699; /* 初期（AK） */
-
-  z-index: 0;
-  
-  transition:
-    top .35s ease,
-    background-color .35s ease;
-}
-
-/* 縦文字 */
+/* 横文字 */
 .charItem {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+
+  width: 220px;
+  height: 44px;
+
+  margin-left: 20px;
 
   font-size: 20px;
   font-weight: bold;
   color: #fff;
 
-  padding: 12px 6px;
+  padding: 0 14px;
   border-radius: 10px;
 
-  transition: all .25s ease;
-  
+  transition: opacity .25s ease;
+
   position: relative;
   z-index: 1;
-  
+
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
-#viewport.character-mode #cardList {
-  margin-left: 100px;
+/* 横文字では不要 */
+.nameGap {
+  display: none;
+}
+
+/* ハイライトも横長に変更 */
+#charHighlight {
+  position: absolute;
+
+  width: 160px;
+  height: 44px;
+
+  border-radius: 12px;
+
+  left: 20px;
+  transform: none;
+
+  background: #ff6699;
+  z-index: 0;
+
+  transition:
+    top .35s ease,
+    background-color .35s ease;
 }
 
 /* ===== start-mode（TAP TO START） ===== */
@@ -785,4 +863,138 @@ body {
 /* blurを止める */
 #sidebar.delay-blur::before {
   opacity: 0;
+}
+
+
+/* ===== 右上モード切替 ===== */
+#modeSelector {
+  position: absolute;
+  top: 22px;
+  right: 18px;
+
+  height: 41px;
+
+  display: flex;
+  align-items: center;
+
+  z-index: 25;
+
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.35));
+}
+
+#modeText {
+  height: 32px;
+  min-width: 94px;
+
+  padding: 0 20px 1px 15px;
+  margin-right: -10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  line-height: 1;
+
+  color: #fff;
+  font-size: 15px;
+  font-weight: bold;
+
+  border-radius: 10px 0 0 10px;
+
+  background: rgba(60, 60, 89, 0.78);
+
+  position: relative;
+  z-index: 1;
+
+  transition:
+    color .22s ease,
+    text-shadow .22s ease,
+    opacity .22s ease,
+    transform .22s ease;
+}
+
+#modeIconWrap {
+  width: 41px;
+  height: 41px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fff;
+  
+  position: relative;
+  z-index: 2;
+}
+
+#modeIcon {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+/* 通常：黄色 */
+#modeSelector.normMode #modeText {
+  color: #ffd84a;
+  text-shadow:
+    0 0 4px rgba(255, 216, 74, 0.75),
+    0 0 9px rgba(255, 216, 74, 0.45);
+}
+
+/* 調教：青色 */
+#modeSelector.discMode #modeText {
+  color: #82A4FF;
+  text-shadow:
+    0 0 4px rgba(143, 140, 255, 0.75),
+    0 0 9px rgba(143, 140, 255, 0.45);
+}
+
+/* 恋愛：ピンク */
+#modeSelector.loveMode #modeText {
+  color: #ff7ab8;
+  text-shadow:
+    0 0 4px rgba(255, 122, 184, 0.75),
+    0 0 9px rgba(255, 122, 184, 0.45);
+}
+
+#modeIcon {
+  transition:
+    opacity .22s ease,
+    transform .22s ease;
+}
+
+#modeSelector.mode-changing #modeText {
+  animation: modeTextChange .22s ease;
+}
+
+#modeSelector.mode-changing #modeIconWrap {
+  animation: modeIconChange .22s ease;
+}
+
+@keyframes modeTextChange {
+  0% {
+    opacity: .4;
+    transform: translateX(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes modeIconChange {
+  0% {
+    opacity: .4;
+    transform: scale(.85) rotate(-20deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
 }

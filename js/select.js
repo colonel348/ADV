@@ -116,20 +116,20 @@ function createCards() {
     const border = document.createElement("div");
     border.className = "innerBorder";
 
-    const seasonTag = document.createElement("div");
-    seasonTag.className = "seasonTag";
-
-    // evtId の5文字目 → シーズン番号
-    const seasonNo = data.evtId.charAt(4);
-
-    seasonTag.textContent = "シーズン" + seasonNo;
-
-    /* ===== シーズンLv取得 ===== */
-    const ssn = ssnData.find(ssn =>
-      data.evtId.startsWith(ssn.ssnId)
-    );
-
-    seasonTag.classList.add(`ssnLv-${ssn.ssnLv}`);
+//    const seasonTag = document.createElement("div");
+//    seasonTag.className = "seasonTag";
+//
+//    // evtId の5文字目 → シーズン番号
+//    const seasonNo = data.evtId.charAt(4);
+//
+//    seasonTag.textContent = "シーズン" + seasonNo;
+//
+//    /* ===== シーズンLv取得 ===== */
+//    const ssn = ssnData.find(ssn =>
+//      data.evtId.startsWith(ssn.ssnId)
+//    );
+//
+//    seasonTag.classList.add(`ssnLv-${ssn.ssnLv}`);
 
     const label = document.createElement("div");
     label.className = "label";
@@ -141,16 +141,16 @@ function createCards() {
     span.className = "labelFirst";
     span.textContent = first;
 
-    const prefix = data.evtId.substring(0,2);
+    const modeType = data.evtId.charAt(3);
 
-    if(prefix === "AK"){
-      span.style.color = "#FF6699";
+    if (modeType === "N") {
+      span.style.color = "#ffd84a";
     }
-    else if(prefix === "SA"){
-      span.style.color = "#00BBDD";
+    else if (modeType === "D") {
+      span.style.color = "#82A4FF";
     }
-    else if(prefix === "FF"){
-      span.style.color = "#00CC66";
+    else if (modeType === "L") {
+      span.style.color = "#ff7ab8";
     }
 
     label.appendChild(span);
@@ -175,7 +175,7 @@ function createCards() {
 
     });
 
-    inner.appendChild(seasonTag);
+//    inner.appendChild(seasonTag);
 
     inner.appendChild(diamondWrap);
 
@@ -415,21 +415,14 @@ function touchAction() {
 
       // 右→左（次のcpt）
       if (dx < 0) {
-      
-        // キャラモードなら戻る
-        if (isCharacterMode) {
-          isCharacterMode = false;
-          applyCharacterMode();
-          requestAnimationFrame(updateCharHighlight);
-          return;
-        }else{
 
-          if (cptIdx < tgtEvtData.cpt.length - 1) {
-            cptIdx++;
-            updateSelection(true, "left", "chapter");
-          }
+        if (cptIdx < tgtEvtData.cpt.length - 1) {
+          cptIdx++;
+          updateSelection(true, "left", "chapter");
         }
+
       }
+
       // 左→右（前のcpt）
       else {
 
@@ -441,16 +434,6 @@ function touchAction() {
           updateSelection(false);
 
           applyMode();
-
-          return;
-        }
-
-        // 先頭cptならキャラモードへ
-        if (cptIdx === 0) {
-
-          isCharacterMode = true;
-          applyCharacterMode();
-          updateCharHighlight();
 
           return;
         }
@@ -519,20 +502,79 @@ function touchAction() {
     goToEvent();
   });
 
+  const charModeToggle =
+    document.getElementById("charModeToggle");
+
+  charModeToggle.addEventListener("click", e => {
+
+    e.stopPropagation();
+
+    isCharacterMode = !isCharacterMode;
+
+    applyCharacterMode();
+
+    if (isCharacterMode) {
+      requestAnimationFrame(updateCharHighlight);
+    }
+
+  });
+
   document.querySelectorAll(".charItem").forEach((el, i) => {
 
-    el.addEventListener("click", () => {
+    el.addEventListener("click", e => {
+      e.stopPropagation();
 
-      // 同じキャラなら何もしない（任意）
       if (i === chrIdx) return;
 
-      // 差分で既存関数を使う
       const diff = i - chrIdx;
 
       changeCharacter(diff);
     });
 
   });
+
+  const modeSelector = document.getElementById("modeSelector");
+
+  modeSelector.addEventListener("click", e => {
+    e.stopPropagation();
+
+    if (modeKbn === "L") {
+      modeKbn = "N";
+    } else if (modeKbn === "N") {
+      modeKbn = "D";
+    } else {
+      modeKbn = "L";
+    }
+
+    updateModeSelector();
+
+    cardList.classList.add("card-fade-out");
+
+    setTimeout(() => {
+
+      updateFilteredEvents();
+
+      evtIdx = 0;
+      cptIdx = 0;
+
+      cardList.innerHTML = "";
+      createCards();
+
+      updateSelection(true, "left", "event");
+
+      cardList.classList.remove("card-fade-out");
+
+      requestAnimationFrame(() => {
+        cardList.classList.add("card-fade-in-active");
+
+        setTimeout(() => {
+          cardList.classList.remove("card-fade-in-active");
+        }, 250);
+      });
+
+    }, 200);
+  });
+
 }
 
 /*************************************************
@@ -603,11 +645,51 @@ function startMomentum(initialVelocity) {
 }
 
 /*************************************************
+ * モード選択
+ *************************************************/
+function updateModeSelector() {
+  const modeSelector = document.getElementById("modeSelector");
+  const modeText = document.getElementById("modeText");
+  const modeIcon = document.getElementById("modeIcon");
+
+  modeSelector.classList.remove(
+    "normMode",
+    "discMode",
+    "loveMode",
+    "mode-changing"
+  );
+
+  if (modeKbn === "N") {
+    modeSelector.classList.add("normMode");
+    modeText.textContent = "通常モード";
+    modeIcon.src = "../img/normMode.png";
+  } else if (modeKbn === "D") {
+    modeSelector.classList.add("discMode");
+    modeText.textContent = "調教モード";
+    modeIcon.src = "../img/discMode.png";
+  } else {
+    modeSelector.classList.add("loveMode");
+    modeText.textContent = "恋愛モード";
+    modeIcon.src = "../img/loveMode.png";
+  }
+
+  requestAnimationFrame(() => {
+    modeSelector.classList.add("mode-changing");
+
+    setTimeout(() => {
+      modeSelector.classList.remove("mode-changing");
+    }, 220);
+  });
+}
+
+/*************************************************
  * イベントフィルター
  *************************************************/
 function updateFilteredEvents() {
+
   filteredEvtData = evtData.filter(evt =>
-    evt.evtId.startsWith(chrId)
+    evt.evtId.startsWith(chrId) &&
+    evt.evtId.charAt(3) === modeKbn
   );
 
   const index = filteredEvtData.findIndex(evt =>
@@ -617,7 +699,7 @@ function updateFilteredEvents() {
   if (index !== -1) {
     evtIdx = index;
   } else {
-    evtIdx = 0; // fallback（先頭にするなど）
+    evtIdx = 0;
   }
 }
 
@@ -726,6 +808,7 @@ window.addEventListener('load', function() {
   setParam();
 
   updateDecideButton();
+  updateModeSelector();
 
   if (cptIdx >= 1) {
     isStartMode = true;

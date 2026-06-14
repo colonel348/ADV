@@ -6,6 +6,7 @@ var chrId;
 var evtIdx;
 var cptIdx;
 var autoFlg;
+var modeKbn;
 var tgtEvtData;
 var debugMovId;
 
@@ -31,7 +32,7 @@ function setParam() {
     if (urlParams.has('evtId')) {
         evtId = String(urlParams.get('evtId'));
     } else {
-        evtId = "AK-P2-C1";
+        evtId = "AK-N1";
     }
 
     if (urlParams.has('autoFlg')) {
@@ -45,6 +46,8 @@ function setParam() {
     } else {
         debugMovId = null;
     }
+
+    modeKbn = evtId.substring(3, 4);
 
     tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];
 
