@@ -861,6 +861,17 @@ body {
   pointer-events: none;
 }
 
+#viewport.start-mode #modeSelector {
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+  transition-delay: 0s;
+}
+
+#viewport:not(.start-mode) #modeSelector {
+  transition-delay: 0.14s;
+}
+
 /* blurを止める */
 #sidebar.delay-blur::before {
   opacity: 0;
@@ -885,6 +896,10 @@ body {
   -webkit-user-select: none;
 
   filter: drop-shadow(0 3px 6px rgba(0,0,0,.35));
+
+  transition:
+    opacity .35s ease,
+    transform .35s ease;
 }
 
 #modeText {

@@ -20,25 +20,25 @@ const evtData = [
  * 小豆沢こはね
  *************************************************/
 
-  { evtId: "AK-D1", evtNm: "快感に抗う試練", cpt:[
+  { evtId: "AK-N1", evtNm: "快感に抗う試練", cpt:[
     { cptId: "1", extLv: "B"},
     { cptId: "2", extLv: "C"}
   ]},
 
-  { evtId: "AK-D2", evtNm: "描かれる私の身体", cpt:[
-    { cptId: "1", extLv: "B"},
-    { cptId: "2", extLv: "C"}
-  ]},
-
-  { evtId: "AK-D3", evtNm: "恥辱の通学路", cpt:[
-    { cptId: "1", extLv: "B"},
-    { cptId: "2", extLv: "E"}
-  ]},
-
-  { evtId: "AK-N1", evtNm: "裸で示す成長", cpt:[
+  { evtId: "AK-N2", evtNm: "裸で示す成長", cpt:[
     { cptId: "1", extLv: "B"},
     { cptId: "2", extLv: "E"},
 // ▲   { cptId: "3", extLv: "E"}
+  ]},
+
+  { evtId: "AK-D1", evtNm: "描かれる私の身体", cpt:[
+    { cptId: "1", extLv: "B"},
+    { cptId: "2", extLv: "C"}
+  ]},
+
+  { evtId: "AK-D2", evtNm: "恥辱の通学路", cpt:[
+    { cptId: "1", extLv: "B"},
+    { cptId: "2", extLv: "E"}
   ]},
 
   { evtId: "AK-L1", evtNm: "dummy", cpt:[

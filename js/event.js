@@ -695,6 +695,8 @@ function nextStep() {
     // 画面遷移
     moveSelect();
 
+    return;
+
   }
 
   showCurrent();
@@ -2002,28 +2004,43 @@ function playSeamlessMovie(srcA, srcL) {
 
             currentVideo = activeLoopVideo;
 
+            pendingLoop = false;
+
+            requestAnimationFrame(() => {
+
+              // 次メッセージ
+              setTimeout(() => {
+
+                ++currentIndex;
+
+                showCurrent();
+
+              }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME);
+
+            });
+
           } else {
 
             startLoopDoubleBuffer(srcL);
 
             currentVideo = activeLoopVideo;
 
+            pendingLoop = false;
+
+            requestAnimationFrame(() => {
+
+              // 次メッセージ
+              setTimeout(() => {
+
+                ++currentIndex;
+
+                showCurrent();
+
+              }, BLACK_FADE_TIME);
+
+            });
+
           }
-
-          pendingLoop = false;
-
-          requestAnimationFrame(() => {
-
-            // 次メッセージ
-            setTimeout(() => {
-
-              ++currentIndex;
-
-              showCurrent();
-
-            }, BLACK_FADE_TIME);
-
-          });
 
           return;
 
