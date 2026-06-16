@@ -407,14 +407,14 @@ body {
 
   position: absolute;
 
-  top: 4px;
+  top: 3px;
   left: 4px;
 
   z-index: 3;
 
   height: 13px;
 
-  padding: 2px 5px 0px 5px;
+  padding: 4px 5px 0px 5px;
 
   background: rgba(255, 120, 170, 0.92);
 
@@ -425,7 +425,7 @@ body {
 
   letter-spacing: 0.5px;
 
-  border-radius: 0 0 4px 0;
+  border-radius: 4px 0 4px 0;
 
   pointer-events: none;
 }
