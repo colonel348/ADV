@@ -837,25 +837,6 @@ window.addEventListener('load', function() {
       chapterText.textContent = "Chapter " + tgtEvtData.cpt[cptIdx].cptId;
     }
 
-/* ===== startMode色同期 ===== */
-const chapterBadge =
-  document.getElementById("chapterBadge");
-
-  const extLv =
-    tgtEvtData.cpt[cptIdx].extLv;
-
-  // 既存ext-*削除
-  chapterBadge.classList.remove(
-    "ext-A",
-    "ext-B",
-    "ext-C",
-    "ext-D",
-    "ext-E"
-  );
-
-  // 新しいext追加
-  chapterBadge.classList.add(`ext-${extLv}`);
-
   } else {
     isStartMode = false;
   }

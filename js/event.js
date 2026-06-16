@@ -514,6 +514,9 @@ async function init() {
 
 function nextStep() {
 
+  clearTimeout(autoTimer);
+  autoTimer = null;
+
   clearATextTimer();
 
   // 非表示状態なら
@@ -776,12 +779,12 @@ function findMovIndex(movId) {
 
   // 先頭2文字比較
   const currentPrefix =
-    currentEvt.evtId.substring(0, 2);
+    currentEvt.evtId.substring(0, 5);
 
   const nextPrefix =
-    nextEvt.evtId.substring(0, 2);
+    nextEvt.evtId.substring(0, 5);
 
-  // 別キャラなら
+  // 別キャラや別モードなら
   // 現evt先頭へ戻る
   if (currentPrefix !== nextPrefix) {
 
@@ -1524,10 +1527,10 @@ function finishTyping() {
 
   }
 
+  isTyping = false;
+
   refreshNextIcon();
 
-  isTyping = false;
-  
   startAutoNext();
 
 }

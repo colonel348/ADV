@@ -412,7 +412,7 @@ body {
 
   z-index: 3;
 
-  height: 13px;
+  height: 11px;
 
   padding: 4px 5px 0px 5px;
 
@@ -559,26 +559,6 @@ body {
   transform: rotate(-28deg);
   transform-origin: center;
   border-radius: 2px;
-}
-
-#chapterBadge.ext-A::before {
-  background: rgba(34, 221, 119, 0.4);
-}
-
-#chapterBadge.ext-B::before {
-  background: rgba(53, 201, 255, 0.4);
-}
-
-#chapterBadge.ext-C::before {
-  background: rgba(255, 204, 0, 0.4);
-}
-
-#chapterBadge.ext-D::before {
-  background: rgba(255, 74, 125, 0.4);
-}
-
-#chapterBadge.ext-E::before {
-  background: rgba(193, 60, 255, 0.4);
 }
 
 /* 文字 */
