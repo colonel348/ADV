@@ -196,7 +196,6 @@ body {
 
   left: 8px;
   padding: 2px 4px;
-  bottom: 8px;
 
   background: rgba(60, 60, 89, 0.78);
 
@@ -404,7 +403,7 @@ body {
 /* =========================
    シーズン
 ========================= */
-.seasonTag {
+.lvLabel {
 
   position: absolute;
 
@@ -414,47 +413,37 @@ body {
   z-index: 3;
 
   height: 13px;
-  line-height: 12px;
 
-  padding: 0 8px 0 5px;
+  padding: 2px 5px 0px 5px;
 
   background: rgba(255, 120, 170, 0.92);
 
-  color: white;
+  color: #454363;
 
-  font-size: 6px;
-  font-weight: 700;
+  font-size: 9px;
+  font-weight: 1000;
 
   letter-spacing: 0.5px;
 
-  clip-path: polygon(
-    0 0,
-    100% 0,
-    calc(100% - 6px) 100%,
-    0 100%
-  );
+  border-radius: 0 0 4px 0;
 
   pointer-events: none;
 }
 
-.seasonTag.ssnLv-1 {
-  background: #a92fe0;
+.lvLabel.lv-1 {
+  background: #46C2FF;
 }
 
-.seasonTag.ssnLv-2 {
-  background: #26b4e8;
+.lvLabel.lv-2 {
+  background: #FFCF13;
 }
 
-.seasonTag.ssnLv-3 {
-  background: #e0b400;
+.lvLabel.lv-3 {
+  background: #FF6D76;
 }
 
-.seasonTag.ssnLv-4 {
-  background: #e2872f;
-}
-
-.seasonTag.ssnLv-5 {
-  background: #e66498;
+.lvLabel.lv-4 {
+  background: #C65EFF;
 }
 
 /* =========================
@@ -463,7 +452,7 @@ body {
 .cardChapterIcons {
   position: absolute;
 
-  bottom: 27px;
+  bottom: 12px;
 
   display: flex;
 
@@ -483,7 +472,7 @@ body {
   transform: rotate(45deg);
 
   opacity: 1;
-  margin-right: 5px;
+  margin-right: 4px;
 
   /* 枠線はグレー */
   border: 1px solid #ccc;
@@ -501,38 +490,38 @@ body {
 
 
 /* =========================
-   未選択時カラー（くすみ色）
-========================= */
-
-/* A 緑 → 灰緑 */
-.chapterDiamond.ext-A {
-  background-color: #5d7c69;
-}
-
-/* B 水色 → 灰青 */
-.chapterDiamond.ext-B {
-  background-color: #617785;
-}
-
-/* C 黄 → 灰黄 */
-.chapterDiamond.ext-C {
-  background-color: #8a8460;
-}
-
-/* D 赤 → 灰赤 */
-.chapterDiamond.ext-D {
-  background-color: #8a646c;
-}
-
-/* E 紫 → 灰紫 */
-.chapterDiamond.ext-E {
-  background-color: #76687f;
-}
-
-
-/* =========================
    選択中（今の鮮やか色を維持）
 ========================= */
+/* 通常 */
+.chapterDiamond.mode-N {
+  background-color: #3F3E5C;
+}
+
+.chapterDiamond.mode-N.active {
+  background-color: #ffd84a;
+  border-color: #fff;
+}
+
+/* 調教 */
+.chapterDiamond.mode-D {
+  background-color: #3F3E5C;
+}
+
+.chapterDiamond.mode-D.active {
+  background-color: #82A4FF;
+  border-color: #fff;
+}
+
+/* 恋愛 */
+.chapterDiamond.mode-L {
+  background-color: #3F3E5C;
+}
+
+.chapterDiamond.mode-L.active {
+  background-color: #ff7ab8;
+  border-color: #fff;
+}
+
 .chapterDiamond.active {
 
   transform:
@@ -545,36 +534,6 @@ body {
   z-index: 10;
 }
 
-
-/* A active（元の色） */
-.chapterDiamond.ext-A.active {
-  background-color: #22dd77;
-  border-color: #ffffff;
-}
-
-/* B active */
-.chapterDiamond.ext-B.active {
-  background-color: #35c9ff;
-  border-color: #ffffff;
-}
-
-/* C active */
-.chapterDiamond.ext-C.active {
-  background-color: #ffcc00;
-  border-color: #ffffff;
-}
-
-/* D active */
-.chapterDiamond.ext-D.active {
-  background-color: #ff4a7d;
-  border-color: #ffffff;
-}
-
-/* E active */
-.chapterDiamond.ext-E.active {
-  background-color: #c13cff;
-  border-color: #ffffff;
-}
 
 /* ===== startmode用 Chapter表示 ===== */
 #chapterBadge {

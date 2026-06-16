@@ -132,20 +132,23 @@ function createCards() {
     const border = document.createElement("div");
     border.className = "innerBorder";
 
-//    const seasonTag = document.createElement("div");
-//    seasonTag.className = "seasonTag";
-//
-//    // evtId の5文字目 → シーズン番号
-//    const seasonNo = data.evtId.charAt(4);
-//
-//    seasonTag.textContent = "シーズン" + seasonNo;
-//
-//    /* ===== シーズンLv取得 ===== */
-//    const ssn = ssnData.find(ssn =>
-//      data.evtId.startsWith(ssn.ssnId)
-//    );
-//
-//    seasonTag.classList.add(`ssnLv-${ssn.ssnLv}`);
+    const lvCode = data.evtId.charAt(6);
+
+    const lvMap = {
+      A: 1,
+      B: 2,
+      C: 3,
+      D: 4
+    };
+
+    const lv = lvMap[lvCode] || 1;
+
+    const lvLabel = document.createElement("div");
+    lvLabel.className = "lvLabel";
+
+    lvLabel.textContent = "Lv" + lv;
+
+    lvLabel.classList.add(`lv-${lv}`);
 
     const label = document.createElement("div");
     label.className = "label";
@@ -180,7 +183,7 @@ function createCards() {
       const diamond = document.createElement("div");
 
       diamond.className =
-        "chapterDiamond ext-" + cpt.extLv;
+        "chapterDiamond mode-" + modeType;	
 
       // 現在選択中だけ光らせる
       if (i === evtIdx && cIdx === cptIdx) {
@@ -191,7 +194,7 @@ function createCards() {
 
     });
 
-//    inner.appendChild(seasonTag);
+    inner.appendChild(lvLabel);
 
     inner.appendChild(diamondWrap);
 

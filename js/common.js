@@ -32,7 +32,7 @@ function setParam() {
     if (urlParams.has('evtId')) {
         evtId = String(urlParams.get('evtId'));
     } else {
-        evtId = "AK-N1";
+        evtId = "AK-NR-B1";
     }
 
     if (urlParams.has('autoFlg')) {
