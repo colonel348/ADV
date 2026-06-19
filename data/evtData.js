@@ -53,7 +53,7 @@ const evtData = [
   ]},
 
   { evtId: "SA-DS-C1", evtNm: "教室に溢れる熱", cpt:[
-    { cptId: "1", cmpRt: "△", memo:""}
+    { cptId: "1", cmpRt: "●", memo:""}
   ]},
 
   { evtId: "SA-LV-B1", evtNm: "魅了の第一歩", cpt:[
