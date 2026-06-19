@@ -412,16 +412,16 @@ body {
 
   z-index: 3;
 
-  height: 11px;
+  height: 10px;
 
-  padding: 4px 5px 0px 5px;
+  padding: 4px 4px 2px 6px;
 
   background: rgba(255, 120, 170, 0.92);
 
   color: #454363;
 
-  font-size: 9px;
-  font-weight: 1000;
+  font-size: 8px;
+  font-weight: 800;
 
   letter-spacing: 0.5px;
 
