@@ -90,7 +90,7 @@ function loadEvent() {
 
     const script = document.createElement("script");
 
-    script.src = `../data/${evtId}/msgData.js`;
+    script.src = `../data/${evtId}/CPT-${cptId}/msgData.js`;
 
     script.onload = () => {
       resolve(window.msgData);
@@ -108,7 +108,7 @@ function loadEvent() {
  *************************************************/
 function preloadMovies() {
 
-  currentData.msgInfo.forEach(item => {
+  currentData.forEach(item => {
 
     // 動画なし
     if (
@@ -120,7 +120,7 @@ function preloadMovies() {
 
     // movIdごとの
     // パターン取得
-    const pattern =  getMoviePattern(currentData.msgInfo.indexOf(item));
+    const pattern =  getMoviePattern(currentData.indexOf(item));
 
     let sources = [];
 
@@ -422,9 +422,7 @@ async function init() {
 
   setParam();
 
-  const msgData = await loadEvent();
-
-  currentData = msgData.find(v => v.cptId === cptId);
+  currentData = await loadEvent();
 
   if (!currentData) {
     alert("データなし");
@@ -500,7 +498,7 @@ async function init() {
     // 初回だけ1秒待つ
     setTimeout(() => {
 
-      showTitle(currentData.title);
+      showTitle(tgtEvtData.cpt[cptIdx].plcNm);
 
     }, 1000);
 
@@ -584,7 +582,7 @@ function nextStep() {
 
   // 現在行
   const currentItem =
-    currentData.msgInfo[currentIndex];
+    currentData[currentIndex];
 
   if (!isAutoMode || !currentItem.movId) {
 
@@ -617,7 +615,7 @@ function nextStep() {
 
     // 次行確認
     const nextItem =
-      currentData.msgInfo[currentIndex + 1];
+      currentData[currentIndex + 1];
 
     // 次がmovIdなら
     // 現在が最後A
@@ -648,7 +646,7 @@ function nextStep() {
   currentIndex++;
 
   const item =
-    currentData.msgInfo[currentIndex];
+    currentData[currentIndex];
 
   // Lテキスト
   if (
@@ -693,7 +691,7 @@ function nextStep() {
 
   }
 
-  if (currentIndex >= currentData.msgInfo.length) {
+  if (currentIndex >= currentData.length) {
 
     // 画面遷移
     moveSelect();
@@ -711,7 +709,7 @@ function nextStep() {
  *************************************************/
 function findMovIndex(movId) {
 
-  return currentData.msgInfo.findIndex(
+  return currentData.findIndex(
     item =>
       item.movId === movId
   );
@@ -866,11 +864,11 @@ function isWaitMessage() {
 
   // 現在行
   const currentItem =
-    currentData.msgInfo[currentIndex];
+    currentData[currentIndex];
 
   // 次行
   const nextItem =
-    currentData.msgInfo[currentIndex + 1];
+    currentData[currentIndex + 1];
 
   // 最終メッセージ
   if (!nextItem) {
@@ -896,12 +894,12 @@ function isLongAVideo() {
 }
 
 function getAStageInfo() {
-  const currentItem = currentData.msgInfo[currentIndex];
+  const currentItem = currentData[currentIndex];
   if (!currentItem || currentItem.msgId !== "A") return null;
   if (currentVideo !== videoA) return null;
 
-  const prevItem = currentData.msgInfo[currentIndex - 1];
-  const nextItem = currentData.msgInfo[currentIndex + 1];
+  const prevItem = currentData[currentIndex - 1];
+  const nextItem = currentData[currentIndex + 1];
 
   return {
     isFirstA: !(prevItem && prevItem.msgId === "A"),
@@ -926,7 +924,7 @@ function startAutoNext() {
   clearATextTimer();
 
   const currentItem =
-    currentData.msgInfo[currentIndex];
+    currentData[currentIndex];
 
   // --------------------
   // Aメッセージだけ別制御
@@ -953,7 +951,7 @@ function startAutoNext() {
     aTextTimer = setTimeout(() => {
 
       const nowItem =
-        currentData.msgInfo[currentIndex];
+        currentData[currentIndex];
 
       // 途中で場面が変わっていたら何もしない
       if (
@@ -1093,12 +1091,12 @@ function getMoviePattern(startIndex) {
   // 次行から確認
   for (
     let i = startIndex + 1;
-    i < currentData.msgInfo.length;
+    i < currentData.length;
     i++
   ) {
 
     const item =
-      currentData.msgInfo[i];
+      currentData[i];
 
     // 次movIdで終了
     if ("movId" in item) {
@@ -1167,7 +1165,7 @@ function getMoviePattern(startIndex) {
  *************************************************/
 function showCurrent() {
 
-  const item = currentData.msgInfo[currentIndex];
+  const item = currentData[currentIndex];
 
   // メッセージ
   if ("msgTxt" in item) {
@@ -1226,7 +1224,7 @@ function showCurrent() {
     // プロローグタイトル
     if (item.movId === "plg") {
 
-      showTitle(item.title || "");
+      showTitle(tgtEvtData.cpt[cptIdx].plcNm || "");
 
       return;
 
@@ -1259,7 +1257,7 @@ function showCurrent() {
       // パターン解析
       moviePattern = getMoviePattern(currentIndex);
 
-      const nextItem = currentData.msgInfo[currentIndex + 1];
+      const nextItem = currentData[currentIndex + 1];
       const nextMsgId = nextItem.msgId;
 
       // 次がフェードなら動画再生しない
@@ -1963,7 +1961,7 @@ function playSeamlessMovie(srcA, srcL) {
 
       // 次行
       const nextItem =
-        currentData.msgInfo[currentIndex + 1];
+        currentData[currentIndex + 1];
 
       // --------------------
       // A→Lパターン
