@@ -1206,8 +1206,17 @@ function showCurrent() {
 
     }
 
+    const chrNm =
+      item.chrNm ||
+      (
+        chrId === "FF" ? "ホタル" :
+        chrId === "AK" ? "こはね" :
+        chrId === "SA" ? "杏" :
+        ""
+      );
+
     changeMessage(
-      item.chrNm || "",
+      chrNm,
       item.msgTxt || ""
     );
 
@@ -1396,6 +1405,7 @@ function startTyping(text) {
   const spans = [];
 
   let inNote = false;
+  let isLineStart = true;
 
   for (const char of fullText) {
 
@@ -1411,8 +1421,25 @@ function startTyping(text) {
         document.createElement("br");
 
       msgEl.appendChild(br);
-
       spans.push(br);
+
+      // プロセカ側で、括弧内の改行なら字下げ
+      if (
+        chrId !== "FF" &&
+        inNote
+      ) {
+
+        const indentSpan =
+          document.createElement("span");
+
+        indentSpan.className = "char noteChar";
+        indentSpan.style.opacity = 0;
+        indentSpan.innerText = "　";
+
+        msgEl.appendChild(indentSpan);
+        spans.push(indentSpan);
+
+      }
 
       continue;
 
@@ -1512,6 +1539,24 @@ function finishTyping() {
       msgEl.appendChild(
         document.createElement("br")
       );
+
+      // プロセカ側で、括弧内の改行なら字下げ
+      if (
+        chrId !== "FF" &&
+        inNote
+      ) {
+
+        const indentSpan =
+          document.createElement("span");
+
+        indentSpan.className = "char noteChar";
+        indentSpan.style.opacity = 1;
+        indentSpan.style.transform = "translateY(0)";
+        indentSpan.innerText = "　";
+
+        msgEl.appendChild(indentSpan);
+
+      }
 
       continue;
 
