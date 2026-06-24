@@ -58,8 +58,8 @@ const evtData = [
 //-------------
 // 恋愛モード
 //-------------
-  { evtId: "AK-LV-B1", evtNm: "dummy", cpt:[
-    { cptId: "1", plcNm: "", cmpRt: "", memo:""}
+  { evtId: "AK-LV-A1", evtNm: "初めての奉仕", cpt:[
+    { cptId: "1", plcNm: "WEEKEND GARAGE", cmpRt: "●", memo:""}
   ]},
 
 /*************************************************
