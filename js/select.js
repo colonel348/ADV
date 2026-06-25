@@ -136,7 +136,7 @@ function createCards() {
 
     const modeType = data.evtId.charAt(3);
 
-    if (modeType === "N") {
+    if (modeType === "S") {
       span.style.color = "#ffd84a";
     }
     else if (modeType === "D") {
@@ -533,8 +533,8 @@ function touchAction() {
     e.stopPropagation();
 
     if (modeKbn === "L") {
-      modeKbn = "N";
-    } else if (modeKbn === "N") {
+      modeKbn = "S";
+    } else if (modeKbn === "S") {
       modeKbn = "D";
     } else {
       modeKbn = "L";
@@ -647,7 +647,7 @@ function updateModeSelector() {
   const modeIcon = document.getElementById("modeIcon");
 
   modeSelector.classList.remove(
-    "normMode",
+    "sersMode",
     "discMode",
     "loveMode",
     "mode-changing"
@@ -656,7 +656,7 @@ function updateModeSelector() {
   if (modeKbn === "S") {
     modeSelector.classList.add("sersMode");
     modeText.textContent = "本気モード";
-    modeIcon.src = "../img/normMode.png";
+    modeIcon.src = "../img/sersMode.png";
   } else if (modeKbn === "D") {
     modeSelector.classList.add("discMode");
     modeText.textContent = "調教モード";
