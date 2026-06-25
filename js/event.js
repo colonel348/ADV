@@ -90,7 +90,7 @@ function loadEvent() {
 
     const script = document.createElement("script");
 
-    script.src = `../data/${evtId}/CPT-${cptId}/msgData.js`;
+    script.src = getMsgDataPath(tgtEvtData, cptId);
 
     script.onload = () => {
       resolve(window.msgData);
@@ -131,11 +131,8 @@ function preloadMovies() {
     if (pattern === "AL") {
 
       sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`,
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
-
+        getMoviePath(tgtEvtData, cptId, item.movId, "A"),
+        getMoviePath(tgtEvtData, cptId, item.movId, "L")
       ];
 
     }
@@ -147,9 +144,7 @@ function preloadMovies() {
     else if (pattern === "A") {
 
       sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-A.mp4`
-
+        getMoviePath(tgtEvtData, cptId, item.movId, "A")
       ];
 
     }
@@ -161,9 +156,7 @@ function preloadMovies() {
     else if (pattern === "L") {
 
       sources = [
-
-        `../data/${evtId}/CPT-${cptId}/${item.movId}-L.mp4`
-
+        getMoviePath(tgtEvtData, cptId, item.movId, "L")
       ];
 
     }
@@ -1633,10 +1626,10 @@ function playMovie(item) {
   }
 
   const srcA =
-    `../data/${evtId}/CPT-${cptId}/${movId}-A.mp4`;
+    getMoviePath(tgtEvtData, cptId, movId, "A");
 
   const srcL =
-    `../data/${evtId}/CPT-${cptId}/${movId}-L.mp4`;
+    getMoviePath(tgtEvtData, cptId, movId, "L");
 
   currentSrcL = srcL;
 

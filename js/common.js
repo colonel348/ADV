@@ -63,3 +63,53 @@ function sleepSetTimeout(ms, callback) {
     setTimeout(callback, ms);
 
 }
+
+/*************************************************
+ * イベントパス
+ *************************************************/
+function getEvtDir(evt) {
+  const chrMap = {
+    FF: "01.ホタル",
+    AK: "02.小豆沢こはね",
+    SA: "03.白石杏"
+  };
+
+  const modeMap = {
+    DS: "01.調教",
+    SR: "02.本気",
+    LV: "03.恋愛"
+  };
+
+  const lvMap = {
+    A: "1",
+    B: "2",
+    C: "3",
+    D: "4"
+  };
+
+  const chr = chrMap[evt.evtId.substring(0, 2)];
+  const mode = modeMap[evt.evtId.substring(3, 5)];
+
+  const lv = lvMap[evt.evtId.charAt(6)];
+  const no = evt.evtId.charAt(7);
+
+  const titleDir = lv + no + "." + evt.evtNm;
+
+  return "../data/" + chr + "/" + mode + "/" + titleDir;
+}
+
+function getBnrPath(evt) {
+  return getEvtDir(evt) + "/bnr.png";
+}
+
+function getSelPath(evt, cpt) {
+  return getEvtDir(evt) + "/CPT-" + cpt.cptId + "/sel.png";
+}
+
+function getMsgDataPath(evt, cptId) {
+  return getEvtDir(evt) + "/CPT-" + cptId + "/msgData.js";
+}
+
+function getMoviePath(evt, cptId, movId, ptn) {
+  return getEvtDir(evt) + "/CPT-" + cptId + "/" + movId + "-" + ptn + ".mp4";
+}

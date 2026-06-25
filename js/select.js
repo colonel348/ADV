@@ -24,32 +24,6 @@ let preloadPromise = null;
 const imageCache = {};
 
 /*************************************************
- * シーズンカラー
- *************************************************/
-
-const ssnData = [
-
-  // ホタル
-  { ssnId: "FF-S1", ssnLv: "3"},
-  { ssnId: "FF-S2", ssnLv: "2"},
-  { ssnId: "FF-S3", ssnLv: "4"},
-  { ssnId: "FF-S4", ssnLv: "5"},
-
-  // 小豆沢こはね
-  { ssnId: "AK-S1", ssnLv: "1"},
-  { ssnId: "AK-S2", ssnLv: "3"},
-  { ssnId: "AK-S3", ssnLv: "4"},
-  { ssnId: "AK-S4", ssnLv: "5"},
-
-  // 白石杏
-  { ssnId: "SA-S1", ssnLv: "3"},
-  { ssnId: "SA-S2", ssnLv: "2"},
-  { ssnId: "SA-S3", ssnLv: "1"},
-  { ssnId: "SA-S4", ssnLv: "5"},
-
-];
-
-/*************************************************
  * 画像プリロード
  *************************************************/
 function preloadAllImages() {
@@ -64,9 +38,8 @@ function preloadAllImages() {
   evtData.forEach(evt => {
     evt.cpt.forEach(cpt => {
 
-      urls.push('../data/' + evt.evtId + '/bnr.png');
-
-      urls.push('../data/' + evt.evtId + '/CPT-' + cpt.cptId + '/sel.png');
+      urls.push(getBnrPath(evt));
+      urls.push(getSelPath(evt, cpt));
 
     });
   });
@@ -112,6 +85,7 @@ function preloadAllImages() {
   return preloadPromise;
 }
 
+
 /*************************************************
  * カード生成
  *************************************************/
@@ -126,7 +100,7 @@ function createCards() {
     // 背景画像をCSS変数で渡す
     inner.style.setProperty(
       "--card-bg",
-      `url("../data/${data.evtId}/bnr.png")`
+      `url("${getBnrPath(data)}")`
     );
 
     const border = document.createElement("div");
@@ -250,7 +224,8 @@ function updateSelection(animated = true, slideDir = "left", changeType = "event
 
   // ===== 背景更新 =====
   tgtEvtData = filteredEvtData[evtIdx];
-  const nextUrl = '../data/' + tgtEvtData.evtId + '/CPT-' + tgtEvtData.cpt[cptIdx].cptId + '/sel.png';
+  const nextUrl =
+    getSelPath(tgtEvtData, tgtEvtData.cpt[cptIdx]);
 
   if (animated) {
     bgImg.style.opacity = 0;
@@ -678,9 +653,9 @@ function updateModeSelector() {
     "mode-changing"
   );
 
-  if (modeKbn === "N") {
-    modeSelector.classList.add("normMode");
-    modeText.textContent = "通常モード";
+  if (modeKbn === "S") {
+    modeSelector.classList.add("sersMode");
+    modeText.textContent = "本気モード";
     modeIcon.src = "../img/normMode.png";
   } else if (modeKbn === "D") {
     modeSelector.classList.add("discMode");
