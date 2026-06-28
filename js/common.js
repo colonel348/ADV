@@ -98,6 +98,20 @@ function getEvtDir(evt) {
   return "../data/" + chr + "/" + mode + "/" + titleDir;
 }
 
+function getChrDir(chrId) {
+  const chrMap = {
+    FF: "01.ホタル",
+    AK: "02.小豆沢こはね",
+    SA: "03.白石杏"
+  };
+
+  return "../data/" + chrMap[chrId];
+}
+
+function getChrSelPath(chrId) {
+  return getChrDir(chrId) + "/sel.png";
+}
+
 function getBnrPath(evt) {
   return getEvtDir(evt) + "/bnr.png";
 }

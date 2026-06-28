@@ -32,6 +32,10 @@ function preloadAllImages() {
 
   const urls = [];
 
+  chrList.forEach(chr => {
+    urls.push(getChrSelPath(chr));
+  });
+
   const preloadStage =
     document.getElementById("preloadImageStage");
 
@@ -85,6 +89,38 @@ function preloadAllImages() {
   return preloadPromise;
 }
 
+/*************************************************
+ * キャラクター選択画像表示
+ *************************************************/
+function showCharacterSelectImage(animated = true) {
+  const nextUrl = getChrSelPath(chrId);
+
+  if (animated) {
+    bgImg.style.opacity = 0;
+
+    setTimeout(() => {
+      bgImg.style.transition = "none";
+      bgImg.style.transform = "translate(-60px, -50%)";
+
+      bgImg.offsetHeight;
+
+      bgImg.src = nextUrl;
+
+      bgImg.style.transition =
+        "transform .4s ease, opacity .4s ease, filter .45s ease";
+
+      requestAnimationFrame(() => {
+        bgImg.style.opacity = 1;
+        bgImg.style.transform = "translate(0px, -50%)";
+      });
+    }, 180);
+
+  } else {
+    bgImg.src = nextUrl;
+    bgImg.style.opacity = 1;
+    bgImg.style.transform = "translate(0px, -50%)";
+  }
+}
 
 /*************************************************
  * カード生成
@@ -207,7 +243,10 @@ function updateSelection(animated = true, slideDir = "left", changeType = "event
   const cards = document.querySelectorAll(".card");
 
   cards.forEach((c, i) => {
-    c.classList.toggle("active", i === evtIdx);
+    c.classList.toggle(
+      "active",
+      !isCharacterMode && i === evtIdx
+    );
   });
 
   const sidebar = document.getElementById("sidebar");
@@ -220,6 +259,11 @@ function updateSelection(animated = true, slideDir = "left", changeType = "event
 
     const offset = activeTop - ((sidebarHeight - activeHeight) / 2);
     cardList.style.transform = `translateY(${-offset}px)`;
+  }
+
+  if (isCharacterMode) {
+    showCharacterSelectImage(animated);
+    return;
   }
 
   // ===== 背景更新 =====
@@ -319,10 +363,24 @@ function applyCharacterMode() {
 
   if (isCharacterMode) {
     viewport.classList.add("character-mode");
+
+    document.querySelectorAll(".card").forEach(card => {
+      card.classList.remove("active");
+    });
+
+    document.querySelectorAll(".chapterDiamond").forEach(d => {
+      d.classList.remove("active");
+    });
+
+    showCharacterSelectImage(true);
+
   } else {
     viewport.classList.remove("character-mode");
+
+    updateSelection(true, "left", "event");
   }
 }
+
 /*************************************************
  * 次のイベント
  *************************************************/
@@ -554,7 +612,21 @@ function touchAction() {
       cardList.innerHTML = "";
       createCards();
 
-      updateSelection(true, "left", "event");
+      if (isCharacterMode) {
+
+        document.querySelectorAll(".card").forEach(card => {
+          card.classList.remove("active");
+        });
+
+        document.querySelectorAll(".chapterDiamond").forEach(d => {
+          d.classList.remove("active");
+        });
+
+      } else {
+
+        updateSelection(true, "left", "event");
+
+      }
 
       cardList.classList.remove("card-fade-out");
 

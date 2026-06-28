@@ -492,12 +492,12 @@ body {
 /* =========================
    選択中（今の鮮やか色を維持）
 ========================= */
-/* 通常 */
-.chapterDiamond.mode-N {
+/* 本気 */
+.chapterDiamond.mode-S {
   background-color: #3F3E5C;
 }
 
-.chapterDiamond.mode-N.active {
+.chapterDiamond.mode-S.active {
   background-color: #ffd84a;
   border-color: #fff;
 }
@@ -666,21 +666,27 @@ body {
 
 /* キャラ選択モード時 */
 #viewport.character-mode #characterSelector {
-  width: 210px;
+  width: 250px;
 }
 
 #viewport.character-mode #characterSelector::before {
-  width: 210px;
+  width: 250px;
 }
 
 /* cardListも同じ速度で横移動 */
 #viewport.character-mode #cardList {
-  margin-left: 210px;
+  margin-left: 250px;
 }
 
 /* 矢印反転 */
 #viewport.character-mode #charModeToggle {
   transform: translateY(-50%) rotate(180deg);
+}
+
+#viewport.character-mode #decideBtn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.98);
 }
 
 /* 通常時は名前・ハイライト非表示 */
@@ -705,7 +711,7 @@ body {
   width: 220px;
   height: 44px;
 
-  margin-left: 20px;
+  margin-left: 35px;
 
   font-size: 20px;
   font-weight: bold;
@@ -739,7 +745,7 @@ body {
 
   border-radius: 12px;
 
-  left: 20px;
+  left: 35px;
   transform: none;
 
   background: #ff6699;
