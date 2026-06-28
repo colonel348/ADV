@@ -21,7 +21,6 @@ let chrList = ["FF", "AK", "SA"];
 let chrIdx = 1; // AK
 let filteredEvtData = [];
 let preloadPromise = null;
-const imageCache = {};
 
 /*************************************************
  * 画像プリロード
@@ -55,8 +54,6 @@ function preloadAllImages() {
       return new Promise(resolve => {
 
         const img = new Image();
-
-        imageCache[url] = img;
 
         img.onload = async () => {
           try {
@@ -229,7 +226,7 @@ function createCards() {
 
       evtIdx = i;
       cptIdx = 0;
-      updateSelection(true, "left", "event");
+      updateSelection(true, "left");
     });
 
     cardList.appendChild(div);
@@ -239,7 +236,7 @@ function createCards() {
 /*************************************************
  * 選択更新
  *************************************************/
-function updateSelection(animated = true, slideDir = "left", changeType = "event") {
+function updateSelection(animated = true, slideDir = "left") {
   const cards = document.querySelectorAll(".card");
 
   cards.forEach((c, i) => {
@@ -327,7 +324,6 @@ function updateSelection(animated = true, slideDir = "left", changeType = "event
  *************************************************/
 function applyMode() {
   const viewport = document.getElementById("viewport");
-  const startOverlay = document.getElementById("startOverlay");
   const sidebar = document.getElementById("sidebar");
 
   if (isStartMode) {
@@ -377,7 +373,7 @@ function applyCharacterMode() {
   } else {
     viewport.classList.remove("character-mode");
 
-    updateSelection(true, "left", "event");
+    updateSelection(true, "left");
   }
 }
 
@@ -408,9 +404,6 @@ function goToEvent() {
 function touchAction() {
 
   const swipeArea = document.getElementById("viewport");
-
-  let dragStartIndex = 0;
-  let moved = false;
 
   // タッチ開始
   swipeArea.addEventListener("touchstart", e => {
@@ -470,7 +463,7 @@ function touchAction() {
 
         if (cptIdx < tgtEvtData.cpt.length - 1) {
           cptIdx++;
-          updateSelection(true, "left", "chapter");
+          updateSelection(true, "left");
         }
 
       }
@@ -493,7 +486,7 @@ function touchAction() {
         if (cptIdx > 0) {
 
           cptIdx--;
-          updateSelection(true, "right", "chapter");
+          updateSelection(true, "right");
         }
       }
 
@@ -521,12 +514,12 @@ function touchAction() {
         if (dy > 0 && evtIdx > 0) {
           evtIdx--;
           cptIdx = 0;
-          updateSelection(true, "left", "event");
+          updateSelection(true, "left");
         }
         else if (dy < 0 && evtIdx < filteredEvtData.length - 1) {
           evtIdx++;
           cptIdx = 0;
-          updateSelection(true, "left", "event");
+          updateSelection(true, "left");
         }
       }
 
@@ -624,7 +617,7 @@ function touchAction() {
 
       } else {
 
-        updateSelection(true, "left", "event");
+        updateSelection(true, "left");
 
       }
 
@@ -805,7 +798,7 @@ function changeCharacter(dir) {
     evtIdx = 0;
     cptIdx = 0;
 
-    updateSelection(true, "left", "event");
+    updateSelection(true, "left");
 
     /* ===== フェードイン準備 ===== */
     cardList.classList.remove("card-fade-out");
@@ -901,7 +894,7 @@ window.addEventListener('load', function() {
 
   // 画像読込後に画面表示
   preloadAllImages().then(() => {
-    updateSelection(false, "left", "event");
+    updateSelection(false, "left");
     applyMode(); // ★追加
     sleepSetTimeout(500, () => document.getElementById('viewport').style.opacity = 1);
   });
