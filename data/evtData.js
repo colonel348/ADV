@@ -74,7 +74,7 @@ const evtData = [
   ]},
 
   { evtId: "SA-DS-C1", evtNm: "教室に溢れる熱", cpt:[
-    { cptId: "1", plcNm: "教室", cmpRt: "●", memo:""}
+    { cptId: "1", plcNm: "教室", cmpRt: "△", memo:"evt2Aの内容変更、動画数修正"}
   ]},
 
 //-------------
