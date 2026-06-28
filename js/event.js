@@ -1338,7 +1338,16 @@ function showCurrent() {
           msgId === "L"
         ) {
 
+          const isFirstLoopOnly =
+            msgId === "L" &&
+            moviePattern === "L" &&
+            isFirstLoopPlay;
+
           playMovie(waitItem, currentIndex);
+
+          if (isFirstLoopOnly) {
+            return;
+          }
 
         }
 
@@ -1791,6 +1800,7 @@ function playMovie(item, aMsgIndex = null) {
 
         if (waitMovie) {
           waitMovie = false;
+          showCurrent();
         } else {
           nextStep();
         }
