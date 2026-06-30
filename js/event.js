@@ -1852,11 +1852,15 @@ function startFirstLoopDoubleBuffer(srcL) {
 
     currentVideo = activeLoopVideo;
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
 
-      setFade(false);
+      requestAnimationFrame(() => {
 
-    }, 100);
+        setFade(false);
+
+      });
+
+    });
 
   }, FIRST_LOOP_WHITE_WAIT);
 
