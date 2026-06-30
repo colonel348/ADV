@@ -60,7 +60,7 @@ const LOOP_FADE_WAIT = 230;
 // fade時間
 const LOOP_FADE_TIME = 500;
 // fade時間
-const BLACK_FADE_TIME = 500;
+const BLACK_FADE_TIME = 750;
 
 const AFTER_TITLE_NEXT_EVT_TIME = 200;
 const AFTER_TITLE_BLACK_FADE_TIME = 200;
@@ -70,6 +70,8 @@ const NEXT_EVT_TIME = 500;
 const NEXT_TEXT_TIME = 4000;
 // タイトル後の時間
 const NEXT_TITLE_TIME = 1200;
+// 次のメッセージ遅らせ
+const NEXT_MSG_DELAY_TIME = 300;
 
 const FIRST_LOOP_WHITE_WAIT = 1500;
 
@@ -1298,6 +1300,8 @@ function getCurrentMovItemIndex(index) {
  *************************************************/
 function showCurrent() {
 
+  let delayMessage = false;
+
   const item = currentData[currentIndex];
 
   // メッセージ
@@ -1343,6 +1347,8 @@ function showCurrent() {
             moviePattern === "L" &&
             isFirstLoopPlay;
 
+          delayMessage = true;
+
           playMovie(waitItem, currentIndex);
 
           if (isFirstLoopOnly) {
@@ -1364,10 +1370,14 @@ function showCurrent() {
         ""
       );
 
-    changeMessage(
-      chrNm,
-      item.msgTxt || ""
-    );
+    setTimeout(() => {
+
+      changeMessage(
+        chrNm,
+        item.msgTxt || ""
+      );
+
+    }, delayMessage ? NEXT_MSG_DELAY_TIME + BLACK_FADE_TIME : 0);
 
     return;
 
@@ -1805,7 +1815,7 @@ function playMovie(item, aMsgIndex = null) {
           nextStep();
         }
 
-      }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME);
+      }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME+ 750);
 
     } else {
 
@@ -1843,7 +1853,6 @@ function playMovie(item, aMsgIndex = null) {
  *************************************************/
 function startFirstLoopDoubleBuffer(srcL) {
 
-  // 白フェード
   setFade(true, "W");
 
   setTimeout(() => {
@@ -1852,15 +1861,20 @@ function startFirstLoopDoubleBuffer(srcL) {
 
     currentVideo = activeLoopVideo;
 
-    requestAnimationFrame(() => {
+    const waitShow = () => {
 
-      requestAnimationFrame(() => {
+      if (activeLoopVideo.classList.contains("show")) {
 
         setFade(false);
+        return;
 
-      });
+      }
 
-    });
+      requestAnimationFrame(waitShow);
+
+    };
+
+    waitShow();
 
   }, FIRST_LOOP_WHITE_WAIT);
 
@@ -2204,35 +2218,39 @@ function playSeamlessMovie(srcA, srcL) {
 
             return;
 
+          } else {
+
+            setFade(true, nextItem.msgId);
+
+            pendingLoop = true;
+
+            setTimeout(() => {
+
+              videoA.classList.remove("show");
+
+              videoA.pause();
+
+              videoA.style.display = "none";
+
+              currentVideo = null;
+
+              isBusy = false;
+
+              ++currentIndex;
+
+              showCurrent();
+
+            }, BLACK_FADE_TIME);
+
+            return;
+
           }
-
-          setFade(true, nextItem.msgId);
-
-          pendingLoop = true;
-
-          setTimeout(() => {
-
-            videoA.classList.remove("show");
-
-            videoA.pause();
-
-            videoA.style.display = "none";
-
-            currentVideo = null;
-
-            isBusy = false;
-
-            ++currentIndex;
-
-            showCurrent();
-
-          }, BLACK_FADE_TIME);
-
-          return;
 
         } else {
 
           if (isFirstLoopPlay) {
+
+            document.getElementById("msgArea").style.opacity = 0;
 
             isFirstLoopPlay = false;
 
@@ -2251,7 +2269,7 @@ function playSeamlessMovie(srcA, srcL) {
 
                 showCurrent();
 
-              }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME);
+              }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME + 750);
 
             });
 
@@ -2330,31 +2348,33 @@ function playSeamlessMovie(srcA, srcL) {
 
             return;
 
+          } else {
+
+            setFade(true, nextItem.msgId);
+
+            pendingLoop = false;
+
+            setTimeout(() => {
+
+              videoA.classList.remove("show");
+
+              videoA.pause();
+
+              videoA.style.display = "none";
+
+              currentVideo = null;
+
+              isBusy = false;
+
+              ++currentIndex;
+
+              showCurrent();
+
+            }, BLACK_FADE_TIME);
+
+            return;
+
           }
-
-          setFade(true, nextItem.msgId);
-
-          pendingLoop = false;
-
-          setTimeout(() => {
-
-            videoA.classList.remove("show");
-
-            videoA.pause();
-
-            videoA.style.display = "none";
-
-            currentVideo = null;
-
-            isBusy = false;
-
-            ++currentIndex;
-
-            showCurrent();
-
-          }, BLACK_FADE_TIME);
-
-          return;
 
         } else {
 
@@ -2401,7 +2421,11 @@ function playSeamlessMovie(srcA, srcL) {
     
     } else {
 
-      nextStep();
+      setTimeout(() => {
+
+        nextStep();
+
+      }, NEXT_MSG_DELAY_TIME);
 
     }
 

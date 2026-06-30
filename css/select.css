@@ -605,7 +605,7 @@ body {
   position: absolute;
   inset: 0;
   width: 40px;
-  background: rgba(40, 40, 50, 0.7);
+  background: rgba(40, 40, 50, 0.5);
   z-index: 0;
   transition: width .35s ease;
 }
