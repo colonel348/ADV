@@ -1857,6 +1857,11 @@ function startFirstLoopDoubleBuffer(srcL) {
 
   setTimeout(() => {
 
+    // 白で隠れている間にAを消す
+    videoA.classList.remove("show");
+    videoA.pause();
+    videoA.style.display = "none";
+
     startLoopDoubleBuffer(srcL, true);
 
     currentVideo = activeLoopVideo;
@@ -1865,7 +1870,13 @@ function startFirstLoopDoubleBuffer(srcL) {
 
       if (activeLoopVideo.classList.contains("show")) {
 
-        setFade(false);
+        // show直後ではなく、少し描画を待ってから白フェード解除
+        setTimeout(() => {
+
+          setFade(false);
+
+        }, 120);
+
         return;
 
       }
