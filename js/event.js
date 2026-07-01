@@ -1875,7 +1875,7 @@ function startFirstLoopDoubleBuffer(srcL) {
 
           setFade(false);
 
-        }, 120);
+        }, 200);
 
         return;
 
