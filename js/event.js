@@ -969,22 +969,59 @@ function startAutoNext() {
     const aInfo = getAStageInfo();
     if (!aInfo) return;
 
-    // 5秒Aは何もしない
-    if (!aInfo.isLongA) {
+    const aTotal =
+      countContinuousA(
+        currentIndex - getContinuousAIndex(currentIndex) + 1
+      );
+
+    const aIndex =
+      getContinuousAIndex(currentIndex);
+
+    const duration =
+      videoA.duration || 0;
+
+    // 5秒以下：Aメッセージはそのまま
+    if (duration <= 5) {
       return;
     }
 
-    // 2個目のAは動画終了までそのまま
-    if (!aInfo.isFirstA) {
+    // 次のAがあるなら進める
+    if (aIndex < aTotal) {
+
+      aTextTimer = setTimeout(() => {
+
+        const nowItem =
+          currentData[currentIndex];
+
+        if (
+          !nowItem ||
+          nowItem.msgId !== "A" ||
+          currentVideo !== videoA
+        ) {
+          return;
+        }
+
+        currentIndex++;
+        showCurrent();
+
+      }, NEXT_TEXT_TIME);
+
+      return;
+
+    }
+
+    // 最後のAメッセージ
+    // 10秒以下なら最後まで表示
+    if (duration <= 10) {
       return;
     }
 
+    // 10秒超なら最後のAメッセージも一定時間後に消す
     aTextTimer = setTimeout(() => {
 
       const nowItem =
         currentData[currentIndex];
 
-      // 途中で場面が変わっていたら何もしない
       if (
         !nowItem ||
         nowItem.msgId !== "A" ||
@@ -993,14 +1030,6 @@ function startAutoNext() {
         return;
       }
 
-      // 2個目のAがあるなら次のAへ
-      if (aInfo.hasNextA) {
-        currentIndex++;
-        showCurrent();
-        return;
-      }
-
-      // 1個だけなら非表示にする
       fadeOutCurrentMessage();
 
     }, NEXT_TEXT_TIME);
@@ -1038,6 +1067,47 @@ function startAutoNext() {
   autoTimer = setTimeout(() => {
     nextStep();
   }, waitTime);
+}
+
+/*************************************************
+ * A動画カウント
+ *************************************************/
+function countContinuousA(index) {
+
+  let count = 0;
+
+  for (let i = index; i < currentData.length; i++) {
+
+    const item = currentData[i];
+
+    if (!item || item.msgId !== "A") {
+      break;
+    }
+
+    count++;
+
+  }
+
+  return count;
+}
+
+function getContinuousAIndex(index) {
+
+  let count = 0;
+
+  for (let i = index; i >= 0; i--) {
+
+    const item = currentData[i];
+
+    if (!item || item.msgId !== "A") {
+      break;
+    }
+
+    count++;
+
+  }
+
+  return count;
 }
 
 /*************************************************
