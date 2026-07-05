@@ -14,8 +14,8 @@ const evtData = [
 //-------------
 // 本気モード
 //-------------
-  { evtId: "FF-SR-A1", evtNm: "dummy", cpt:[
-    { cptId: "1", movPtn: "-", cmpRt: "-", plcNm: "" }
+  { evtId: "FF-SR-B1", evtNm: "●●●", cpt:[
+    { cptId: "1", movPtn: "2", cmpRt: "-", plcNm: "オーディション会場" }
   ]},
 
 //-------------
