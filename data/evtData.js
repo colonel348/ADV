@@ -38,7 +38,7 @@ const evtData = [
   ]},
 
   { evtId: "AK-DS-C1", evtNm: "描かれる身体", cpt:[
-    { cptId: "1", movPtn: "1", cmpRt: "△", plcNm: "美術室" },
+    { cptId: "1", movPtn: "1", cmpRt: "●", plcNm: "美術室" },
     { cptId: "2", movPtn: "2", cmpRt: "△", plcNm: "美術室" }, // Lv3のためCPT-3用意
   ]},
 
@@ -88,8 +88,8 @@ const evtData = [
 //-------------
 // 恋愛モード
 //-------------
-  { evtId: "SA-LV-B1", evtNm: "魅了の第一歩", cpt:[
-    { cptId: "1", movPtn: "1", cmpRt: "×", plcNm: "ダンススタジオ" }
+  { evtId: "SA-LV-B1", evtNm: "雨の日の秘密", cpt:[
+    { cptId: "1", movPtn: "4", cmpRt: "●", plcNm: "バスルーム" }
   ]}
 
 ];
