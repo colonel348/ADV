@@ -579,59 +579,68 @@ function touchAction() {
   });
 
   const modeSelector = document.getElementById("modeSelector");
+  const modeButton = document.getElementById("modeButton");
 
-  modeSelector.addEventListener("click", e => {
+  modeButton.addEventListener("click", e => {
     e.stopPropagation();
+    modeSelector.classList.toggle("open");
+  });
 
-    if (modeKbn === "L") {
-      modeKbn = "S";
-    } else if (modeKbn === "S") {
-      modeKbn = "D";
-    } else {
-      modeKbn = "L";
-    }
+  document.querySelectorAll(".modeOption").forEach(option => {
+    option.addEventListener("click", e => {
+      e.stopPropagation();
 
-    updateModeSelector();
+      const nextMode = option.dataset.mode;
 
-    cardList.classList.add("card-fade-out");
-
-    setTimeout(() => {
-
-      updateFilteredEvents();
-
-      evtIdx = 0;
-      cptIdx = 0;
-
-      cardList.innerHTML = "";
-      createCards();
-
-      if (isCharacterMode) {
-
-        document.querySelectorAll(".card").forEach(card => {
-          card.classList.remove("active");
-        });
-
-        document.querySelectorAll(".chapterDiamond").forEach(d => {
-          d.classList.remove("active");
-        });
-
-      } else {
-
-        updateSelection(true, "left");
-
+      if (modeKbn === nextMode) {
+        modeSelector.classList.remove("open");
+        return;
       }
 
-      cardList.classList.remove("card-fade-out");
+      modeKbn = nextMode;
+      modeSelector.classList.remove("open");
 
-      requestAnimationFrame(() => {
-        cardList.classList.add("card-fade-in-active");
+      updateModeSelector();
 
-        setTimeout(() => {
-          cardList.classList.remove("card-fade-in-active");
-        }, 250);
-      });
+      cardList.classList.add("card-fade-out");
 
-    }, 200);
+      setTimeout(() => {
+        updateFilteredEvents();
+
+        evtIdx = 0;
+        cptIdx = 0;
+
+        cardList.innerHTML = "";
+        createCards();
+
+        if (isCharacterMode) {
+          document.querySelectorAll(".card").forEach(card => {
+            card.classList.remove("active");
+          });
+
+          document.querySelectorAll(".chapterDiamond").forEach(d => {
+            d.classList.remove("active");
+          });
+        } else {
+          updateSelection(true, "left");
+        }
+
+        cardList.classList.remove("card-fade-out");
+
+        requestAnimationFrame(() => {
+          cardList.classList.add("card-fade-in-active");
+
+          setTimeout(() => {
+            cardList.classList.remove("card-fade-in-active");
+          }, 250);
+        });
+
+      }, 200);
+    });
+  });
+
+  document.addEventListener("click", () => {
+    modeSelector.classList.remove("open");
   });
 
 }
@@ -731,6 +740,13 @@ function updateModeSelector() {
     modeText.textContent = "恋愛モード";
     modeIcon.src = "../img/loveMode.png";
   }
+
+  document.querySelectorAll(".modeOption").forEach(option => {
+    option.classList.toggle(
+      "mode-active",
+      option.dataset.mode === modeKbn
+    );
+  });
 
   requestAnimationFrame(() => {
     modeSelector.classList.add("mode-changing");
