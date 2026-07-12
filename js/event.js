@@ -68,10 +68,12 @@ const AFTER_TITLE_BLACK_FADE_TIME = 200;
 const NEXT_EVT_TIME = 500;
 // 次メッセージへの時間
 const NEXT_TEXT_TIME = 4000;
+// メッセージのみの自動送り時間
+const NEXT_MSG_TEXT_TIME = 3000;
 // タイトル後の時間
 const NEXT_TITLE_TIME = 1200;
 // 次のメッセージ遅らせ
-const NEXT_MSG_DELAY_TIME = 300;
+const NEXT_MSG_DELAY_TIME = 100;
 
 const FIRST_LOOP_WHITE_WAIT = 1500;
 
@@ -1045,9 +1047,14 @@ function startAutoNext() {
 
     if (isAutoMode) {
 
+      const currentItem =
+        currentData[currentIndex];
+
+      const waitTime = getMessageWaitTime(currentItem);
+
       autoTimer = setTimeout(() => {
         nextStep();
-      }, NEXT_TEXT_TIME);
+      }, waitTime);
 
       return;
     }
@@ -1059,14 +1066,31 @@ function startAutoNext() {
     return;
   }
 
-  const waitTime =
+  let waitTime =
     isAfterTitle
       ? NEXT_TITLE_TIME
-      : NEXT_TEXT_TIME;
+      : getMessageWaitTime(currentItem);
 
   autoTimer = setTimeout(() => {
     nextStep();
   }, waitTime);
+
+}
+
+/*************************************************
+ * 待ち時間
+ *************************************************/
+function getMessageWaitTime(item) {
+
+  if (
+    item &&
+    ["N", "B", "W"].includes(item.msgId)
+  ) {
+    return NEXT_MSG_TEXT_TIME;
+  }
+
+  return NEXT_TEXT_TIME;
+
 }
 
 /*************************************************

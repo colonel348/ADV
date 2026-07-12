@@ -8,14 +8,14 @@ const evtData = [
 // 調教モード
 //-------------
   { evtId: "FF-DS-B1", evtNm: "内緒の記念撮影", cpt:[
-    { cptId: "1", movPtn: "2", cmpRt: "★", plcNm: "秘密のアジト" },
+    { cptId: "1", movPtn: "2", cmpRt: "●", plcNm: "秘密のアジト" },
   ]},
 
 //-------------
 // 本気モード
 //-------------
   { evtId: "FF-SR-B1", evtNm: "三度目の死", cpt:[
-    { cptId: "1", movPtn: "2", cmpRt: "★", plcNm: "オーディション会場" }
+    { cptId: "1", movPtn: "2", cmpRt: "●", plcNm: "オーディション会場" }
   ]},
 
 //-------------
@@ -39,7 +39,7 @@ const evtData = [
 
   { evtId: "AK-DS-C1", evtNm: "描かれる身体", cpt:[
     { cptId: "1", movPtn: "1", cmpRt: "●", plcNm: "美術室" },
-    { cptId: "2", movPtn: "2", cmpRt: "△", plcNm: "美術室" }, // Lv3のためCPT-3用意
+    { cptId: "2", movPtn: "2", cmpRt: "△", plcNm: "美術室" },
   ]},
 
   { evtId: "AK-DS-D1", evtNm: "恥辱の通学路", cpt:[
@@ -89,7 +89,7 @@ const evtData = [
 // 恋愛モード
 //-------------
   { evtId: "SA-LV-B1", evtNm: "雨の日の秘密", cpt:[
-    { cptId: "1", movPtn: "4", cmpRt: "●", plcNm: "バスルーム" }
+    { cptId: "1", movPtn: "4", cmpRt: "★", plcNm: "バスルーム" }
   ]}
 
 ];
