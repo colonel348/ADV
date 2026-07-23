@@ -1,21 +1,21 @@
-window.msgData = [
+﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "あのね、東雲くん……　そこ、動かないでじっとしててね？" },
-    { msgId: "A", msgTxt: "（このズボンの向こうに東雲くんの……　そう思うと、ドキドキする……）" },
-    { msgId: "B", msgTxt: "ひゃ……っ！？　（実際に見るのは初めてだけど……　男の人のって、こんなにすごいんだ……）" },
-    { msgId: "L", msgTxt: "（こんなに大きいなんて……　本当に、私のお口に入るのかな……？　でも、喜んでもらうために頑張らなきゃ…！）" },
-
-  { movId: "evt2" },
-    { msgId: "A", msgTxt: "……じゃあ、いくね？　………ん、はむ……っ" },
+    { msgId: "N", msgTxt: "あのね、東雲くん……動かないでじっとしててね？　………ん、はむ……っ" },
     { msgId: "L", msgTxt: "ん、ふぅ……ふ、ぁ……しのの、め、くん……っ　……これ……きもち、いい……？" },
 
+  { movId: "evt2" },
+    { msgId: "A", msgTxt: "  " },
+    { msgId: "B", msgTxt: "  " },
+    { msgId: "A", msgTxt: "  " },
+    { msgId: "L", msgTxt: "  " },
+
   { movId: "evt3" },
-    { msgId: "B", msgTxt: "（お口の中、すごく熱い……っ　もっと奥まで入れたほうがいいのかな……っ　東雲くん、東雲くん……っ）" },
-    { msgId: "A", msgTxt: "ん、むぅ……ッ！？ふぁ、あ……　（ふぁ、あ……っな、何か……いっぱい出てきた）" },
-    { msgId: "L", msgTxt: "えへへ……っ、びっくりしちゃったぁ……　……東雲くん、あの、どうだったかな……？" },
+    { msgId: "A", msgTxt: "  " },
+    { msgId: "W", msgTxt: "  " },
+    { msgId: "L", msgTxt: "  " },
 
   { movId: "evt4" },
-    { msgId: "N", msgTxt: "あれ……？　出したのに、まだこんなに大きいよ……？　……私、もっと、してもいいのかな……？" }
+    { msgId: "N", msgTxt: "  " },
 
 ];
