@@ -30,6 +30,7 @@ let isAfterTitle = false;
 
 let pendingLoop = false;
 
+// Kept for the legacy preloadMovies helper. That helper is no longer invoked.
 const videoCache = {};
 
 let moviePattern = "";
@@ -245,6 +246,66 @@ function preloadMovies() {
 /*************************************************
  * 初期化
  *************************************************/
+
+/*************************************************
+ * L動画の事前準備
+ *************************************************/
+function prepareLoopVideos(srcL) {
+  const loopVideos = [videoL1, videoL2];
+
+  loopVideos.forEach(video => {
+    if (video.dataset.loopSrc === srcL) return;
+
+    video.pause();
+    delete video.dataset.loopWarmed;
+    video.dataset.loopSrc = srcL;
+    video.src = srcL;
+    video.preload = "auto";
+    video.load();
+  });
+
+  // A再生中に、実表示に使う先頭L動画だけを一度デコードする。
+  // 2本同時のウォームアップはiOSのデコーダ競合を招きやすいため避ける。
+  warmupLoopVideo(activeLoopVideo);
+}
+
+/*************************************************
+ * iOS向けL動画デコーダのウォームアップ
+ *************************************************/
+function warmupLoopVideo(video) {
+  const warmup = () => {
+    if (video.dataset.loopWarmed === "1") return;
+
+    video.dataset.loopWarmed = "1";
+    video.style.display = "block";
+
+    video.play()
+      .then(() => {
+        const pauseAtFirstFrame = () => {
+          // すでに本再生に切り替わった場合は止めない。
+          if (!video.classList.contains("show")) {
+            video.pause();
+            video.currentTime = 0;
+          }
+        };
+
+        if (typeof video.requestVideoFrameCallback === "function") {
+          video.requestVideoFrameCallback(pauseAtFirstFrame);
+        } else {
+          requestAnimationFrame(pauseAtFirstFrame);
+        }
+      })
+      .catch(() => {
+        delete video.dataset.loopWarmed;
+      });
+  };
+
+  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    warmup();
+  } else {
+    video.addEventListener("loadeddata", warmup, { once: true });
+  }
+}
 
 window.addEventListener("load", () => {
 
@@ -481,7 +542,9 @@ async function init() {
   }
 
   // 動画事前読込
-  preloadMovies();
+  // 全段落分の非表示videoを生成する事前読込は、iOS Safariでは
+  // デコーダ競合を起こしやすいため行わない。L動画はA再生開始時に
+  // 実表示用video要素へ限定して準備する。
 
   // デバッグ開始位置
   if (debugMovId) {
@@ -1990,14 +2053,12 @@ function startFirstLoopDoubleBuffer(srcL) {
  *************************************************/
 function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
-  // 初回
-  activeLoopVideo.src = srcL;
-  activeLoopVideo.currentTime = 0;
-  activeLoopVideo.load();
+  // A再生開始時に読み込んだ実表示用のL動画をそのまま使う。
+  // ここでsrc設定とload()をやり直すと、iOS Safariではデコード待ちが発生する。
+  prepareLoopVideos(srcL);
 
-  standbyLoopVideo.src = srcL;
+  activeLoopVideo.currentTime = 0;
   standbyLoopVideo.currentTime = 0;
-  standbyLoopVideo.load();
 
   videoL1.classList.remove("show");
   videoL2.classList.remove("show");
@@ -2055,23 +2116,9 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   }, 2000);
 
-  // 次待機
-  standbyLoopVideo.src = srcL;
-  standbyLoopVideo.load();
-
-  standbyLoopVideo.play()
-  .then(() => {
-
-    requestAnimationFrame(() => {
-
-      standbyLoopVideo.pause();
-
-      standbyLoopVideo.currentTime = 0;
-
-    });
-
-  })
-  .catch(() => {});
+  // 待機側はL再生開始後にウォームアップする。
+  // Aと同時に3本の動画をデコードしないため、iOSでの負荷を抑えられる。
+  warmupLoopVideo(standbyLoopVideo);
 
   watchLoopSeamless(srcL);
 
@@ -2219,15 +2266,18 @@ function playSeamlessMovie(srcA, srcL) {
   videoA.classList.remove("show");
   videoA.style.display = "none";
 
+  // A→Lでは、Aの再生中に実表示用L動画のネットワーク取得と
+  // 最初のフレームのデコードを済ませておく。
+  if (moviePattern === "AL") {
+    prepareLoopVideos(srcL);
+  }
+
   // ソース設定
   videoA.src = srcA;
-
   videoA.currentTime = 0;
 
   // preload
   videoA.load();
-  videoL1.load();
-  videoL2.load();
 
   // --------------------
   // A表示
