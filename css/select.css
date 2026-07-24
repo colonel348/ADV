@@ -692,6 +692,10 @@ body {
   opacity: 1;
 }
 
+#viewport.character-closing #characterSelector::after {
+  opacity: 0;
+}
+
 /* cardListも同じ速度で横移動 */
 #viewport.character-mode #cardList {
   margin-left: 250px;
@@ -699,6 +703,10 @@ body {
 
 /* 矢印反転 */
 #viewport.character-mode #charModeToggle {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+#viewport.character-closing #charModeToggle {
   transform: translateY(-50%) rotate(180deg);
 }
 
@@ -726,6 +734,40 @@ body {
   pointer-events: auto;
 }
 
+/* 開くときはすぐ表示し、閉じるときはパネルの幅が戻った後に隠す */
+#viewport.character-mode .charItem,
+#viewport.character-mode #modeSelector {
+  transition-delay: 0s;
+}
+
+#viewport.character-mode #charHighlight {
+  transition-delay: 0s, 0s, 0s;
+}
+
+#viewport.character-mode #modeHighlight {
+  transition-delay: 0s, 0s;
+}
+
+/* 閉じるときは、選択項目をパネルの収縮と同時にフェードアウトする */
+#viewport.character-closing .charItem,
+#viewport.character-closing #modeSelector {
+  opacity: 0;
+  pointer-events: none;
+  transition-delay: 0s;
+}
+
+#viewport.character-closing #charHighlight {
+  opacity: 0;
+  pointer-events: none;
+  transition-delay: 0s, 0s, 0s;
+}
+
+#viewport.character-closing #modeHighlight {
+  opacity: 0;
+  pointer-events: none;
+  transition-delay: 0s, 0s;
+}
+
 /* 横文字 */
 .charItem {
   writing-mode: horizontal-tb;
@@ -743,7 +785,7 @@ body {
   padding: 0 14px;
   border-radius: 10px;
 
-  transition: opacity .25s ease;
+  transition: opacity .25s ease .35s;
 
   position: relative;
   z-index: 1;
@@ -776,7 +818,8 @@ body {
 
   transition:
     top .35s ease,
-    background-color .35s ease;
+    background-color .35s ease,
+    opacity .25s ease .35s;
 }
 
 /* ===== start-mode（TAP TO START） ===== */
@@ -852,7 +895,7 @@ body {
   -webkit-user-select: none;
 
   transition:
-    opacity .25s ease;
+    opacity .25s ease .35s;
 }
 
 .modeOption {
@@ -883,7 +926,20 @@ body {
   margin: 0;
 }
 
+#viewport.character-closing #modeSelector {
+  position: absolute;
+  left: 35px;
+  bottom: calc(50% + 50px);
+  margin: 0;
+}
+
 #viewport.character-mode .charItem {
+  position: absolute;
+  left: 35px;
+  margin-left: 0;
+}
+
+#viewport.character-closing .charItem {
   position: absolute;
   left: 35px;
   margin-left: 0;
@@ -893,11 +949,23 @@ body {
   top: calc(50% + 50px);
 }
 
+#viewport.character-closing .charItem[data-chr="FF"] {
+  top: calc(50% + 50px);
+}
+
 #viewport.character-mode .charItem[data-chr="AK"] {
   top: calc(50% + 114px);
 }
 
+#viewport.character-closing .charItem[data-chr="AK"] {
+  top: calc(50% + 114px);
+}
+
 #viewport.character-mode .charItem[data-chr="SA"] {
+  top: calc(50% + 178px);
+}
+
+#viewport.character-closing .charItem[data-chr="SA"] {
   top: calc(50% + 178px);
 }
 
@@ -916,7 +984,10 @@ body {
   height: 44px;
   border-radius: 10px;
   z-index: 0;
-  transition: top .35s ease, background-color .35s ease;
+  transition:
+    top .35s ease,
+    background-color .35s ease,
+    opacity .25s ease .35s;
 }
 
 #preloadImageStage {

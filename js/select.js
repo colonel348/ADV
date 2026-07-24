@@ -353,11 +353,14 @@ function applyMode() {
 }
 
 let isDeciding = false;
+let characterCloseTimer = null;
 
 function applyCharacterMode() {
   const viewport = document.getElementById("viewport");
 
   if (isCharacterMode) {
+    clearTimeout(characterCloseTimer);
+    viewport.classList.remove("character-closing");
     viewport.classList.add("character-mode");
 
     document.querySelectorAll(".card").forEach(card => {
@@ -372,8 +375,15 @@ function applyCharacterMode() {
 
   } else {
     viewport.classList.remove("character-mode");
+    viewport.classList.add("character-closing");
 
     updateSelection(true, "left");
+
+    clearTimeout(characterCloseTimer);
+
+    characterCloseTimer = setTimeout(() => {
+      viewport.classList.remove("character-closing");
+    }, 600);
   }
 }
 
