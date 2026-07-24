@@ -578,14 +578,6 @@ function touchAction() {
 
   });
 
-  const modeSelector = document.getElementById("modeSelector");
-  const modeButton = document.getElementById("modeButton");
-
-  modeButton.addEventListener("click", e => {
-    e.stopPropagation();
-    modeSelector.classList.toggle("open");
-  });
-
   document.querySelectorAll(".modeOption").forEach(option => {
     option.addEventListener("click", e => {
       e.stopPropagation();
@@ -593,12 +585,10 @@ function touchAction() {
       const nextMode = option.dataset.mode;
 
       if (modeKbn === nextMode) {
-        modeSelector.classList.remove("open");
         return;
       }
 
       modeKbn = nextMode;
-      modeSelector.classList.remove("open");
 
       updateModeSelector();
 
@@ -637,10 +627,6 @@ function touchAction() {
 
       }, 200);
     });
-  });
-
-  document.addEventListener("click", () => {
-    modeSelector.classList.remove("open");
   });
 
 }
@@ -717,28 +703,19 @@ function startMomentum(initialVelocity) {
  *************************************************/
 function updateModeSelector() {
   const modeSelector = document.getElementById("modeSelector");
-  const modeText = document.getElementById("modeText");
-  const modeIcon = document.getElementById("modeIcon");
 
   modeSelector.classList.remove(
     "sersMode",
     "discMode",
-    "loveMode",
-    "mode-changing"
+    "loveMode"
   );
 
   if (modeKbn === "S") {
     modeSelector.classList.add("sersMode");
-    modeText.textContent = "本気モード";
-    modeIcon.src = "../img/sersMode.png";
   } else if (modeKbn === "D") {
     modeSelector.classList.add("discMode");
-    modeText.textContent = "調教モード";
-    modeIcon.src = "../img/discMode.png";
   } else {
     modeSelector.classList.add("loveMode");
-    modeText.textContent = "恋愛モード";
-    modeIcon.src = "../img/loveMode.png";
   }
 
   document.querySelectorAll(".modeOption").forEach(option => {
@@ -748,13 +725,31 @@ function updateModeSelector() {
     );
   });
 
-  requestAnimationFrame(() => {
-    modeSelector.classList.add("mode-changing");
+  requestAnimationFrame(updateModeHighlight);
+}
 
-    setTimeout(() => {
-      modeSelector.classList.remove("mode-changing");
-    }, 220);
-  });
+/*************************************************
+ * モード選択ハイライト
+ *************************************************/
+function updateModeHighlight() {
+  const selector = document.getElementById("modeSelector");
+  const highlight = document.getElementById("modeHighlight");
+  const active = selector?.querySelector(".modeOption.mode-active");
+
+  if (!selector || !highlight || !active) return;
+
+  const parentRect = selector.getBoundingClientRect();
+  const rect = active.getBoundingClientRect();
+
+  highlight.style.top = (rect.top - parentRect.top) + "px";
+
+  const colorMap = {
+    L: "#ff7ab8",
+    S: "#ffd84a",
+    D: "#82A4FF"
+  };
+
+  highlight.style.backgroundColor = colorMap[modeKbn];
 }
 
 /*************************************************
