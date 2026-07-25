@@ -52,7 +52,7 @@ let autoTimer = null;
 let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.7;
+const ACTION_SWITCH_BEFORE = 0.3;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.3;
 // 次L動画play後
@@ -272,48 +272,6 @@ function prepareStandbyLoopVideo(srcL) {
   video.src = srcL;
   video.preload = "auto";
   video.load();
-}
-
-function preloadInitialLoopVideo() {
-  const movIndex = currentData[currentIndex]?.movId
-    ? currentIndex
-    : currentData.findIndex(item => "movId" in item);
-
-  if (movIndex < 0) return;
-
-  const item = currentData[movIndex];
-  const pattern = getMoviePattern(movIndex);
-
-  if (pattern === "AL" || pattern === "L") {
-    prepareLoopVideos(
-      getMoviePath(tgtEvtData, cptId, item.movId, "L")
-    );
-  }
-}
-
-function playVideoAtFirstFrame(video) {
-  return new Promise(resolve => {
-    let resolved = false;
-    let fallbackTimer = null;
-
-    const finish = () => {
-      if (resolved) return;
-      resolved = true;
-      clearTimeout(fallbackTimer);
-      video.dataset.frameReady = "1";
-      resolve();
-    };
-
-    video.addEventListener("playing", () => {
-      requestAnimationFrame(finish);
-    }, { once: true });
-
-    video.play()
-      .then(() => requestAnimationFrame(finish))
-      .catch(finish);
-
-    fallbackTimer = setTimeout(finish, 800);
-  });
 }
 
 /*************************************************
@@ -614,8 +572,6 @@ async function init() {
     }
 
   }
-
-  preloadInitialLoopVideo();
 
   // デバッグ開始
   if (debugMovId) {
@@ -2074,7 +2030,7 @@ function startFirstLoopDoubleBuffer(srcL) {
 
     const waitShow = () => {
 
-      if (activeLoopVideo.dataset.frameReady === "1") {
+      if (activeLoopVideo.classList.contains("show")) {
 
         // show直後ではなく、少し描画を待ってから白フェード解除
         setTimeout(() => {
@@ -2136,26 +2092,27 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   }
 
-  const started = new Promise(resolve => {
-    requestAnimationFrame(() => {
-      // Keep the video visible to the compositor while the white fade covers it.
-      // Safari may not deliver a video frame callback for a fully transparent video.
-      delete activeLoopVideo.dataset.frameReady;
-      activeLoopVideo.classList.add("show");
+  requestAnimationFrame(() => {
 
-      playVideoAtFirstFrame(activeLoopVideo).then(() => {
-        if (firstEffect) {
-          requestAnimationFrame(() => {
-            activeLoopVideo.style.transition =
-              "transform 2.0s ease, filter 2.0s ease";
-            activeLoopVideo.style.transform = "scale(1)";
-            activeLoopVideo.style.filter = "blur(0px)";
-          });
-        }
+    activeLoopVideo.play()
+      .catch(() => {});
 
-        resolve();
+    activeLoopVideo.classList.add("show");
+
+    if (firstEffect) {
+
+      requestAnimationFrame(() => {
+
+        activeLoopVideo.style.transition =
+          "transform 2.0s ease, filter 2.0s ease";
+
+        activeLoopVideo.style.transform = "scale(1)";
+        activeLoopVideo.style.filter = "blur(0px)";
+
       });
-    });
+
+    }
+
   });
 
   setTimeout(() => {
@@ -2164,15 +2121,11 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   }, 2000);
 
-  started.then(() => {
-    setTimeout(() => {
-      prepareStandbyLoopVideo(srcL);
-    }, 300);
-  });
+  setTimeout(() => {
+    prepareStandbyLoopVideo(srcL);
+  }, 300);
 
   watchLoopSeamless(srcL);
-
-  return started;
 
 }
 
