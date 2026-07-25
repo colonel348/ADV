@@ -52,7 +52,7 @@ let autoTimer = null;
 let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.35;
+const ACTION_SWITCH_BEFORE = 0.3;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.3;
 // 次L動画play後
@@ -1351,6 +1351,28 @@ function getMoviePattern(startIndex) {
 
 }
 
+function getActionSwitchBefore() {
+  const nextItem = currentData[currentIndex + 1];
+
+  // A1 -> fade -> A2 and all other transitions retain the fixed timing.
+  if (moviePattern !== "AL" || nextItem?.msgId !== "L") {
+    return ACTION_SWITCH_BEFORE;
+  }
+
+  const loopDuration =
+    activeLoopVideo.dataset.loopSrc === currentSrcL
+      ? activeLoopVideo.duration
+      : 0;
+
+  // The L source may still be loading. Use the safe fixed value until its
+  // metadata is available.
+  if (!loopDuration) {
+    return ACTION_SWITCH_BEFORE;
+  }
+
+  return loopDuration >= 7.5 ? 0.75 : 0.3;
+}
+
 /*************************************************
  * 動画A判定
  *************************************************/
@@ -2326,7 +2348,7 @@ function playSeamlessMovie(srcA, srcL) {
       videoA.duration - videoA.currentTime;
 
     // 終了直前
-    if (remain <= ACTION_SWITCH_BEFORE) {
+    if (remain <= getActionSwitchBefore()) {
 
       // 次行
       const nextItem =
