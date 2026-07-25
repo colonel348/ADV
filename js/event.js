@@ -52,7 +52,7 @@ let autoTimer = null;
 let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.3;
+const ACTION_SWITCH_BEFORE = 0.35;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.3;
 // 次L動画play後
