@@ -274,6 +274,48 @@ function prepareStandbyLoopVideo(srcL) {
   video.load();
 }
 
+function preloadInitialLoopVideo() {
+  const movIndex = currentData[currentIndex]?.movId
+    ? currentIndex
+    : currentData.findIndex(item => "movId" in item);
+
+  if (movIndex < 0) return;
+
+  const item = currentData[movIndex];
+  const pattern = getMoviePattern(movIndex);
+
+  if (pattern === "AL" || pattern === "L") {
+    prepareLoopVideos(
+      getMoviePath(tgtEvtData, cptId, item.movId, "L")
+    );
+  }
+}
+
+function playVideoAtFirstFrame(video) {
+  return new Promise(resolve => {
+    let resolved = false;
+    let fallbackTimer = null;
+
+    const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      clearTimeout(fallbackTimer);
+      video.dataset.frameReady = "1";
+      resolve();
+    };
+
+    video.addEventListener("playing", () => {
+      requestAnimationFrame(finish);
+    }, { once: true });
+
+    video.play()
+      .then(() => requestAnimationFrame(finish))
+      .catch(finish);
+
+    fallbackTimer = setTimeout(finish, 800);
+  });
+}
+
 /*************************************************
  * iOS向けL動画デコーダのウォームアップ
  *************************************************/
@@ -572,6 +614,8 @@ async function init() {
     }
 
   }
+
+  preloadInitialLoopVideo();
 
   // デバッグ開始
   if (debugMovId) {
@@ -2030,7 +2074,7 @@ function startFirstLoopDoubleBuffer(srcL) {
 
     const waitShow = () => {
 
-      if (activeLoopVideo.classList.contains("show")) {
+      if (activeLoopVideo.dataset.frameReady === "1") {
 
         // show直後ではなく、少し描画を待ってから白フェード解除
         setTimeout(() => {
@@ -2092,27 +2136,26 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   }
 
-  requestAnimationFrame(() => {
+  const started = new Promise(resolve => {
+    requestAnimationFrame(() => {
+      // Keep the video visible to the compositor while the white fade covers it.
+      // Safari may not deliver a video frame callback for a fully transparent video.
+      delete activeLoopVideo.dataset.frameReady;
+      activeLoopVideo.classList.add("show");
 
-    activeLoopVideo.play()
-      .catch(() => {});
+      playVideoAtFirstFrame(activeLoopVideo).then(() => {
+        if (firstEffect) {
+          requestAnimationFrame(() => {
+            activeLoopVideo.style.transition =
+              "transform 2.0s ease, filter 2.0s ease";
+            activeLoopVideo.style.transform = "scale(1)";
+            activeLoopVideo.style.filter = "blur(0px)";
+          });
+        }
 
-    activeLoopVideo.classList.add("show");
-
-    if (firstEffect) {
-
-      requestAnimationFrame(() => {
-
-        activeLoopVideo.style.transition =
-          "transform 2.0s ease, filter 2.0s ease";
-
-        activeLoopVideo.style.transform = "scale(1)";
-        activeLoopVideo.style.filter = "blur(0px)";
-
+        resolve();
       });
-
-    }
-
+    });
   });
 
   setTimeout(() => {
@@ -2121,11 +2164,15 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   }, 2000);
 
-  setTimeout(() => {
-    prepareStandbyLoopVideo(srcL);
-  }, 300);
+  started.then(() => {
+    setTimeout(() => {
+      prepareStandbyLoopVideo(srcL);
+    }, 300);
+  });
 
   watchLoopSeamless(srcL);
+
+  return started;
 
 }
 
