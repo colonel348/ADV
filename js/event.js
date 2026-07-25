@@ -52,7 +52,7 @@ let autoTimer = null;
 let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.3;
+const ACTION_SWITCH_BEFORE = 0.7;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.3;
 // 次L動画play後
@@ -251,22 +251,27 @@ function preloadMovies() {
  * L動画の事前準備
  *************************************************/
 function prepareLoopVideos(srcL) {
-  const loopVideos = [videoL1, videoL2];
+  const video = activeLoopVideo;
 
-  loopVideos.forEach(video => {
-    if (video.dataset.loopSrc === srcL) return;
+  if (video.dataset.loopSrc === srcL) return;
 
-    video.pause();
-    delete video.dataset.loopWarmed;
-    video.dataset.loopSrc = srcL;
-    video.src = srcL;
-    video.preload = "auto";
-    video.load();
-  });
+  video.pause();
+  video.dataset.loopSrc = srcL;
+  video.src = srcL;
+  video.preload = "auto";
+  video.load();
+}
 
-  // A再生中に、実表示に使う先頭L動画だけを一度デコードする。
-  // 2本同時のウォームアップはiOSのデコーダ競合を招きやすいため避ける。
-  warmupLoopVideo(activeLoopVideo);
+function prepareStandbyLoopVideo(srcL) {
+  const video = standbyLoopVideo;
+
+  if (video.dataset.loopSrc === srcL) return;
+
+  video.pause();
+  video.dataset.loopSrc = srcL;
+  video.src = srcL;
+  video.preload = "auto";
+  video.load();
 }
 
 /*************************************************
@@ -2116,9 +2121,9 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   }, 2000);
 
-  // 待機側はL再生開始後にウォームアップする。
-  // Aと同時に3本の動画をデコードしないため、iOSでの負荷を抑えられる。
-  warmupLoopVideo(standbyLoopVideo);
+  setTimeout(() => {
+    prepareStandbyLoopVideo(srcL);
+  }, 300);
 
   watchLoopSeamless(srcL);
 
