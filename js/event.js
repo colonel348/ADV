@@ -274,6 +274,23 @@ function prepareStandbyLoopVideo(srcL) {
   video.load();
 }
 
+function preloadInitialLoopVideo() {
+  const movIndex = currentData[currentIndex]?.movId
+    ? currentIndex
+    : currentData.findIndex(item => "movId" in item);
+
+  if (movIndex < 0) return;
+
+  const item = currentData[movIndex];
+  const pattern = getMoviePattern(movIndex);
+
+  if (pattern === "AL" || pattern === "L") {
+    prepareLoopVideos(
+      getMoviePath(tgtEvtData, cptId, item.movId, "L")
+    );
+  }
+}
+
 /*************************************************
  * iOS向けL動画デコーダのウォームアップ
  *************************************************/
@@ -572,6 +589,8 @@ async function init() {
     }
 
   }
+
+  preloadInitialLoopVideo();
 
   // デバッグ開始
   if (debugMovId) {
@@ -1359,18 +1378,7 @@ function getActionSwitchBefore() {
     return ACTION_SWITCH_BEFORE;
   }
 
-  const loopDuration =
-    activeLoopVideo.dataset.loopSrc === currentSrcL
-      ? activeLoopVideo.duration
-      : 0;
-
-  // The L source may still be loading. Use the safe fixed value until its
-  // metadata is available.
-  if (!loopDuration) {
-    return ACTION_SWITCH_BEFORE;
-  }
-
-  return loopDuration >= 7.5 ? 0.75 : 0.3;
+  return 0.75;
 }
 
 /*************************************************
@@ -1984,6 +1992,7 @@ function playMovie(item, aMsgIndex = null) {
 
     if (isFirstLoopPlay) {
 
+      prepareLoopVideos(srcL);
       isFirstLoopPlay = false;
 
       startFirstLoopDoubleBuffer(srcL);
@@ -2117,23 +2126,19 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
   requestAnimationFrame(() => {
 
     activeLoopVideo.play()
+      .then(() => {
+        activeLoopVideo.classList.add("show");
+
+        if (firstEffect) {
+          requestAnimationFrame(() => {
+            activeLoopVideo.style.transition =
+              "transform 2.0s ease, filter 2.0s ease";
+            activeLoopVideo.style.transform = "scale(1)";
+            activeLoopVideo.style.filter = "blur(0px)";
+          });
+        }
+      })
       .catch(() => {});
-
-    activeLoopVideo.classList.add("show");
-
-    if (firstEffect) {
-
-      requestAnimationFrame(() => {
-
-        activeLoopVideo.style.transition =
-          "transform 2.0s ease, filter 2.0s ease";
-
-        activeLoopVideo.style.transform = "scale(1)";
-        activeLoopVideo.style.filter = "blur(0px)";
-
-      });
-
-    }
 
   });
 
