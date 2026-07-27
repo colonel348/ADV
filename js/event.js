@@ -262,6 +262,9 @@ function prepareLoopVideos(srcL) {
   video.load();
 }
 
+/*************************************************
+ * 待機用L動画の先読み
+ *************************************************/
 function prepareStandbyLoopVideo(srcL) {
   const video = standbyLoopVideo;
 
@@ -274,7 +277,11 @@ function prepareStandbyLoopVideo(srcL) {
   video.load();
 }
 
+/*************************************************
+ * 初回段落のL動画先読み
+ *************************************************/
 function preloadInitialLoopVideo() {
+  // デバッグ開始位置を含む、最初に再生する段落を取得
   const movIndex = currentData[currentIndex]?.movId
     ? currentIndex
     : currentData.findIndex(item => "movId" in item);
@@ -285,6 +292,7 @@ function preloadInitialLoopVideo() {
   const pattern = getMoviePattern(movIndex);
 
   if (pattern === "AL" || pattern === "L") {
+    // 初回表示前に実表示用L動画の読み込みを開始
     prepareLoopVideos(
       getMoviePath(tgtEvtData, cptId, item.movId, "L")
     );
@@ -1370,14 +1378,18 @@ function getMoviePattern(startIndex) {
 
 }
 
+/*************************************************
+ * A動画からL動画へ切り替える開始時間取得
+ *************************************************/
 function getActionSwitchBefore() {
   const nextItem = currentData[currentIndex + 1];
 
-  // A1 -> fade -> A2 and all other transitions retain the fixed timing.
+  // A1からフェードを挟んでA2へ進む場合は固定時間を使う
   if (moviePattern !== "AL" || nextItem?.msgId !== "L") {
     return ACTION_SWITCH_BEFORE;
   }
 
+  // 直接Lへ移る場合は、10秒L動画向けの切替時間を使う
   return 0.75;
 }
 
