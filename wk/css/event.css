@@ -1,0 +1,748 @@
+@charset "utf-8";
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: black;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#videoArea {
+  position: absolute;
+  inset: 0;
+  background: black;
+}
+
+#video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#videoContainer {
+
+  position: absolute;
+
+  inset: 0;
+  
+  isolation: isolate;
+
+}
+
+.movie {
+
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  opacity: 0;
+
+  transition: opacity 0.12s linear;
+
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: opacity;
+
+  pointer-events: none;
+
+  contain: paint;
+
+  z-index: 1;
+
+}
+
+.movie.front {
+
+  z-index: 2;
+
+}
+
+.movie.show {
+
+  opacity: 1;
+
+}
+
+#fade {
+  position: absolute;
+  inset: 0;
+  background-color: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s,
+    background-color 0.45s;
+
+  z-index: 5;
+}
+
+#fade.fade-white {
+
+  background-color: #fff;
+
+}
+
+#fade.show {
+  opacity: 1;
+}
+
+#msgText {
+  font-size: 15px;
+  line-height: 1.8;
+  min-height: 100px;
+  margin-left: 6px;
+  padding-top: 6px;
+}
+
+#msgText,
+#chrName {
+  transition: opacity 0.25s ease;
+}
+
+.msg-hide {
+  opacity: 0;
+}
+
+.msg-show {
+  opacity: 1;
+}
+
+.noteChar {
+
+  color:
+    rgba(210,225,255,0.85) !important;
+
+}
+
+/* --------------------
+ * 共通文字
+ * -------------------- */
+
+#chrName,
+#msgBody {
+
+  color: white;
+
+  text-shadow:
+    -1px -1px 0 #333,
+     1px -1px 0 #333,
+    -1px  1px 0 #333,
+     1px  1px 0 #333,
+     0px  1px 0 #333,
+     1px  0px 0 #333,
+    -1px  0px 0 #333,
+     0px -1px 0 #333;
+
+}
+
+/* =========================
+ * nextIcon 共通
+ * ========================= */
+#nextIcon {
+
+  position: absolute;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  font-weight: bold;
+
+  transition: opacity 0.15s ease;
+
+}
+
+#nextIcon.auto {
+
+  opacity: 1;
+
+  animation:
+    autoFade 0.22s ease;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  letter-spacing: 0.08em;
+
+}
+
+/* =========================
+ * PS版
+ * ========================= */
+.msgArea-ps #nextIcon {
+
+  right: 28px;
+  bottom: 5px;
+
+  font-size: 26px;
+
+  color: #69d8ca;
+
+  text-shadow:
+    0 0 8px rgba(105,216,202,0.8);
+
+  transform: translateY(0);
+
+}
+
+.msgArea-ps #nextIcon.show {
+
+  opacity: 1;
+
+  animation:
+    noteFade 0.25s ease,
+    noteFloat 0.9s ease-in-out infinite;
+
+}
+
+/* =========================
+ * HR版
+ * ========================= */
+.msgArea-hs #nextIcon {
+  position: absolute;
+
+  left: 50%;
+  bottom: 16px;
+
+  width: 16px;
+  height: 10px;
+
+  transform: translateX(-50%);
+
+  overflow: hidden;
+}
+
+.msgArea-hs #nextIcon::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+
+  top: -5px;
+
+  width: 8px;
+  height: 8px;
+
+  border-right: 4px solid rgba(210,190,159,1);
+  border-bottom: 4px solid rgba(210,190,159,1);
+
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+}
+
+.msgArea-hs #nextIcon.show {
+
+  opacity: 1;
+
+  animation:
+    hrArrowBlink 1.8s ease-in-out infinite;
+
+}
+
+@keyframes noteFloat {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes hrArrowBlink {
+  0%   { opacity: .25; }
+  50%  { opacity: 1; }
+  100% { opacity: .25; }
+}
+
+.msg-fade {
+
+  opacity: 0;
+
+  transition: opacity 0.25s ease;
+
+}
+
+.char {
+
+  display: inline-block;
+
+  opacity: 0;
+
+  transition: opacity 0.25s ease;
+
+}
+
+#titleArea {
+
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  transition: opacity 0.35s ease;
+  
+  z-index: 20;
+
+}
+
+#titleArea.show {
+
+  opacity: 1;
+
+}
+
+#titleText {
+
+  width: 70%;
+
+  padding: 12px 12px 12px;
+
+  box-sizing: border-box;
+
+  color: white;
+
+  font-size: 22px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+
+  text-align: center;
+
+  border-radius: 4px;
+
+  line-height: 1.2;
+
+  background:
+    linear-gradient(
+      to right,
+      rgba(50,50,60,0),
+      rgba(50,50,60,0.2)  5%,
+      rgba(50,50,60,0.4) 15%,
+      rgba(50,50,60,0.5) 35%,
+      rgba(50,50,60,0.5) 65%,
+      rgba(50,50,60,0.4) 85%,
+      rgba(50,50,60,0.2) 95%,
+      rgba(50,50,60,0)
+    );
+
+  opacity: 1;
+
+  transform: translateX(0);
+
+  transition: opacity 0.35s ease;
+
+}
+
+/* 表示アニメ */
+#titleText.slide-in {
+
+  animation:
+    titleSlideIn 0.45s ease forwards;
+
+}
+
+@keyframes titleSlideIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateX(-40px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateX(0);
+
+  }
+
+}
+
+/* --------------------
+ * 右上メニュー
+ * -------------------- */
+
+#controlArea {
+
+  position: absolute;
+
+  top: 30px;
+  right: 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
+
+  z-index: 30;
+
+  opacity: 0;
+
+  transform: translateX(24px);
+
+  pointer-events: none;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+}
+
+#controlArea.show {
+
+  opacity: 1;
+
+  transform: translateX(0);
+
+  pointer-events: auto;
+
+}
+
+/* --------------------
+ * ボタン
+ * -------------------- */
+
+.control-btn {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  width: 120px;
+
+  height: 36px;
+
+  padding: 0 14px;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background: rgba(255,255,255,0.95);
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.3);
+
+  font-size: 14px;
+
+  font-weight: 1000;
+
+  color: #3f3a63;
+
+  -webkit-tap-highlight-color: transparent;
+
+  transform: scale(1);
+
+  transition:
+    transform 0.14s ease,
+    background-color 0.22s ease,
+    color 0.22s ease,
+    box-shadow 0.22s ease;
+
+}
+
+/* 押下感 */
+.control-btn:active {
+
+  transform: scale(0.93);
+
+  background:
+    rgba(245,245,245,0.96);
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.18);
+
+}
+
+/* --------------------
+ * アイコン
+ * -------------------- */
+
+.control-icon {
+
+  width: 18px;
+
+  height: 18px;
+
+  object-fit: contain;
+
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(21%)
+    sepia(11%)
+    saturate(1200%)
+    hue-rotate(210deg);
+
+  transition:
+    filter 0.22s ease,
+    transform 0.14s ease;
+
+}
+
+.control-btn:active .control-icon {
+
+  transform: scale(0.9);
+
+}
+
+/* --------------------
+ * AUTO ON
+ * -------------------- */
+
+#autoBtn.active {
+
+  color: #ff5ca8;
+
+  background:
+    rgba(255,240,247,0.98);
+
+}
+
+#autoBtn.active .control-icon {
+
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(56%)
+    sepia(78%)
+    saturate(1864%)
+    hue-rotate(299deg)
+    brightness(102%)
+    contrast(102%);
+
+}
+
+#controlArea.show .control-btn {
+
+  animation:
+    controlShow 0.28s ease;
+
+}
+
+@keyframes controlShow {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      translateX(16px)
+      scale(0.96);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      scale(1);
+
+  }
+
+}
+
+/* =================================================
+ * msgArea 共通
+ * ================================================= */
+
+#msgArea {
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 180px;
+
+  padding: 24px 20px;
+
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,0,0,0.75),
+      rgba(0,0,0,0.3),
+      transparent
+    );
+
+  color: white;
+
+  z-index: 10;
+
+  transition:
+    transform 0.32s ease,
+    opacity 0.32s ease;
+
+  opacity: 0;
+
+}
+
+#msgArea.msg-hidden {
+
+  transform: translateY(100%);
+
+  opacity: 0;
+
+}
+
+/* --------------------
+ * PS
+ * -------------------- */
+
+.msgArea-ps {
+
+  text-align: left;
+
+}
+
+/* --------------------
+ * HS
+ * -------------------- */
+
+.msgArea-hs {
+
+  text-align: center;
+
+}
+
+.msgArea-hs #msgText {
+
+  margin-left: 0;
+
+}
+
+/* =================================================
+ * chrName 共通
+ * ================================================= */
+
+#chrName {
+
+  position: relative;
+
+  display: inline-block;
+
+  z-index: 1;
+
+  font-size: 18px;
+  
+  margin: 0 auto 8px;
+
+}
+
+/* --------------------
+ * 下ライン 共通
+ * -------------------- */
+
+#chrName::after {
+
+  content: "";
+
+  z-index: -1;
+
+  position: absolute;
+
+}
+
+/* --------------------
+ * PS
+ * -------------------- */
+
+.chrName-ps {
+
+  color: white;
+  font-weight: bold;
+
+}
+
+.chrName-ps::after {
+
+  left: -10px;
+
+  width: 220px;
+
+  height: 10px;
+
+  bottom: 2px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, #EEEEEE 70%, transparent) 10%,
+      color-mix(in srgb, #EEEEEE 50%, transparent) 30%,
+      color-mix(in srgb, #EEEEEE 10%, transparent) 70%,
+      transparent 100%
+    );
+
+}
+
+/* --------------------
+ * HS
+ * -------------------- */
+
+.chrName-hs {
+
+  display: block;
+
+  width: 100%;
+
+  text-align: center;
+
+  color: #D2BE9F !important;
+
+}
+
+.chrName-hs::after {
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: 350px;
+
+  bottom: -6px;
+
+  height: 1px;
+
+  background:
+    rgba(210, 190, 159, 0.45);
+
+  border-radius: 999px;
+
+}
