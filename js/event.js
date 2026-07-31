@@ -613,11 +613,32 @@ async function init() {
     // 初回だけ1秒待つ
     setTimeout(() => {
 
+      // 直前チャプターと同じ場所ならタイトル演出を省略します。
+      if (shouldSkipInitialTitle()) {
+        showCurrent();
+        return;
+      }
+
       showTitle(tgtEvtData.cpt[cptIdx].plcNm);
 
     }, 500);
 
   }
+
+}
+
+/*************************************************
+ * 初期タイトルを省略するか判定
+ *************************************************/
+function shouldSkipInitialTitle() {
+
+  const currentCpt = tgtEvtData?.cpt?.[cptIdx];
+  const previousCpt = tgtEvtData?.cpt?.[cptIdx - 1];
+
+  // 先頭チャプター、またはタイトルが異なる場合はタイトルを表示します。
+  if (!currentCpt || !previousCpt) return false;
+
+  return currentCpt.plcNm === previousCpt.plcNm;
 
 }
 
@@ -1234,6 +1255,9 @@ function getContinuousAIndex(index) {
  *************************************************/
 function moveSelect() {
 
+  // スキップ指定がある場合は、同一イベント内の次チャプターを優先します。
+  const skipNextCpt = getSkipNextCpt();
+
   setFade(true);
 
   document.getElementById("msgArea").style.opacity = 0;
@@ -1242,9 +1266,28 @@ function moveSelect() {
 
   setTimeout(() => {
 
+    // スキップ対象ならイベント画面を継続し、それ以外は選択画面へ戻します。
+    if (skipNextCpt) {
+      location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&cptId=' + skipNextCpt.cptId + '&autoFlg=' + autoFlg;
+      return;
+    }
+
     location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
 
   }, BLACK_FADE_TIME);
+
+}
+
+/*************************************************
+ * スキップ遷移先の次チャプターを取得
+ *************************************************/
+function getSkipNextCpt() {
+
+  const currentEvt = evtData.find(data => data.evtId === evtId);
+  if (!currentEvt) return null;
+
+  // 同一イベント内で連番となる次チャプターだけを遷移先にします。
+  return currentEvt.cpt.find(data => Number(data.cptId) === Number(cptId) + 1) || null;
 
 }
 

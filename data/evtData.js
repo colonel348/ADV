@@ -1,57 +1,41 @@
 ﻿const evtData = [
 
-  { evtId: "FF-LV-B1", evtNm: "背伸びの誘惑", cpt:[
-    { cptId: "1", plcNm: "ホテル" }
+  { evtId: "FF-L2", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
-  { evtId: "FF-SR-B1", evtNm: "三度目の死", cpt:[
-    { cptId: "1", plcNm: "オーディション会場" }
+  { evtId: "FF-S2", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
-  { evtId: "FF-DS-B1", evtNm: "内緒の記念撮影", cpt:[
-    { cptId: "1", plcNm: "秘密のアジト" }
+  { evtId: "FF-D2", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
-  { evtId: "AK-LV-A1", evtNm: "初めての奉仕", cpt:[
-    { cptId: "1", plcNm: "WEEKEND GARAGE" }
+  { evtId: "AK-L1", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
-  { evtId: "AK-SR-D1", evtNm: "裸で示す成長", cpt:[
-    { cptId: "1", plcNm: "タクシー" },
-    { cptId: "2", plcNm: "ニューヨーク州" },
-    { cptId: "3", plcNm: "カフェ" }
+  { evtId: "AK-S4", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
-  { evtId: "AK-DS-B1", evtNm: "快感に抗う試練", cpt:[
-    { cptId: "1", plcNm: "WEEKEND GARAGE" },
-    { cptId: "2", plcNm: "WEEKEND GARAGE" }
+  { evtId: "AK-D3", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
-  { evtId: "AK-DS-C1", evtNm: "描かれる身体", cpt:[
-    { cptId: "1", plcNm: "美術室" },
-    { cptId: "2", plcNm: "美術室" }
+  { evtId: "SA-L1", evtNm: "雨の日の秘密", cpt:[
+    { cptId: "1", plcNm: "彰人の家" },
+    { cptId: "2", plcNm: "脱衣所"},
+    { cptId: "3", plcNm: "バスルーム"}
   ]},
 
-  { evtId: "AK-DS-D1", evtNm: "恥辱の通学路", cpt:[
-    { cptId: "1", plcNm: "こはねの部屋" },
-    { cptId: "2", plcNm: "住宅街" }
+  { evtId: "SA-S4", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
-  { evtId: "SA-LV-B1", evtNm: "雨の日の秘密", cpt:[
-    { cptId: "1", plcNm: "バスルーム" }
-  ]},
-
-  { evtId: "SA-SR-D1", evtNm: "裸心の絶唱", cpt:[
-    { cptId: "1", plcNm: "ビビッドストリート" },
-    { cptId: "2", plcNm: "ビビッドストリート" }
-  ]},
-
-  { evtId: "SA-DS-A1", evtNm: "放課後に堕ちて", cpt:[
-    { cptId: "1", plcNm: "体育倉庫" }
-  ]},
-
-  { evtId: "SA-DS-C1", evtNm: "教室に溢れる熱", cpt:[
-    { cptId: "1", plcNm: "教室" }
+  { evtId: "SA-D3", evtNm: "dummy", cpt:[
+    { cptId: "1", plcNm: "dummy" }
   ]},
 
 ];
