@@ -32,7 +32,7 @@ function setParam() {
     if (urlParams.has('evtId')) {
         evtId = String(urlParams.get('evtId'));
     } else {
-        evtId = "AK-DS-B1";
+        evtId = "AK-L1";
     }
 
     if (urlParams.has('autoFlg')) {
@@ -75,27 +75,25 @@ function getEvtDir(evt) {
   };
 
   const modeMap = {
-    DS: "01.調教",
-    SR: "02.本気",
-    LV: "03.恋愛"
-  };
-
-  const lvMap = {
-    A: "1",
-    B: "2",
-    C: "3",
-    D: "4"
+    L: { prefix: "1", name: "恋愛" },
+    S: { prefix: "2", name: "恋愛" },
+    D: { prefix: "3", name: "調教" }
   };
 
   const chr = chrMap[evt.evtId.substring(0, 2)];
-  const mode = modeMap[evt.evtId.substring(3, 5)];
+  const mode = modeMap[evt.evtId.charAt(3)];
+  const episode = evt.evtId.charAt(4);
+  const eventDir =
+    mode.prefix + episode + "." + mode.name + "-EPS" + episode;
 
-  const lv = lvMap[evt.evtId.charAt(6)];
-  const no = evt.evtId.charAt(7);
+  return "../data/" + chr + "/" + eventDir;
+}
 
-  const titleDir = lv + no + "." + evt.evtNm;
+function getCptDir(evt, cptId) {
+  const cptNo = String(cptId);
+  const folderNo = cptNo.padStart(2, "0");
 
-  return "../data/" + chr + "/" + mode + "/" + titleDir;
+  return getEvtDir(evt) + "/" + folderNo + ".CPT" + cptNo;
 }
 
 function getChrDir(chrId) {
@@ -109,21 +107,21 @@ function getChrDir(chrId) {
 }
 
 function getChrSelPath(chrId) {
-  return getChrDir(chrId) + "/sel.png";
+  return getChrDir(chrId) + "/00.選択/sel.png";
 }
 
 function getBnrPath(evt) {
-  return getEvtDir(evt) + "/bnr.png";
+  return getEvtDir(evt) + "/00.タイトル/bnr.png";
 }
 
 function getSelPath(evt, cpt) {
-  return getEvtDir(evt) + "/CPT-" + cpt.cptId + "/sel.png";
+  return getEvtDir(evt) + "/00.タイトル/sel.png";
 }
 
 function getMsgDataPath(evt, cptId) {
-  return getEvtDir(evt) + "/CPT-" + cptId + "/msgData.js";
+  return getCptDir(evt, cptId) + "/msgData.js";
 }
 
 function getMoviePath(evt, cptId, movId, ptn) {
-  return getEvtDir(evt) + "/CPT-" + cptId + "/" + movId + "-" + ptn + ".mp4";
+  return getCptDir(evt, cptId) + "/" + movId + "-" + ptn + ".mp4";
 }

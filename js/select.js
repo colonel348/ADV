@@ -139,16 +139,7 @@ function createCards() {
     const border = document.createElement("div");
     border.className = "innerBorder";
 
-    const lvCode = data.evtId.charAt(6);
-
-    const lvMap = {
-      A: 1,
-      B: 2,
-      C: 3,
-      D: 4
-    };
-
-    const lv = lvMap[lvCode] || 1;
+    const lv = Number(data.evtId.charAt(4)) || 1;
 
     const lvLabel = document.createElement("div");
     lvLabel.className = "lvLabel";

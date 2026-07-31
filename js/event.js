@@ -925,12 +925,12 @@ function findMovIndex(movId) {
 
   }
 
-  // 先頭2文字比較
+  // キャラクターIDとモードを比較
   const currentPrefix =
-    currentEvt.evtId.substring(0, 5);
+    currentEvt.evtId.substring(0, 4);
 
   const nextPrefix =
-    nextEvt.evtId.substring(0, 5);
+    nextEvt.evtId.substring(0, 4);
 
   // 別キャラや別モードなら
   // 現evt先頭へ戻る
@@ -1253,7 +1253,9 @@ function getContinuousAIndex(index) {
 /*************************************************
  * select遷移
  *************************************************/
-function moveSelect() {
+function moveSelect(
+  transitionTime = BLACK_FADE_TIME
+) {
 
   // スキップ指定がある場合は、同一イベント内の次チャプターを優先します。
   const skipNextCpt = getSkipNextCpt();
@@ -1274,7 +1276,7 @@ function moveSelect() {
 
     location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
 
-  }, BLACK_FADE_TIME);
+  }, transitionTime);
 
 }
 
@@ -2413,6 +2415,32 @@ function playSeamlessMovie(srcA, srcL) {
       // 次行
       const nextItem =
         currentData[currentIndex + 1];
+
+      // 最後のAメッセージでイベント終了
+      if (!nextItem) {
+
+        currentIndex = currentData.length;
+
+        // 黒フェード完了後に動画を停止し、
+        // 黒画面を少し保持してから遷移
+        setTimeout(() => {
+
+          videoA.classList.remove("show");
+          videoA.pause();
+          videoA.style.display = "none";
+
+          currentVideo = null;
+          isBusy = false;
+
+        }, BLACK_FADE_TIME);
+
+        moveSelect(
+          BLACK_FADE_TIME + NEXT_EVT_TIME
+        );
+
+        return;
+
+      }
 
       // --------------------
       // A→Lパターン
