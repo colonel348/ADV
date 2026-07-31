@@ -75,6 +75,8 @@ const NEXT_MSG_TEXT_TIME = 3000;
 const NEXT_TITLE_TIME = 1200;
 // 次のメッセージ遅らせ
 const NEXT_MSG_DELAY_TIME = 100;
+// A動画開始後、最初のAメッセージを追加で待つ時間
+const FIRST_A_MSG_DELAY_TIME = 300;
 
 const FIRST_LOOP_WHITE_WAIT = 1500;
 
@@ -1095,6 +1097,9 @@ function startAutoNext() {
     const aIndex =
       getContinuousAIndex(currentIndex);
 
+    const aTextTime =
+      getATextTime(aTotal);
+
     const duration =
       videoA.duration || 0;
 
@@ -1122,7 +1127,7 @@ function startAutoNext() {
         currentIndex++;
         showCurrent();
 
-      }, NEXT_TEXT_TIME);
+      }, aTextTime);
 
       return;
 
@@ -1150,7 +1155,7 @@ function startAutoNext() {
 
       fadeOutCurrentMessage();
 
-    }, NEXT_TEXT_TIME);
+    }, aTextTime);
 
     return;
   }
@@ -1229,6 +1234,19 @@ function countContinuousA(index) {
   }
 
   return count;
+}
+
+function getATextTime(aTotal) {
+
+  if (aTotal === 2) {
+    return 4300;
+  }
+
+  if (aTotal >= 3) {
+    return 4600;
+  }
+
+  return NEXT_TEXT_TIME;
 }
 
 function getContinuousAIndex(index) {
@@ -2695,7 +2713,7 @@ function playSeamlessMovie(srcA, srcL) {
 
         nextStep();
 
-      }, NEXT_MSG_DELAY_TIME);
+      }, NEXT_MSG_DELAY_TIME + FIRST_A_MSG_DELAY_TIME);
 
     }
 
