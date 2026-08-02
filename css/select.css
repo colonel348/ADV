@@ -400,6 +400,24 @@ button { font: inherit; }
 .modeChoice[data-mode="S"] { --mode-color: #ffc94a; }
 .modeChoice[data-mode="C"] { --mode-color: #858bea; }
 
+.modeChoice::after {
+  content: attr(data-story);
+  position: absolute;
+  z-index: 3;
+  right: -8px;
+  bottom: -12px;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: clamp(.7px, .12vw, 1.4px) rgba(255,255,255,.68);
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+  font-size: 9vh;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .055em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .modeChoiceText {
   position: relative;
   z-index: 2;
@@ -411,17 +429,20 @@ button { font: inherit; }
   padding-left: clamp(18px, 5vw, 52px);
   color: white;
   background: transparent;
-  font-size: clamp(23px, 5.5vw, 46px);
+  font-size: clamp(23px, 7vw, 46px);
   font-weight: 900;
   letter-spacing: .06em;
 }
 
 .modeChoiceLabel {
-  display: inline-block;
-  padding: .08em .2em .12em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: .11em .22em .19em;
   color: #fff;
   background: #3f3e5c;
-  line-height: 1.05;
+  line-height: 1;
   white-space: nowrap;
 }
 
