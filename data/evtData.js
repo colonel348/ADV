@@ -1,6 +1,6 @@
 ﻿const evtData = [
 
-  { evtId: "FF-L1", evtNm: "", cpt:[
+  { evtId: "FF-R1", evtNm: "", cpt:[
     { cptId: "1", plcNm: "" }
   ]},
 
@@ -8,11 +8,11 @@
     { cptId: "2", plcNm: "" }
   ]},
 
-  { evtId: "FF-D1", evtNm: "", cpt:[
+  { evtId: "FF-C1", evtNm: "", cpt:[
     { cptId: "3", plcNm: "" }
   ]},
 
-  { evtId: "AK-L1", evtNm: "", cpt:[
+  { evtId: "AK-R1", evtNm: "", cpt:[
     { cptId: "1", plcNm: "" }
   ]},
 
@@ -20,11 +20,11 @@
     { cptId: "2", plcNm: "" }
   ]},
 
-  { evtId: "AK-D1", evtNm: "", cpt:[
+  { evtId: "AK-C1", evtNm: "", cpt:[
     { cptId: "3", plcNm: "" }
   ]},
 
-  { evtId: "SA-L1", evtNm: "雨の日の秘密", cpt:[
+  { evtId: "SA-R1", evtNm: "雨の日の秘密", cpt:[
     { cptId: "1", plcNm: "彰人の家 - 玄関" },
     { cptId: "2", plcNm: "脱衣所" },
     { cptId: "3", plcNm: "バスルーム" }
@@ -34,7 +34,7 @@
     { cptId: "4", plcNm: "" }
   ]},
 
-  { evtId: "SA-D1", evtNm: "", cpt:[
+  { evtId: "SA-C1", evtNm: "", cpt:[
     { cptId: "5", plcNm: "" }
   ]},
 

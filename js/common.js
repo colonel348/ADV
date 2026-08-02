@@ -32,7 +32,7 @@ function setParam() {
     if (urlParams.has('evtId')) {
         evtId = String(urlParams.get('evtId'));
     } else {
-        evtId = "AK-L1";
+        evtId = "AK-R1";
     }
 
     if (urlParams.has('autoFlg')) {
@@ -75,9 +75,9 @@ function getEvtDir(evt) {
   };
 
   const modeMap = {
-    L: { prefix: "1", name: "恋愛" },
+    R: { prefix: "1", name: "恋愛" },
     S: { prefix: "2", name: "恋愛" },
-    D: { prefix: "3", name: "調教" }
+    C: { prefix: "3", name: "調教" }
   };
 
   const chr = chrMap[evt.evtId.substring(0, 2)];
@@ -108,6 +108,16 @@ function getChrDir(chrId) {
 
 function getChrSelPath(chrId) {
   return getChrDir(chrId) + "/00.選択/sel.png";
+}
+
+function getModeSelPath(chrId, mode) {
+  const fileMap = {
+    R: "rm-sel.png",
+    S: "sr-sel.png",
+    C: "ct-sel.png"
+  };
+
+  return getChrDir(chrId) + "/00.選択/" + fileMap[mode];
 }
 
 function getBnrPath(evt) {

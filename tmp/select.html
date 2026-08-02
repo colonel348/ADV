@@ -15,31 +15,42 @@
       <div id="bgWrap">
         <img id="bgImg" />
       </div>
+      <div id="bgFade"></div>
+
+      <button id="backBtn" type="button" aria-label="一つ前の画面へ戻る">
+        <img src="../img/back.png" alt="">
+      </button>
+
       <div id="sidebar">
         <div id="cardList"></div>
-        <div id="characterSelector">
-          <div id="charModeToggle"></div>
-          <div id="modeSelector">
-            <div id="modeHighlight"></div>
-            <div class="modeOption loveMode" data-mode="L">恋愛モード</div>
-            <div class="modeOption sersMode" data-mode="S">本気モード</div>
-            <div class="modeOption discMode" data-mode="D">調教モード</div>
-          </div>
-          <div id="charHighlight"></div>
-          <div class="charItem" data-chr="FF">ホタル</div>
-          <div class="charItem" data-chr="AK">小豆沢<span class="nameGap"></span>こはね</div>
-          <div class="charItem" data-chr="SA">白石<span class="nameGap"></span>杏</div>
+      </div>
+
+      <div id="characterStage" class="selectStage">
+        <button class="characterCursor characterCursor-left" data-step="-1" type="button" aria-label="前のキャラクター"></button>
+        <button class="characterCursor characterCursor-right" data-step="1" type="button" aria-label="次のキャラクター"></button>
+        <div id="characterHint">TAP TO START</div>
+        <div id="characterName"><span id="characterNameText"></span></div>
+      </div>
+
+      <div id="modeStage" class="selectStage">
+        <div id="modePanel">
+          <button class="modeChoice" data-mode="R" type="button">
+            <span class="modeChoiceText"><span class="modeChoiceLabel"><span class="modeInitial">恋</span>愛編</span></span>
+            <span class="modeChoiceVisual"><img class="modeChoiceImage" alt=""></span>
+          </button>
+          <button class="modeChoice" data-mode="S" type="button">
+            <span class="modeChoiceText"><span class="modeChoiceLabel"><span class="modeInitial">本</span>気編</span></span>
+            <span class="modeChoiceVisual"><img class="modeChoiceImage" alt=""></span>
+          </button>
+          <button class="modeChoice" data-mode="C" type="button">
+            <span class="modeChoiceText"><span class="modeChoiceLabel"><span class="modeInitial">調</span>教編</span></span>
+            <span class="modeChoiceVisual"><img class="modeChoiceImage" alt=""></span>
+          </button>
         </div>
       </div>
+
       <div id="decisionArea">
-        <div id="chapterIcons"></div>
         <div id="decideBtn" class="decideBtn">決定</div>
-      </div>
-      <div id="startOverlay">
-        <div id="tapText">TAP TO START</div>
-      </div>
-      <div id="chapterBadge">
-        <div id="chapterText"></div>
       </div>
       <div id="preloadImageStage"></div>
       <div id="fade"></div>

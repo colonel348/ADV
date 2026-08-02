@@ -1,915 +1,585 @@
-/*************************************************
- * 変数
- *************************************************/
-let startY = 0;
-let startX = 0;
-
 let cardList;
 let bgImg;
+let bgFade;
 let fade;
 let decideBtn;
 
+let screen = "character";
+let startX = 0;
+let startY = 0;
 let isDragging = false;
-let velocityY = 0;
-let lastY = 0;
-let lastTime = 0;
-let momentumTimer = null;
+let suppressCharacterClick = false;
+let isDeciding = false;
+let screenTransitionTimer = null;
+let characterAnimationTimer = null;
 
-let isStartMode = false;
-let isCharacterMode = false;
 let chrList = ["FF", "AK", "SA"];
-let chrIdx = 1; // AK
+let chrIdx = 1;
 let filteredEvtData = [];
-let preloadPromise = null;
 
-/*************************************************
- * 画像プリロード
- *************************************************/
-function preloadAllImages() {
+const characterNames = {
+  FF: "ホタル",
+  AK: "小豆沢こはね",
+  SA: "白石杏"
+};
 
-  if (preloadPromise) return preloadPromise;
+function readSelectionParams() {
+  const params = new URLSearchParams(window.location.search);
+  const requestedEvtId = (params.get("evtId") || "").trim();
+  const requestedChrId = (params.get("chrId") || "AK").trim();
 
+  autoFlg = params.get("autoFlg") || "0";
+  evtId = requestedEvtId;
+  chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
+  cptId = params.get("cptId") || "1";
+
+  const requestedEvent = evtData.find(evt => evt.evtId === requestedEvtId);
+
+  if (requestedEvent) {
+    tgtEvtData = requestedEvent;
+    chrId = requestedEvent.evtId.substring(0, 2);
+    modeKbn = requestedEvent.evtId.charAt(3);
+    cptIdx = requestedEvent.cpt.findIndex(cpt => String(cpt.cptId) === String(cptId));
+    if (cptIdx < 0) cptIdx = 0;
+    screen = "event";
+  } else {
+    tgtEvtData = null;
+    modeKbn = "R";
+    cptIdx = 0;
+    screen = "character";
+  }
+
+  chrIdx = chrList.indexOf(chrId);
+}
+
+function preloadImages() {
   const urls = [];
 
   chrList.forEach(chr => {
     urls.push(getChrSelPath(chr));
+    urls.push(getModeSelPath(chr, "R"));
+    urls.push(getModeSelPath(chr, "S"));
+    urls.push(getModeSelPath(chr, "C"));
   });
-
-  const preloadStage =
-    document.getElementById("preloadImageStage");
 
   evtData.forEach(evt => {
-    evt.cpt.forEach(cpt => {
-
-      urls.push(getBnrPath(evt));
-      urls.push(getSelPath(evt, cpt));
-
-    });
+    urls.push(getBnrPath(evt));
+    urls.push(getSelPath(evt, evt.cpt[0]));
   });
 
-  preloadPromise = Promise.all(
-
-    urls.map(url => {
-
-      return new Promise(resolve => {
-
-        const img = new Image();
-
-        img.onload = async () => {
-          try {
-            if (img.decode) {
-              await img.decode();
-            }
-          } catch (e) {
-          }
-
-          resolve();
-        };
-
-        img.onerror = resolve;
-
-        img.src = url;
-
-        img.alt = "";
-        img.dataset.preloadSrc = url;
-
-        if (preloadStage) {
-          preloadStage.appendChild(img);
-        }
-
-      });
-
-    })
-
-  );
-
-  return preloadPromise;
+  return Promise.all(urls.map(url => new Promise(resolve => {
+    const img = new Image();
+    img.onload = resolve;
+    img.onerror = resolve;
+    img.src = url;
+  })));
 }
 
-/*************************************************
- * キャラクター選択画像表示
- *************************************************/
-function showCharacterSelectImage(animated = true) {
-  const nextUrl = getChrSelPath(chrId);
+function waitForImage(src) {
+  return new Promise(resolve => {
+    const image = new Image();
 
-  if (animated) {
-    bgImg.style.opacity = 0;
+    image.onload = async () => {
+      try {
+        if (image.decode) await image.decode();
+      } catch (error) {
+      }
+      resolve();
+    };
 
-    setTimeout(() => {
-      bgImg.style.transition = "none";
-      bgImg.style.transform = "translate(-60px, -50%)";
+    image.onerror = resolve;
+    image.src = src;
+  });
+}
 
-      bgImg.offsetHeight;
+function setScreen(
+  nextScreen,
+  delayed = false,
+  preserveCurrent = false
+) {
+  const viewport = document.getElementById("viewport");
 
-      bgImg.src = nextUrl;
+  clearTimeout(screenTransitionTimer);
 
-      bgImg.style.transition =
-        "transform .4s ease, opacity .4s ease, filter .45s ease";
+  if (delayed) {
+    if (!preserveCurrent) {
+      viewport.classList.add("screen-leaving");
+    }
 
-      requestAnimationFrame(() => {
-        bgImg.style.opacity = 1;
-        bgImg.style.transform = "translate(0px, -50%)";
-      });
-    }, 180);
+    screenTransitionTimer = setTimeout(() => {
+      screen = nextScreen;
+      viewport.dataset.screen = screen;
+      viewport.classList.remove("screen-leaving");
+      showScreenContent(nextScreen, true);
+    }, 300);
 
+    return;
+  }
+
+  screen = nextScreen;
+  viewport.dataset.screen = screen;
+  showScreenContent(nextScreen);
+}
+
+function showScreenContent(nextScreen, fromTransition = false) {
+
+  if (nextScreen === "character") {
+    showCharacter();
+  } else if (nextScreen === "mode") {
+    showModeChoices();
   } else {
-    bgImg.src = nextUrl;
-    bgImg.style.opacity = 1;
-    bgImg.style.transform = "translate(0px, -50%)";
+    showEventSelection(false, fromTransition);
   }
 }
 
-/*************************************************
- * カード生成
- *************************************************/
+function swapBackground(src, direction = "left", animated = true) {
+  if (!animated) {
+    bgImg.src = src;
+    bgImg.style.opacity = 1;
+    bgImg.style.transform = "translate(0, -50%)";
+    return;
+  }
+
+  bgImg.style.opacity = 0;
+
+  setTimeout(() => {
+    const startOffset =
+      direction === "none"
+        ? "0px"
+        : direction === "right"
+          ? "60px"
+          : "-60px";
+    bgImg.style.transition = "none";
+    bgImg.style.transform = `translate(${startOffset}, -50%)`;
+    bgImg.offsetHeight;
+    bgImg.src = src;
+    bgImg.style.transition = "opacity .4s ease, transform .4s ease, filter .4s ease";
+
+    requestAnimationFrame(() => {
+      bgImg.style.opacity = 1;
+      bgImg.style.transform = "translate(0, -50%)";
+    });
+  }, 160);
+}
+
+function showCharacter(animated = false, direction = "left") {
+  const stage = document.getElementById("characterStage");
+  const nameText = document.getElementById("characterNameText");
+
+  clearTimeout(characterAnimationTimer);
+
+  if (!animated) {
+    nameText.textContent = characterNames[chrId];
+    nameText.dataset.name = characterNames[chrId];
+    swapBackground(getChrSelPath(chrId), direction, false);
+    return;
+  }
+
+  stage.classList.remove("character-reveal");
+  stage.classList.add("character-changing");
+
+  // スワイプ直後から現在のキャラクター画像をフェードアウト
+  bgImg.style.opacity = 0;
+
+  characterAnimationTimer = setTimeout(() => {
+    nameText.textContent = characterNames[chrId];
+    nameText.dataset.name = characterNames[chrId];
+
+    const startOffset = direction === "right" ? "60px" : "-60px";
+    bgImg.style.transition = "none";
+    bgImg.style.transform = `translate(${startOffset}, -50%)`;
+    bgImg.src = getChrSelPath(chrId);
+    bgImg.offsetHeight;
+    bgImg.style.transition = "opacity .4s ease, transform .4s ease, filter .4s ease";
+
+    requestAnimationFrame(() => {
+      bgImg.style.opacity = 1;
+      bgImg.style.transform = "translate(0, -50%)";
+    });
+
+    stage.classList.remove("character-changing");
+    stage.classList.add("character-reveal");
+
+    setTimeout(() => {
+      stage.classList.remove("character-reveal");
+    }, 650);
+  }, 260);
+}
+
+function changeCharacter(step) {
+  animateCharacterCursor(step);
+  chrIdx = (chrIdx + step + chrList.length) % chrList.length;
+  chrId = chrList[chrIdx];
+  showCharacter(true, step < 0 ? "right" : "left");
+}
+
+function animateCharacterCursor(step) {
+  const cursor = document.querySelector(
+    step < 0 ? ".characterCursor-left" : ".characterCursor-right"
+  );
+
+  if (!cursor) return;
+
+  cursor.classList.remove("cursor-activated");
+  cursor.offsetHeight;
+  cursor.classList.add("cursor-activated");
+
+  setTimeout(() => {
+    cursor.classList.remove("cursor-activated");
+
+    // 片側だけ位相がずれないよう、左右の通常アニメーションを同時再開
+    const cursors = document.querySelectorAll(".characterCursor");
+    cursors.forEach(item => {
+      item.style.animation = "none";
+    });
+
+    cursor.offsetHeight;
+
+    requestAnimationFrame(() => {
+      cursors.forEach(item => {
+        item.style.animation = "";
+      });
+    });
+  }, 360);
+}
+
+function confirmCharacter() {
+  if (suppressCharacterClick) return;
+  setScreen("mode", true);
+}
+
+function showModeChoices(backgroundDirection = "right") {
+  const characterImage = getChrSelPath(chrId);
+
+  // ③から戻った場合は、選択中キャラクターのタイトル画像へ戻す
+  if (bgImg.getAttribute("src") !== characterImage) {
+    swapBackground(characterImage, backgroundDirection, true);
+  }
+
+  document.querySelectorAll(".modeChoice").forEach(choice => {
+    const mode = choice.dataset.mode;
+    const image = choice.querySelector(".modeChoiceImage");
+    choice.classList.remove("mode-selected", "mode-dimmed");
+    image.style.opacity = 1;
+    image.src = getModeSelPath(chrId, mode);
+  });
+}
+
+function selectMode(mode) {
+  const viewport = document.getElementById("viewport");
+  viewport.classList.add("mode-transitioning");
+
+  document.querySelectorAll(".modeChoice").forEach(choice => {
+    const isSelected = choice.dataset.mode === mode;
+    choice.classList.toggle("mode-selected", isSelected);
+    choice.classList.toggle("mode-dimmed", !isSelected);
+  });
+
+  modeKbn = mode;
+  evtId = "";
+  evtIdx = 0;
+  cptIdx = 0;
+  updateFilteredEvents(false);
+  createCards();
+
+  // ②を300ms保持した後、そのまま黒フェードで覆う
+  clearTimeout(screenTransitionTimer);
+  screenTransitionTimer = setTimeout(() => {
+    bgFade.classList.add("show");
+
+    // ③表示の約0.2秒前から②のボタンを消し始める
+    setTimeout(() => {
+      viewport.classList.add("mode-buttons-leaving");
+    }, 300);
+
+    // 黒画面の裏側で③へ切り替える
+    screenTransitionTimer = setTimeout(async () => {
+      const eventBackground = getSelPath(
+        filteredEvtData[evtIdx],
+        filteredEvtData[evtIdx].cpt[cptIdx]
+      );
+
+      // 前のキャラ画像が一瞬見えないよう、黒画面の裏で描画準備を待つ
+      await waitForImage(eventBackground);
+
+      // 黒画面の裏で左ぼかしを完成状態にしておく
+      viewport.classList.add("event-prepared");
+      screen = "event";
+      viewport.dataset.screen = screen;
+      viewport.classList.remove("mode-buttons-leaving");
+
+      showEventSelection(false, false);
+
+      // 初回のイベント背景は横スライドさせず通常位置で表示
+      bgImg.style.transition = "none";
+      bgImg.style.opacity = 1;
+      bgImg.style.transform = "translate(0, -50%)";
+      bgImg.offsetHeight;
+      bgImg.style.transition = "opacity .5s ease, transform .4s ease, filter .4s ease";
+
+      bgFade.classList.remove("show");
+
+      // 背景とぼかしを先に見せ、カードと決定ボタンを後から表示
+      setTimeout(() => {
+        viewport.classList.remove("event-prepared");
+      }, 100);
+
+      setTimeout(() => {
+        viewport.classList.remove("mode-transitioning");
+      }, 500);
+    }, 500);
+  }, 300);
+}
+
+function goBackSelection() {
+  if (screen === "event") {
+    // ③→②は、先にカードを消してから②を表示する
+    const viewport = document.getElementById("viewport");
+    viewport.classList.add("returning-to-mode", "event-cards-leaving");
+
+    // 戻るボタン押下直後から現在のイベント背景を暗くする
+    bgImg.style.transition = "opacity .3s ease";
+    bgImg.style.opacity = 0;
+
+    clearTimeout(screenTransitionTimer);
+    screenTransitionTimer = setTimeout(async () => {
+      const characterBackground = getChrSelPath(chrId);
+
+      // 完全に暗い状態で切り替え先画像の描画準備を待つ
+      await waitForImage(characterBackground);
+
+      // キャラ画像を表示する前に、②の暗色・ぼかしを完成状態で配置
+      viewport.classList.add("mode-prepared");
+      screen = "mode";
+      viewport.dataset.screen = screen;
+
+      bgImg.style.transition = "none";
+      bgImg.src = characterBackground;
+      bgImg.style.transform = "translate(0, -50%)";
+      viewport.offsetHeight;
+      showModeChoices("none");
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          bgImg.style.transition = "opacity .4s ease";
+          bgImg.style.opacity = 1;
+          viewport.classList.remove("mode-prepared");
+        });
+      });
+
+      setTimeout(() => {
+        viewport.classList.remove("returning-to-mode", "event-cards-leaving");
+      }, 500);
+    }, 300);
+  } else if (screen === "mode") {
+    setScreen("character", true);
+  }
+}
+
+function updateFilteredEvents(keepRequestedEvent = true) {
+  filteredEvtData = evtData.filter(evt =>
+    evt.evtId.startsWith(chrId) && evt.evtId.charAt(3) === modeKbn
+  );
+
+  const requestedIndex = keepRequestedEvent
+    ? filteredEvtData.findIndex(evt => evt.evtId === evtId)
+    : -1;
+
+  evtIdx = requestedIndex >= 0 ? requestedIndex : 0;
+  tgtEvtData = filteredEvtData[evtIdx] || null;
+}
+
 function createCards() {
-  filteredEvtData.forEach((data, i) => {
-    const div = document.createElement("div");
-    div.className = "card";
+  cardList.innerHTML = "";
+
+  if (!filteredEvtData.length) {
+    const empty = document.createElement("div");
+    empty.id = "emptyEvents";
+    empty.textContent = "このモードのイベントはまだありません";
+    cardList.appendChild(empty);
+    decideBtn.classList.add("disabled");
+    return;
+  }
+
+  decideBtn.classList.remove("disabled");
+
+  filteredEvtData.forEach((data, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
 
     const inner = document.createElement("div");
     inner.className = "cardInner";
-
-    // 背景画像をCSS変数で渡す
-    inner.style.setProperty(
-      "--card-bg",
-      `url("${getBnrPath(data)}")`
-    );
+    inner.style.setProperty("--card-bg", `url("${getBnrPath(data)}")`);
 
     const border = document.createElement("div");
     border.className = "innerBorder";
 
-    const lv = Number(data.evtId.charAt(4)) || 1;
-
-    const lvLabel = document.createElement("div");
-    lvLabel.className = "lvLabel";
-
-    lvLabel.textContent = "Lv" + lv;
-
-    lvLabel.classList.add(`lv-${lv}`);
-
     const label = document.createElement("div");
     label.className = "label";
+    label.textContent = data.evtNm;
 
-    const first = data.evtNm.charAt(0);
-    const rest = data.evtNm.slice(1);
+    inner.append(label, border);
+    card.appendChild(inner);
 
-    const span = document.createElement("span");
-    span.className = "labelFirst";
-    span.textContent = first;
-
-    const modeType = data.evtId.charAt(3);
-
-    if (modeType === "S") {
-      span.style.color = "#ffd84a";
-    }
-    else if (modeType === "D") {
-      span.style.color = "#82A4FF";
-    }
-    else if (modeType === "L") {
-      span.style.color = "#ff7ab8";
-    }
-
-    label.appendChild(span);
-    label.append(rest);
-
-    const diamondWrap = document.createElement("div");
-    diamondWrap.className = "cardChapterIcons";
-
-    data.cpt.forEach((cpt, cIdx) => {
-
-      const diamond = document.createElement("div");
-
-      diamond.className =
-        "chapterDiamond mode-" + modeType;	
-
-      // 現在選択中だけ光らせる
-      if (i === evtIdx && cIdx === cptIdx) {
-        diamond.classList.add("active");
-      }
-
-      diamondWrap.appendChild(diamond);
-
-    });
-
-    inner.appendChild(lvLabel);
-
-    inner.appendChild(diamondWrap);
-
-    inner.appendChild(border);
-    inner.appendChild(label);
-
-    div.appendChild(inner);
-
-    div.addEventListener("click", () => {
-      if (momentumTimer) {
-        cancelAnimationFrame(momentumTimer);
-        momentumTimer = null;
-      }
-
-      if (isCharacterMode) {
-        isCharacterMode = false;
-        applyCharacterMode();
-        requestAnimationFrame(updateCharHighlight);
-      }
-
-      if (evtIdx === i) return;
-
-      evtIdx = i;
+    card.addEventListener("click", event => {
+      event.stopPropagation();
+      if (evtIdx === index) return;
+      evtIdx = index;
       cptIdx = 0;
-      updateSelection(true, "left");
+      updateEventSelection(true, "left");
     });
 
-    cardList.appendChild(div);
+    cardList.appendChild(card);
   });
 }
 
-/*************************************************
- * 選択更新
- *************************************************/
-function updateSelection(animated = true, slideDir = "left") {
-  const cards = document.querySelectorAll(".card");
+function updateEventSelection(
+  animated = true,
+  direction = "left",
+  backgroundAnimated = animated
+) {
+  if (!filteredEvtData.length) return;
 
-  cards.forEach((c, i) => {
-    c.classList.toggle(
-      "active",
-      !isCharacterMode && i === evtIdx
-    );
-  });
-
-  const sidebar = document.getElementById("sidebar");
-  const activeCard = cards[evtIdx];
-
-  if (activeCard) {
-    const sidebarHeight = sidebar.clientHeight;
-    const activeTop = activeCard.offsetTop;
-    const activeHeight = activeCard.offsetHeight;
-
-    const offset = activeTop - ((sidebarHeight - activeHeight) / 2);
-    cardList.style.transform = `translateY(${-offset}px)`;
-  }
-
-  if (isCharacterMode) {
-    showCharacterSelectImage(animated);
-    return;
-  }
-
-  // ===== 背景更新 =====
   tgtEvtData = filteredEvtData[evtIdx];
-  const nextUrl =
-    getSelPath(tgtEvtData, tgtEvtData.cpt[cptIdx]);
+  evtId = tgtEvtData.evtId;
 
-  if (animated) {
-    bgImg.style.opacity = 0;
+  const cards = document.querySelectorAll(".card");
+  cards.forEach((card, index) => card.classList.toggle("active", index === evtIdx));
 
-    setTimeout(() => {
-      bgImg.style.transition = "none";
-
-      // スライド方向ごとの開始位置
-      // slideDir === "left"  : 右から入って左へ動く
-      // slideDir === "right" : 左から入って右へ動く
-      const startX = slideDir === "right" ? "60px" : "-60px";
-
-      bgImg.style.transform = `translate(${startX}, -50%)`;
-
-      // 強制リフロー
-      bgImg.offsetHeight;
-
-      // 画像差し替え
-      bgImg.src = nextUrl;
-
-      // transition を戻す
-      bgImg.style.transition = "transform .4s ease, opacity .4s ease, filter .45s ease";
-
-      requestAnimationFrame(() => {
-        bgImg.style.opacity = 1;
-        bgImg.style.transform = "translate(0px, -50%)";
-      });
-    }, 180);
-
-  } else {
-    bgImg.src = nextUrl;
-    bgImg.style.opacity = 1;
-    bgImg.style.transform = "translate(0px, -50%)";
-  }
-  
-  // カード再描画で◇のactive更新
-  const diamonds = document.querySelectorAll(".chapterDiamond");
-
-  diamonds.forEach(d => {
-    d.classList.remove("active");
-  });
-
+  const activeCard = cards[evtIdx];
   if (activeCard) {
-    const currentDiamonds =
-      activeCard.querySelectorAll(".chapterDiamond");
+    const offset = activeCard.offsetTop - ((document.getElementById("sidebar").clientHeight - activeCard.offsetHeight) / 2);
 
-    if (currentDiamonds[cptIdx]) {
-      currentDiamonds[cptIdx].classList.add("active");
+    if (!animated) {
+      cardList.style.transition = "none";
+    }
+
+    cardList.style.transform = `translateY(${-offset}px)`;
+
+    if (!animated) {
+      cardList.offsetHeight;
+      cardList.style.transition = "";
     }
   }
+
+  swapBackground(
+    getSelPath(tgtEvtData, tgtEvtData.cpt[cptIdx]),
+    direction,
+    backgroundAnimated
+  );
 }
 
-/*************************************************
- * モード
- *************************************************/
-function applyMode() {
-  const viewport = document.getElementById("viewport");
-  const sidebar = document.getElementById("sidebar");
-
-  if (isStartMode) {
-    viewport.classList.add("start-mode");
-  } else {
-    viewport.classList.remove("start-mode");
-    // 通常へ戻るときサイドバーを左からスライドイン
-    sidebar.classList.add("force-hidden");
-    decideBtn.classList.add("decideBtn-fade-out");
-
-    /* blur開始を一旦止める */
-    sidebar.classList.add("delay-blur");
-
-    requestAnimationFrame(() => {
-
-      /* 先にカードだけ出す */
-      sidebar.classList.remove("force-hidden");
-
-      /* 少し遅れてblur解放 */
-      setTimeout(() => {
-        sidebar.classList.remove("delay-blur");
-        decideBtn.classList.remove("decideBtn-fade-out");
-      }, 450);
-
-    });
-  }
+function showEventSelection(animated = true, backgroundAnimated = animated) {
+  updateDecideButton();
+  updateEventSelection(animated, "left", backgroundAnimated);
 }
 
-let isDeciding = false;
-let characterCloseTimer = null;
-
-function applyCharacterMode() {
-  const viewport = document.getElementById("viewport");
-
-  if (isCharacterMode) {
-    clearTimeout(characterCloseTimer);
-    viewport.classList.remove("character-closing");
-    viewport.classList.add("character-mode");
-
-    document.querySelectorAll(".card").forEach(card => {
-      card.classList.remove("active");
-    });
-
-    document.querySelectorAll(".chapterDiamond").forEach(d => {
-      d.classList.remove("active");
-    });
-
-    showCharacterSelectImage(true);
-
-  } else {
-    viewport.classList.remove("character-mode");
-    viewport.classList.add("character-closing");
-
-    updateSelection(true, "left");
-
-    clearTimeout(characterCloseTimer);
-
-    characterCloseTimer = setTimeout(() => {
-      viewport.classList.remove("character-closing");
-    }, 600);
-  }
+function updateDecideButton() {
+  decideBtn.classList.toggle("decideBtn-hs", chrId === "FF");
+  decideBtn.classList.toggle("decideBtn-ps", chrId !== "FF");
 }
 
-/*************************************************
- * 次のイベント
- *************************************************/
 function goToEvent() {
-  if (isDeciding) return;
+  if (isDeciding || !tgtEvtData) return;
   isDeciding = true;
+  decideBtn.classList.add("pressed", "disabled");
 
-  const decideBtn = document.getElementById("decideBtn");
-  if (decideBtn) decideBtn.classList.add("pressed", "disabled");
-
-  // 少し待ってからフェード開始
+  // ボタンを発光させてから画面を暗転
   setTimeout(() => {
     fade.classList.add("show");
   }, 120);
 
-  // 画面遷移
   setTimeout(() => {
-    location.href = './event.html?chrId=' + chrId + '&evtId=' + tgtEvtData.evtId + '&cptId=' + tgtEvtData.cpt[cptIdx].cptId + '&autoFlg=' + autoFlg + '&debugMovId=';
+    const targetCpt = tgtEvtData.cpt[cptIdx];
+    location.href = "./event.html?chrId=" + chrId +
+      "&evtId=" + tgtEvtData.evtId +
+      "&cptId=" + targetCpt.cptId +
+      "&autoFlg=" + autoFlg +
+      "&debugMovId=";
   }, 520);
 }
 
-/*************************************************
- * タッチ処理
- *************************************************/
-function touchAction() {
-
-  const swipeArea = document.getElementById("viewport");
-
-  // タッチ開始
-  swipeArea.addEventListener("touchstart", e => {
-  
-    // ボタンやカードタップは除外
-    if (e.target.closest("#decideBtn") || e.target.closest(".card")) return;
-
-    isDragging = true;
-    startY = e.touches[0].clientY;
-    startX = e.touches[0].clientX;
-    lastY = startY;
-    lastTime = performance.now();
-    velocityY = 0;
-
-    if (momentumTimer) {
-      cancelAnimationFrame(momentumTimer);
-      momentumTimer = null;
+function handleSwipe(dx, dy) {
+  if (screen === "character") {
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      changeCharacter(dx < 0 ? 1 : -1);
+      suppressCharacterClick = true;
+      setTimeout(() => { suppressCharacterClick = false; }, 350);
     }
-  }, {
-    passive: true
-  });
-
-
-  // タッチ移動
-  swipeArea.addEventListener("touchmove", e => {
-    if (!isDragging) return;
-
-    const y = e.touches[0].clientY;
-    const now = performance.now();
-
-    const dy = y - lastY;
-    const dt = now - lastTime;
-
-    if (dt > 0) {
-      velocityY = dy / dt;
-    }
-
-    lastY = y;
-    lastTime = now;
-  }, {
-    passive: true
-  });
-
-  // タッチ終了
-  swipeArea.addEventListener("touchend", e => {
-    if (!isDragging) return;
-    isDragging = false;
-
-    const dy = e.changedTouches[0].clientY - startY;
-    const dx = e.changedTouches[0].clientX - startX;
-
-    // ===== 横スワイプ（cpt切替） =====
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-
-      // 右→左（次のcpt）
-      if (dx < 0) {
-
-        if (cptIdx < tgtEvtData.cpt.length - 1) {
-          cptIdx++;
-          updateSelection(true, "left");
-        }
-
-      }
-
-      // 左→右（前のcpt）
-      else {
-
-        // ===== start mode解除 =====
-        if (isStartMode) {
-
-          isStartMode = false;
-
-          updateSelection(false);
-
-          applyMode();
-
-          return;
-        }
-
-        if (cptIdx > 0) {
-
-          cptIdx--;
-          updateSelection(true, "right");
-        }
-      }
-
-      return;
-    }
-
-    // ===== 縦スワイプ（evt切替） =====
-    if (Math.abs(dy) > 40) {
-
-      if (isCharacterMode) {
-
-        if (Math.abs(dy) > 40) {
-
-          if (dy > 0) {
-            changeCharacter(-1);
-          } else {
-            changeCharacter(1);
-          }
-
-        }
-
-        return;
-      }else{
-
-        if (dy > 0 && evtIdx > 0) {
-          evtIdx--;
-          cptIdx = 0;
-          updateSelection(true, "left");
-        }
-        else if (dy < 0 && evtIdx < filteredEvtData.length - 1) {
-          evtIdx++;
-          cptIdx = 0;
-          updateSelection(true, "left");
-        }
-      }
-
-      return;
-    }
-
-    // ===== 慣性 =====
-    const speed = velocityY;
-    if (Math.abs(speed) > 0.4) {
-      startMomentum(speed);
-    }
-
-  }, {
-    passive: true
-  });
-
-  // 決定ボタン
-  const decideBtn = document.getElementById("decideBtn");
-  decideBtn.addEventListener("click", goToEvent);
-
-  // TAP TO STARTの画面タップ
-  const startOverlay = document.getElementById("startOverlay");
-  startOverlay.addEventListener("click", () => {
-    if (!isStartMode) return;
-    goToEvent();
-  });
-
-  const charModeToggle =
-    document.getElementById("charModeToggle");
-
-  charModeToggle.addEventListener("click", e => {
-
-    e.stopPropagation();
-
-    isCharacterMode = !isCharacterMode;
-
-    applyCharacterMode();
-
-    if (isCharacterMode) {
-      requestAnimationFrame(updateCharHighlight);
-    }
-
-  });
-
-  document.querySelectorAll(".charItem").forEach((el, i) => {
-
-    el.addEventListener("click", e => {
-      e.stopPropagation();
-
-      if (i === chrIdx) return;
-
-      const diff = i - chrIdx;
-
-      changeCharacter(diff);
-    });
-
-  });
-
-  document.querySelectorAll(".modeOption").forEach(option => {
-    option.addEventListener("click", e => {
-      e.stopPropagation();
-
-      const nextMode = option.dataset.mode;
-
-      if (modeKbn === nextMode) {
-        return;
-      }
-
-      modeKbn = nextMode;
-
-      updateModeSelector();
-
-      cardList.classList.add("card-fade-out");
-
-      setTimeout(() => {
-        updateFilteredEvents();
-
-        evtIdx = 0;
-        cptIdx = 0;
-
-        cardList.innerHTML = "";
-        createCards();
-
-        if (isCharacterMode) {
-          document.querySelectorAll(".card").forEach(card => {
-            card.classList.remove("active");
-          });
-
-          document.querySelectorAll(".chapterDiamond").forEach(d => {
-            d.classList.remove("active");
-          });
-        } else {
-          updateSelection(true, "left");
-        }
-
-        cardList.classList.remove("card-fade-out");
-
-        requestAnimationFrame(() => {
-          cardList.classList.add("card-fade-in-active");
-
-          setTimeout(() => {
-            cardList.classList.remove("card-fade-in-active");
-          }, 250);
-        });
-
-      }, 200);
-    });
-  });
-
-}
-
-/*************************************************
- * ハイライト
- *************************************************/
-function updateCharHighlight() {
-
-  const selector = document.getElementById("characterSelector");
-  const highlight = document.getElementById("charHighlight");
-  const active = document.querySelector(".charItem.active");
-
-  if (!selector || !highlight || !active) return;
-
-  const parentRect = selector.getBoundingClientRect();
-  const rect = active.getBoundingClientRect();
-
-  // ★ 中央位置を計算
-  const centerY = rect.top + rect.height / 2;
-
-  // ★ highlightの高さの半分を引く
-  const highlightHalf = highlight.offsetHeight / 2;
-
-  const top = centerY - parentRect.top - highlightHalf;
-
-  highlight.style.top = top + "px";
-
-  // 色
-  const chr = active.dataset.chr;
-
-  if (chr === "AK") highlight.style.backgroundColor = "#ff6699";
-  if (chr === "SA") highlight.style.backgroundColor = "#00bbdd";
-  if (chr === "FF") highlight.style.backgroundColor = "#00cc66";
-}
-
-/*************************************************
- * 慣性スクロール
- *************************************************/
-function startMomentum(initialVelocity) {
-  let v = initialVelocity;
-  const friction = 0.94; // ← 少し強め減衰
-  const minVelocity = 0.03; // ← 停止しやすく
-
-  function step() {
-    v *= friction;
-
-    if (Math.abs(v) < minVelocity) {
-      momentumTimer = null;
-      return;
-    }
-
-    // 1フレームで複数枚飛ばないよう制御
-    if (v > 0) {
-      if (evtIdx > 0) {
-        evtIdx--;
-        updateSelection();
-      }
-    } else {
-      if (evtIdx < evtData.length - 1) {
-        evtIdx++;
-        updateSelection();
-      }
-    }
-
-    momentumTimer = requestAnimationFrame(step);
-  }
-
-  momentumTimer = requestAnimationFrame(step);
-}
-
-/*************************************************
- * モード選択
- *************************************************/
-function updateModeSelector() {
-  const modeSelector = document.getElementById("modeSelector");
-
-  modeSelector.classList.remove(
-    "sersMode",
-    "discMode",
-    "loveMode"
-  );
-
-  if (modeKbn === "S") {
-    modeSelector.classList.add("sersMode");
-  } else if (modeKbn === "D") {
-    modeSelector.classList.add("discMode");
-  } else {
-    modeSelector.classList.add("loveMode");
-  }
-
-  document.querySelectorAll(".modeOption").forEach(option => {
-    option.classList.toggle(
-      "mode-active",
-      option.dataset.mode === modeKbn
-    );
-  });
-
-  requestAnimationFrame(updateModeHighlight);
-}
-
-/*************************************************
- * モード選択ハイライト
- *************************************************/
-function updateModeHighlight() {
-  const selector = document.getElementById("modeSelector");
-  const highlight = document.getElementById("modeHighlight");
-  const active = selector?.querySelector(".modeOption.mode-active");
-
-  if (!selector || !highlight || !active) return;
-
-  const parentRect = selector.getBoundingClientRect();
-  const rect = active.getBoundingClientRect();
-
-  highlight.style.top = (rect.top - parentRect.top) + "px";
-
-  const colorMap = {
-    L: "#ff7ab8",
-    S: "#ffd84a",
-    D: "#82A4FF"
-  };
-
-  highlight.style.backgroundColor = colorMap[modeKbn];
-}
-
-/*************************************************
- * イベントフィルター
- *************************************************/
-function updateFilteredEvents() {
-
-  filteredEvtData = evtData.filter(evt =>
-    evt.evtId.startsWith(chrId) &&
-    evt.evtId.charAt(3) === modeKbn
-  );
-
-  const index = filteredEvtData.findIndex(evt =>
-    evt.evtId === evtId
-  );
-
-  if (index !== -1) {
-    evtIdx = index;
-  } else {
-    evtIdx = 0;
-  }
-}
-
-/*************************************************
- * キャラクター変更
- *************************************************/
-function changeCharacter(dir) {
-
-  if (chrIdx + dir < 0 || chrIdx + dir > 2) {
     return;
   }
 
-  chrIdx += dir;
+  if (screen !== "event" || !tgtEvtData) return;
 
-  chrId = chrList[chrIdx];
-
-  // active更新
-  document.querySelectorAll(".charItem").forEach((el, i) => {
-    el.classList.toggle("active", i === chrIdx);
-  });
-
-  updateCharHighlight();
-
-  /* ===== フェードアウト ===== */
-  cardList.classList.add("card-fade-out");
-  decideBtn.classList.add("decideBtn-fade-out");
-
-  setTimeout(() => {
-
-    /* ===== 中身更新（今まで通り） ===== */
-    updateFilteredEvents();
-    updateDecideButton();
-
-    cardList.innerHTML = "";
-    createCards();
-
-    evtIdx = 0;
-    cptIdx = 0;
-
-    updateSelection(true, "left");
-
-    /* ===== フェードイン準備 ===== */
-    cardList.classList.remove("card-fade-out");
-    decideBtn.classList.remove("decideBtn-fade-out");
-
-    requestAnimationFrame(() => {
-
-      /* ===== フェードイン実行 ===== */
-      cardList.classList.add("card-fade-in-active");
-      decideBtn.classList.add("decideBtn-fade-in-active");
-
-      setTimeout(() => {
-        cardList.classList.remove("card-fade-in-active");
-        decideBtn.classList.remove("decideBtn-fade-in-active");
-      }, 250);
-
-    });
-
-  }, 200);
-
-}
-
-/*************************************************
- * 初期値設定
- *************************************************/
-function initCharacterActive() {
-
-  const items = document.querySelectorAll(".charItem");
-
-  items.forEach(el => {
-    const chr = el.dataset.chr;
-    el.classList.toggle("active", chr === chrId);
-  });
-  
-  chrIdx = chrList.findIndex(chr => chr === chrId);
-}
-
-/*************************************************
- * ボタン変更
- *************************************************/
-function updateDecideButton() {
-
-  decideBtn.classList.remove(
-    "decideBtn-hs",
-    "decideBtn-ps"
-  );
-
-  if (chrId === "FF") {
-    decideBtn.classList.add("decideBtn-hs");
-  } else {
-    decideBtn.classList.add("decideBtn-ps");
+  if (Math.abs(dy) > 40) {
+    if (dy > 0 && evtIdx > 0) {
+      evtIdx--;
+      cptIdx = 0;
+      updateEventSelection(true, "right");
+    } else if (dy < 0 && evtIdx < filteredEvtData.length - 1) {
+      evtIdx++;
+      cptIdx = 0;
+      updateEventSelection(true, "left");
+    }
   }
-
 }
 
-/*************************************************
- * 初期化
- *************************************************/
-window.addEventListener('load', function() {
+function bindInteractions() {
+  const viewport = document.getElementById("viewport");
 
+  viewport.addEventListener("touchstart", event => {
+    if (event.target.closest("button") || event.target.closest(".card")) return;
+    isDragging = true;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+
+  viewport.addEventListener("touchend", event => {
+    if (!isDragging) return;
+    isDragging = false;
+    handleSwipe(
+      event.changedTouches[0].clientX - startX,
+      event.changedTouches[0].clientY - startY
+    );
+  }, { passive: true });
+
+  document.getElementById("characterStage").addEventListener("click", confirmCharacter);
+
+  document.querySelectorAll(".characterCursor").forEach(cursor => {
+    cursor.addEventListener("click", event => {
+      event.stopPropagation();
+      changeCharacter(Number(cursor.dataset.step));
+    });
+  });
+
+  document.getElementById("backBtn").addEventListener("click", event => {
+    event.stopPropagation();
+    goBackSelection();
+  });
+
+  document.querySelectorAll(".modeChoice").forEach(choice => {
+    const image = choice.querySelector(".modeChoiceImage");
+    image.addEventListener("error", () => { image.style.opacity = 0; });
+    choice.addEventListener("click", () => selectMode(choice.dataset.mode));
+  });
+
+  decideBtn.addEventListener("click", goToEvent);
+}
+
+window.addEventListener("load", () => {
   cardList = document.getElementById("cardList");
   bgImg = document.getElementById("bgImg");
+  bgFade = document.getElementById("bgFade");
   fade = document.getElementById("fade");
   decideBtn = document.getElementById("decideBtn");
 
-  // パラメタ取得
-  setParam();
-
-  updateDecideButton();
-  updateModeSelector();
-
-  if (cptIdx >= 1) {
-    isStartMode = true;
-    
-    const chapterText = document.getElementById("chapterText");
-    if (chapterText) {
-      chapterText.textContent = "Chapter " + tgtEvtData.cpt[cptIdx].cptId;
-    }
-
-  } else {
-    isStartMode = false;
-  }
-  
-  // 初期キャラ選択
-  initCharacterActive();
-  // フィルター生成
-  updateFilteredEvents();
-  // ハイライト
-  updateCharHighlight();
-  // カード生成
+  readSelectionParams();
+  updateFilteredEvents(true);
   createCards();
-  // 押下イベント
-  touchAction();
+  bindInteractions();
+  setScreen(screen);
 
-  // 画像読込後に画面表示
-  preloadAllImages().then(() => {
-    updateSelection(false, "left");
-    applyMode(); // ★追加
-    sleepSetTimeout(500, () => document.getElementById('viewport').style.opacity = 1);
+  preloadImages().then(() => {
+    document.getElementById("viewport").style.opacity = 1;
   });
-
 });
