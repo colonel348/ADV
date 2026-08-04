@@ -52,7 +52,7 @@ let autoTimer = null;
 let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.15;
+const ACTION_SWITCH_BEFORE = 0.25;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.25;
 // 次L動画play後
@@ -1442,21 +1442,6 @@ function getMoviePattern(startIndex) {
 }
 
 /*************************************************
- * A動画からL動画へ切り替える開始時間取得
- *************************************************/
-function getActionSwitchBefore() {
-  const nextItem = currentData[currentIndex + 1];
-
-  // A1からフェードを挟んでA2へ進む場合は固定時間を使う
-  if (moviePattern !== "AL" || nextItem?.msgId !== "L") {
-    return ACTION_SWITCH_BEFORE;
-  }
-
-  // 直接Lへ移る場合は、10秒L動画向けの切替時間を使う
-  return 0.75;
-}
-
-/*************************************************
  * 動画A判定
  *************************************************/
 function hasSplitA(startIndex) {
@@ -2428,7 +2413,7 @@ function playSeamlessMovie(srcA, srcL) {
       videoA.duration - videoA.currentTime;
 
     // 終了直前
-    if (remain <= getActionSwitchBefore()) {
+    if (remain <= ACTION_SWITCH_BEFORE) {
 
       // 次行
       const nextItem =
