@@ -16,8 +16,11 @@
     { cptId: "1", plcNm: "" }
   ]},
 
-  { evtId: "AK-S1", evtNm: "", cpt:[
-    { cptId: "2", plcNm: "" }
+  { evtId: "AK-S4", evtNm: "裸で示す成長", cpt:[
+    { cptId: "1", plcNm: "タクシー" },
+    { cptId: "2", plcNm: "ニューヨーク州" },
+    { cptId: "3", plcNm: "カフェ" },
+    { cptId: "4", plcNm: "カフェ" }
   ]},
 
   { evtId: "AK-C1", evtNm: "", cpt:[

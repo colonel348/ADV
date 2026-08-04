@@ -76,7 +76,7 @@ function getEvtDir(evt) {
 
   const modeMap = {
     R: { prefix: "1", name: "恋愛" },
-    S: { prefix: "2", name: "恋愛" },
+    S: { prefix: "2", name: "本気" },
     C: { prefix: "3", name: "調教" }
   };
 
