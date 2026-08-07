@@ -33,12 +33,13 @@
     { cptId: "3", plcNm: "バスルーム" }
   ]},
 
-  { evtId: "SA-S4", evtNm: "", cpt:[
-    { cptId: "4", plcNm: "" }
+  { evtId: "SA-S1", evtNm: "", cpt:[
+    { cptId: "1", plcNm: "" }
   ]},
 
-  { evtId: "SA-C1", evtNm: "", cpt:[
-    { cptId: "5", plcNm: "" }
+  { evtId: "SA-C2", evtNm: "教室に溢れる熱", cpt:[
+    { cptId: "2", plcNm: "神山高校 - 教室" },
+    { cptId: "3", plcNm: "神山高校 - 教室" }
   ]},
 
 ];

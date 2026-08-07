@@ -1861,6 +1861,13 @@ function startTyping(text) {
 
   }
 
+  // 空メッセージでは文字要素が生成されないため、そのまま次の表示へ進める
+  if (spans.length === 0) {
+    isTyping = false;
+    startAutoNext();
+    return;
+  }
+
   let index = 0;
 
   function type() {
