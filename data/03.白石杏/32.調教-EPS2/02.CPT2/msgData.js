@@ -1,12 +1,11 @@
-window.msgData = [
+﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
-
+    { msgId: "N", msgTxt: "……言われた通り……全部脱いだよ……っ　これで、満足……？" },
+    { msgId: "L", msgTxt: "はぁ……っ、……こんなの……　……全っ然、恥ずかしくないんだから……！" },
+  
   { movId: "evt2" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" }
+    { msgId: "A", msgTxt: "約束通り……やったんだから……っ　もう十分でしょ……っ、これで終わりにして……！" },
+    { msgId: "A", msgTxt: "は……っ！？ お、オナ……っ！？　ここで……っ！？" }
 
 ];

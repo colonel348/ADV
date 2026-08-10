@@ -406,6 +406,7 @@ function createCards() {
   filteredEvtData.forEach((data, index) => {
     const card = document.createElement("div");
     card.className = "card";
+    card.dataset.mode = data.evtId.charAt(3);
 
     const inner = document.createElement("div");
     inner.className = "cardInner";
@@ -490,7 +491,7 @@ function goToEvent() {
   }, 120);
 
   setTimeout(() => {
-    const targetCpt = tgtEvtData.cpt[cptIdx];
+    const targetCpt = tgtEvtData.cpt[0];
     location.href = "./event.html?chrId=" + chrId +
       "&evtId=" + tgtEvtData.evtId +
       "&cptId=" + targetCpt.cptId +

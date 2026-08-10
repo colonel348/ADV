@@ -38,6 +38,7 @@
   ]},
 
   { evtId: "SA-C2", evtNm: "教室に溢れる熱", cpt:[
+    { cptId: "1", plcNm: "神山高校 - 教室" },
     { cptId: "2", plcNm: "神山高校 - 教室" },
     { cptId: "3", plcNm: "神山高校 - 教室" }
   ]},
