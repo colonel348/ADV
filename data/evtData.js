@@ -23,8 +23,10 @@
     { cptId: "4", plcNm: "カフェ" }
   ]},
 
-  { evtId: "AK-C1", evtNm: "", cpt:[
-    { cptId: "3", plcNm: "" }
+  { evtId: "AK-C2", evtNm: "描かれる身体", cpt:[
+    { cptId: "1", plcNm: "美術教室" },
+    { cptId: "2", plcNm: "美術教室" },
+    { cptId: "3", plcNm: "美術教室" }
   ]},
 
   { evtId: "SA-R1", evtNm: "雨の日の秘密", cpt:[
