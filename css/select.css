@@ -603,18 +603,22 @@ button { font: inherit; }
   left: 8px;
   top: 24px;
   z-index: 4;
-  padding: 2px 4px;
-  color: var(--event-mode-color, #fff);
-  background: transparent;
-  -webkit-text-stroke: 1.5px rgba(255,255,255,.95);
-  paint-order: stroke fill;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 2px 4px 3px;
+  color: #fff;
+  background: rgba(60,60,89,.78);
   font-size: 9px;
   font-weight: 700;
+  line-height: 1;
 }
 
-.card[data-mode="R"] { --event-mode-color: #d84f8d; }
-.card[data-mode="S"] { --event-mode-color: #d59a16; }
-.card[data-mode="C"] { --event-mode-color: #5962c2; }
+.labelInitial { color: var(--event-mode-color, #fff); }
+
+.card[data-mode="R"] { --event-mode-color: #ff7ab8; }
+.card[data-mode="S"] { --event-mode-color: #ffc94a; }
+.card[data-mode="C"] { --event-mode-color: #858bea; }
 
 #decisionArea {
   position: absolute;

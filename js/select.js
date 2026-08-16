@@ -417,7 +417,11 @@ function createCards() {
 
     const label = document.createElement("div");
     label.className = "label";
-    label.textContent = data.evtNm;
+    const eventName = String(data.evtNm || "");
+    const initial = document.createElement("span");
+    initial.className = "labelInitial";
+    initial.textContent = eventName.charAt(0);
+    label.append(initial, document.createTextNode(eventName.slice(1)));
 
     inner.append(label, border);
     card.appendChild(inner);

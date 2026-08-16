@@ -1,9 +1,9 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "あの……全部、脱ぎました……っ　えっと……そちらに移動すればいいでしょうか……？" },
+    { msgId: "A", msgTxt: "うぅ……っ、はぁ……っ" },
+    { msgId: "A", msgTxt: "（体の隅々まで見られてるのが分かって……　恥ずかしすぎて、倒れちゃいそう……）" },
+    { msgId: "L", msgTxt: "えっと……　この台の上に……座ればいいんですよね……？" }
 
 ];

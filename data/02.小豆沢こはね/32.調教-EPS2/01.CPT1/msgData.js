@@ -1,15 +1,17 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "え…っ、ヌードデッサンのモデル……！？　東雲くん、本当なの……！？" },
+    { msgId: "L", msgTxt: "服を全部脱ぐって……下着も、だよね……？　待って……、まだ心の準備が……っ！" },
+
   { movId: "evt2" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "A", msgTxt: "……う、うん……分かったよ……　（私……少しでも役に立たなきゃ……っ）" },
+    { msgId: "A", msgTxt: "（でもこんなにたくさんの人に見られながら　服を脱ぐなんて……恥ずかしすぎるよ……っ）" },
+    { msgId: "A", msgTxt: "あっ……っ、はぁ……" },
+    { msgId: "L", msgTxt: "（下着だけになっちゃった……　みんなの視線を感じて、息が苦しいよ……）" },
+
   { movId: "evt3" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
+    { msgId: "A", msgTxt: "ご、ごめんなさい……っ！　ぼーっとしちゃって……" },
+    { msgId: "A", msgTxt: "（指が震えて上手く動かないよ……　これを脱いだら……私、本当に……）" }
 
 ];
