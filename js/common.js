@@ -120,8 +120,12 @@ function getModeSelPath(chrId, mode) {
   return getChrDir(chrId) + "/00.選択/" + fileMap[mode];
 }
 
-function getBnrPath(evt) {
-  return getEvtDir(evt) + "/00.タイトル/bnr.png";
+function getBnrFrontPath(evt) {
+  return getEvtDir(evt) + "/00.タイトル/bnr1.png";
+}
+
+function getBnrBackPath(evt) {
+  return getEvtDir(evt) + "/00.タイトル/bnr2.png";
 }
 
 function getSelPath(evt, cpt) {

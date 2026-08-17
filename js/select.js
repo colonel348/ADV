@@ -63,7 +63,8 @@ function preloadImages() {
   });
 
   evtData.forEach(evt => {
-    urls.push(getBnrPath(evt));
+    urls.push(getBnrFrontPath(evt));
+    urls.push(getBnrBackPath(evt));
     urls.push(getSelPath(evt, evt.cpt[0]));
   });
 
@@ -410,10 +411,14 @@ function createCards() {
 
     const inner = document.createElement("div");
     inner.className = "cardInner";
-    inner.style.setProperty("--card-bg", `url("${getBnrPath(data)}")`);
+    inner.style.setProperty("--card-bg-back", `url("${getBnrBackPath(data)}")`);
+    inner.style.setProperty("--card-bg-front", `url("${getBnrFrontPath(data)}")`);
 
     const border = document.createElement("div");
     border.className = "innerBorder";
+
+    const foreground = document.createElement("div");
+    foreground.className = "cardForeground";
 
     const label = document.createElement("div");
     label.className = "label";
@@ -423,7 +428,7 @@ function createCards() {
     initial.textContent = eventName.charAt(0);
     label.append(initial, document.createTextNode(eventName.slice(1)));
 
-    inner.append(label, border);
+    inner.append(label, foreground, border);
     card.appendChild(inner);
 
     card.addEventListener("click", event => {
