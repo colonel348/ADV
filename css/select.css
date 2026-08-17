@@ -439,7 +439,7 @@ button { font: inherit; }
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: .11em .22em .19em;
+  padding: .15em .22em;
   color: #fff;
   background: #3f3e5c;
   line-height: 1;
