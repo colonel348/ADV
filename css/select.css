@@ -410,7 +410,7 @@ button { font: inherit; }
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: clamp(.7px, .12vw, 1.4px) rgba(255,255,255,.68);
   font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
-  font-size: 8vh;
+  font-size: 7vh;
   font-weight: 700;
   line-height: 1;
   letter-spacing: .055em;
@@ -603,9 +603,10 @@ button { font: inherit; }
 .innerBorder {
   position: absolute;
   inset: 3px;
-  z-index: 4;
+  z-index: 6;
   border: 2px solid #fff;
   border-radius: 3px;
+  pointer-events: none;
 }
 
 .label {
@@ -628,7 +629,12 @@ button { font: inherit; }
   text-align: left;
 }
 
+.labelText { display: inline-block; }
 .labelInitial { color: var(--event-mode-color, #fff); }
+
+@supports (-webkit-touch-callout: none) {
+  .labelText { transform: translateY(1px); }
+}
 
 .card[data-mode="R"] { --event-mode-color: #ff7ab8; }
 .card[data-mode="S"] { --event-mode-color: #ffc94a; }
