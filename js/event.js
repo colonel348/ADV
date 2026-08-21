@@ -373,30 +373,19 @@ window.addEventListener("load", () => {
     }
   );
 
-  const autoBtn =
-    document.getElementById("autoBtn");
-
+  const titleBtn =
+    document.getElementById("titleBtn");
   const skipBtn =
     document.getElementById("skipBtn");
+  const nextBtn =
+    document.getElementById("nextBtn");
 
-  autoBtn.addEventListener(
+  titleBtn.addEventListener(
     "click",
     e => {
 
       e.stopPropagation();
-
-      isAutoMode = !isAutoMode;
-
-      autoFlg = isAutoMode ? "1" : "0";
-
-      autoBtn.classList.toggle(
-        "active",
-        isAutoMode
-      );
-
-      refreshNextIcon();
-
-      startAutoNext();
+      moveTitle();
 
     }
   );
@@ -406,7 +395,16 @@ window.addEventListener("load", () => {
     e => {
 
       e.stopPropagation();
+      moveSkip();
 
+    }
+  );
+
+  nextBtn.addEventListener(
+    "click",
+    e => {
+
+      e.stopPropagation();
       moveSelect();
 
     }
@@ -570,10 +568,6 @@ async function init() {
 
   // AUTO初期状態
   isAutoMode = autoFlg === "1";
-
-  if (isAutoMode) {
-    document.getElementById("autoBtn").classList.add("active");
-  }
 
   // 動画事前読込
   // 全段落分の非表示videoを生成する事前読込は、iOS Safariでは
@@ -1277,8 +1271,8 @@ function moveSelect(
   transitionTime = BLACK_FADE_TIME
 ) {
 
-  // スキップ指定がある場合は、同一イベント内の次チャプターを優先します。
-  const skipNextCpt = getSkipNextCpt();
+  // 同一イベント内の次チャプターがあればイベント画面を継続します。
+  const immediateNextCpt = getImmediateNextCpt();
 
   setFade(true);
 
@@ -1288,9 +1282,8 @@ function moveSelect(
 
   setTimeout(() => {
 
-    // スキップ対象ならイベント画面を継続し、それ以外は選択画面へ戻します。
-    if (skipNextCpt) {
-      location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&cptId=' + skipNextCpt.cptId + '&autoFlg=' + autoFlg;
+    if (immediateNextCpt) {
+      location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&cptId=' + immediateNextCpt.cptId + '&autoFlg=' + autoFlg;
       return;
     }
 
@@ -1301,15 +1294,45 @@ function moveSelect(
 }
 
 /*************************************************
- * スキップ遷移先の次チャプターを取得
+ * 同一イベント内の次チャプターを取得
  *************************************************/
-function getSkipNextCpt() {
+function getImmediateNextCpt() {
 
   const currentEvt = evtData.find(data => data.evtId === evtId);
   if (!currentEvt) return null;
 
   // 同一イベント内で連番となる次チャプターだけを遷移先にします。
   return currentEvt.cpt.find(data => Number(data.cptId) === Number(cptId) + 1) || null;
+
+}
+
+/*************************************************
+ * タイトルへ戻る
+ *************************************************/
+function moveTitle() {
+
+  setFade(true);
+  document.getElementById("msgArea").style.opacity = 0;
+
+  setTimeout(() => {
+    location.href = './select.html?chrId=' + chrId;
+  }, BLACK_FADE_TIME);
+
+}
+
+/*************************************************
+ * 現在のチャプターをスキップして選択画面へ戻る
+ *************************************************/
+function moveSkip() {
+
+  setFade(true);
+  document.getElementById("msgArea").style.opacity = 0;
+
+  const nextCpt = getNextCpt();
+
+  setTimeout(() => {
+    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
+  }, BLACK_FADE_TIME);
 
 }
 

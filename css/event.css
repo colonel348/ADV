@@ -516,33 +516,6 @@ html, body {
 
 }
 
-/* --------------------
- * AUTO ON
- * -------------------- */
-
-#autoBtn.active {
-
-  color: #ff5ca8;
-
-  background:
-    rgba(255,240,247,0.98);
-
-}
-
-#autoBtn.active .control-icon {
-
-  filter:
-    brightness(0)
-    saturate(100%)
-    invert(56%)
-    sepia(78%)
-    saturate(1864%)
-    hue-rotate(299deg)
-    brightness(102%)
-    contrast(102%);
-
-}
-
 #controlArea.show .control-btn {
 
   animation:
