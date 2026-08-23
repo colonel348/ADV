@@ -416,6 +416,8 @@ button { font: inherit; }
   --mode-bg-top: #b7b7bf;
   --mode-bg-bottom: #858691;
   --mode-corner: #cacad0;
+  cursor: default;
+  pointer-events: none;
 }
 
 .modeChoice::before {
@@ -522,8 +524,13 @@ button { font: inherit; }
 }
 
 .modeAvailabilityDiamond.is-available {
-  background: rgba(255,255,255,.9);
+  background: #fff;
 }
+
+.modeAvailabilityDiamond.is-available[data-level="1"] { background: #39c7e8; }
+.modeAvailabilityDiamond.is-available[data-level="2"] { background: #f3ad25; }
+.modeAvailabilityDiamond.is-available[data-level="3"] { background: #ef4f78; }
+.modeAvailabilityDiamond.is-available[data-level="4"] { background: #b443df; }
 
 .modeChoiceVisual {
   position: relative;

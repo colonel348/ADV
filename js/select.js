@@ -57,9 +57,6 @@ function preloadImages() {
 
   chrList.forEach(chr => {
     urls.push(getChrSelPath(chr));
-    urls.push(getModeSelPath(chr, "R"));
-    urls.push(getModeSelPath(chr, "S"));
-    urls.push(getModeSelPath(chr, "C"));
   });
 
   evtData.forEach(evt => {
@@ -109,8 +106,14 @@ function setScreen(
     screenTransitionTimer = setTimeout(() => {
       screen = nextScreen;
       viewport.dataset.screen = screen;
-      viewport.classList.remove("screen-leaving");
       showScreenContent(nextScreen, true);
+
+      // 次画面を透明状態で一度描画してから表示し、背景マスクの急な切替を防ぐ
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          viewport.classList.remove("screen-leaving");
+        });
+      });
     }, 300);
 
     return;
@@ -292,13 +295,17 @@ function showModeChoices(backgroundDirection = "right") {
     for (let number = 1; number <= 4; number++) {
       const diamond = document.createElement("span");
       diamond.className = "modeAvailabilityDiamond";
+      diamond.dataset.level = number;
       diamond.classList.toggle("is-available", availableNumbers.has(number));
       diamond.setAttribute("aria-label", `${number}: ${availableNumbers.has(number) ? "あり" : "なし"}`);
       availability.appendChild(diamond);
     }
 
+    const isEmpty = availableNumbers.size === 0;
     choice.classList.remove("mode-selected", "mode-dimmed", "mode-empty");
-    choice.classList.toggle("mode-empty", availableNumbers.size === 0);
+    choice.classList.toggle("mode-empty", isEmpty);
+    choice.disabled = isEmpty;
+    choice.setAttribute("aria-disabled", String(isEmpty));
     label.textContent = modeLabelMap[mode];
     image.style.opacity = 1;
     image.src = modeIconMap[mode];
@@ -307,6 +314,9 @@ function showModeChoices(backgroundDirection = "right") {
 
 function selectMode(mode) {
   const viewport = document.getElementById("viewport");
+  const selectedChoice = document.querySelector(`.modeChoice[data-mode="${mode}"]`);
+  if (!selectedChoice || selectedChoice.disabled) return;
+
   viewport.classList.add("mode-transitioning");
 
   document.querySelectorAll(".modeChoice").forEach(choice => {

@@ -110,16 +110,6 @@ function getChrSelPath(chrId) {
   return getChrDir(chrId) + "/00.選択/sel.png";
 }
 
-function getModeSelPath(chrId, mode) {
-  const fileMap = {
-    R: "rm-sel.png",
-    S: "sr-sel.png",
-    C: "ct-sel.png"
-  };
-
-  return getChrDir(chrId) + "/00.選択/" + fileMap[mode];
-}
-
 function getBnrFrontPath(evt) {
   return getEvtDir(evt) + "/00.タイトル/bnr1.png";
 }
