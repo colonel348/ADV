@@ -46,6 +46,7 @@ let isAutoMode = false;
 let isNextReady = false;
 
 let aTextTimer = null;
+let aPlaybackSequence = 0;
 
 let autoTimer = null;
 
@@ -785,19 +786,32 @@ function nextStep() {
 
     if (isFirstLoopPlay) {
 
-      isFirstLoopPlay = false;
+      const movItemIndex =
+        getCurrentMovItemIndex(currentIndex);
 
-      startFirstLoopDoubleBuffer(currentSrcL);
+      const movId =
+        movItemIndex >= 0
+          ? currentData[movItemIndex].movId
+          : "";
+
+      const useWhiteFade =
+        startInitialLoopVideo(currentSrcL, movId);
 
       pendingLoop = false;
 
       setTimeout(() => {
 
+        if (!useWhiteFade) {
+          setFade(false);
+        }
+
         currentVideo = activeLoopVideo;
 
         showCurrent();
 
-      }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME);
+      }, useWhiteFade
+        ? FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME
+        : BLACK_FADE_TIME);
 
     } else {
 
@@ -1382,6 +1396,37 @@ function setFade(show, color = null) {
     }, BLACK_FADE_TIME);
   
   }
+
+}
+
+/*************************************************
+ * 初回L動画の白フェード判定
+ *************************************************/
+function shouldUseFirstLoopWhiteFade(movId) {
+
+  const currentCpt = tgtEvtData?.cpt?.[cptIdx];
+
+  return (
+    String(currentCpt?.fadeFlg) === "1" &&
+    movId === "evt1"
+  );
+
+}
+
+function startInitialLoopVideo(srcL, movId) {
+
+  const useWhiteFade =
+    shouldUseFirstLoopWhiteFade(movId);
+
+  isFirstLoopPlay = false;
+
+  if (useWhiteFade) {
+    startFirstLoopDoubleBuffer(srcL);
+  } else {
+    startLoopDoubleBuffer(srcL);
+  }
+
+  return useWhiteFade;
 
 }
 
@@ -2085,11 +2130,15 @@ function playMovie(item, aMsgIndex = null) {
     if (isFirstLoopPlay) {
 
       prepareLoopVideos(srcL);
-      isFirstLoopPlay = false;
 
-      startFirstLoopDoubleBuffer(srcL);
+      const useWhiteFade =
+        startInitialLoopVideo(srcL, movId);
 
       setTimeout(() => {
+
+        if (!useWhiteFade) {
+          setFade(false);
+        }
 
         isBusy = false;
 
@@ -2100,7 +2149,9 @@ function playMovie(item, aMsgIndex = null) {
           nextStep();
         }
 
-      }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME+ 750);
+      }, useWhiteFade
+        ? FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME + 750
+        : BLACK_FADE_TIME);
 
     } else {
 
@@ -2129,7 +2180,7 @@ function playMovie(item, aMsgIndex = null) {
   }
 
   // 通常
-  playSeamlessMovie(srcA, srcL);
+  playSeamlessMovie(srcA, srcL, movId);
 
 }
 
@@ -2372,7 +2423,9 @@ function switchLoopVideo(srcL) {
 /*************************************************
  * 動画シームレス再生
  *************************************************/
-function playSeamlessMovie(srcA, srcL) {
+function playSeamlessMovie(srcA, srcL, movId) {
+
+  const playbackSequence = ++aPlaybackSequence;
 
   videoA.classList.remove("show");
   videoL1.classList.remove("show");
@@ -2402,6 +2455,31 @@ function playSeamlessMovie(srcA, srcL) {
 
   // preload
   videoA.load();
+
+  // A動画が実際に再生を開始してから、最初のメッセージ表示を待つ。
+  // Safariなどで読み込みに時間がかかっても、動画より先には表示しない。
+  videoA.addEventListener("playing", () => {
+
+    setTimeout(() => {
+
+      if (
+        playbackSequence !== aPlaybackSequence ||
+        currentVideo !== videoA
+      ) {
+        return;
+      }
+
+      isBusy = false;
+
+      if (waitMovie) {
+        waitMovie = false;
+      } else {
+        nextStep();
+      }
+
+    }, FIRST_A_MSG_DELAY_TIME);
+
+  }, { once: true });
 
   // --------------------
   // A表示
@@ -2562,11 +2640,14 @@ function playSeamlessMovie(srcA, srcL) {
 
           if (isFirstLoopPlay) {
 
-            document.getElementById("msgArea").style.opacity = 0;
+            const useWhiteFade =
+              shouldUseFirstLoopWhiteFade(movId);
 
-            isFirstLoopPlay = false;
+            if (useWhiteFade) {
+              document.getElementById("msgArea").style.opacity = 0;
+            }
 
-            startFirstLoopDoubleBuffer(srcL);
+            startInitialLoopVideo(srcL, movId);
 
             currentVideo = activeLoopVideo;
 
@@ -2581,7 +2662,9 @@ function playSeamlessMovie(srcA, srcL) {
 
                 showCurrent();
 
-              }, FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME + 750);
+              }, useWhiteFade
+                ? FIRST_LOOP_WHITE_WAIT + BLACK_FADE_TIME + 750
+                : BLACK_FADE_TIME);
 
             });
 
@@ -2723,26 +2806,6 @@ function playSeamlessMovie(srcA, srcL) {
   watch();
 
   // 次メッセージ
-  setTimeout(() => {
-
-    isBusy = false;
-
-    if (waitMovie) {
-
-      waitMovie = false;
-    
-    } else {
-
-      setTimeout(() => {
-
-        nextStep();
-
-      }, NEXT_MSG_DELAY_TIME + FIRST_A_MSG_DELAY_TIME);
-
-    }
-
-  }, BLACK_FADE_TIME);
-
 }
 
 /*************************************************
