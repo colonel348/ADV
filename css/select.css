@@ -728,6 +728,10 @@ button { font: inherit; }
 .levelBadgePrefix { font-size: 8px; }
 .levelBadgeValue { font-size: 10px; }
 
+@supports (-webkit-touch-callout: none) {
+  .levelBadgeText { transform: translateY(-.5px); }
+}
+
 .levelBadgeSvg[data-level="1"] { --level-color: #39c7e8; }
 .levelBadgeSvg[data-level="2"] { --level-color: #f3ad25; }
 .levelBadgeSvg[data-level="3"] { --level-color: #ef4f78; }

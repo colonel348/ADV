@@ -483,10 +483,8 @@ function createCards() {
     const levelBadgeText = document.createElementNS(svgNamespace, "text");
     levelBadgeText.classList.add("levelBadgeText");
     levelBadgeText.setAttribute("x", "20");
-    levelBadgeText.setAttribute("y", "9");
+    levelBadgeText.setAttribute("y", "13");
     levelBadgeText.setAttribute("text-anchor", "middle");
-    levelBadgeText.setAttribute("dominant-baseline", "central");
-    levelBadgeText.setAttribute("alignment-baseline", "central");
 
     const levelBadgePrefix = document.createElementNS(svgNamespace, "tspan");
     levelBadgePrefix.classList.add("levelBadgePrefix");
