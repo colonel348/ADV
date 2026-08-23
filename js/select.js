@@ -63,8 +63,7 @@ function preloadImages() {
   });
 
   evtData.forEach(evt => {
-    urls.push(getBnrFrontPath(evt));
-    urls.push(getBnrBackPath(evt));
+    urls.push(getBnrPath(evt));
     urls.push(getSelPath(evt, evt.cpt[0]));
   });
 
@@ -251,6 +250,16 @@ function confirmCharacter() {
 
 function showModeChoices(backgroundDirection = "right") {
   const characterImage = getChrSelPath(chrId);
+  const modeIconMap = {
+    R: "../img/romance-mode.png",
+    S: "../img/serious-mode.png",
+    C: "../img/control-mode.png"
+  };
+  const modeLabelMap = {
+    R: "恋愛モード",
+    S: "本気モード",
+    C: "調教モード"
+  };
 
   // ③から戻った場合は、選択中キャラクターのタイトル画像へ戻す
   if (bgImg.getAttribute("src") !== characterImage) {
@@ -260,9 +269,39 @@ function showModeChoices(backgroundDirection = "right") {
   document.querySelectorAll(".modeChoice").forEach(choice => {
     const mode = choice.dataset.mode;
     const image = choice.querySelector(".modeChoiceImage");
-    choice.classList.remove("mode-selected", "mode-dimmed");
+    const label = choice.querySelector(".modeChoiceLabel");
+    const text = choice.querySelector(".modeChoiceText");
+    const availableNumbers = new Set(
+      evtData
+        .filter(evt =>
+          evt.evtId.substring(0, 2) === chrId &&
+          evt.evtId.charAt(3) === mode &&
+          /^[1-4]$/.test(evt.evtId.charAt(4))
+        )
+        .map(evt => Number(evt.evtId.charAt(4)))
+    );
+
+    let availability = text.querySelector(".modeAvailability");
+    if (!availability) {
+      availability = document.createElement("span");
+      availability.className = "modeAvailability";
+      text.appendChild(availability);
+    }
+
+    availability.replaceChildren();
+    for (let number = 1; number <= 4; number++) {
+      const diamond = document.createElement("span");
+      diamond.className = "modeAvailabilityDiamond";
+      diamond.classList.toggle("is-available", availableNumbers.has(number));
+      diamond.setAttribute("aria-label", `${number}: ${availableNumbers.has(number) ? "あり" : "なし"}`);
+      availability.appendChild(diamond);
+    }
+
+    choice.classList.remove("mode-selected", "mode-dimmed", "mode-empty");
+    choice.classList.toggle("mode-empty", availableNumbers.size === 0);
+    label.textContent = modeLabelMap[mode];
     image.style.opacity = 1;
-    image.src = getModeSelPath(chrId, mode);
+    image.src = modeIconMap[mode];
   });
 }
 
@@ -411,14 +450,42 @@ function createCards() {
 
     const inner = document.createElement("div");
     inner.className = "cardInner";
-    inner.style.setProperty("--card-bg-back", `url("${getBnrBackPath(data)}")`);
-    inner.style.setProperty("--card-bg-front", `url("${getBnrFrontPath(data)}")`);
+    inner.style.setProperty("--card-bg", `url("${getBnrPath(data)}")`);
 
     const border = document.createElement("div");
     border.className = "innerBorder";
 
-    const foreground = document.createElement("div");
-    foreground.className = "cardForeground";
+    const level = data.evtId.charAt(4);
+    const svgNamespace = "http://www.w3.org/2000/svg";
+    const levelBadge = document.createElementNS(svgNamespace, "svg");
+    levelBadge.classList.add("levelBadgeSvg");
+    levelBadge.dataset.level = level;
+    levelBadge.setAttribute("viewBox", "0 0 42 18");
+    levelBadge.setAttribute("aria-label", `Lv${level}`);
+
+    const levelBadgeShape = document.createElementNS(svgNamespace, "path");
+    levelBadgeShape.classList.add("levelBadgeShape");
+    levelBadgeShape.setAttribute(
+      "d",
+      "M5 0 H42 L38.5 12.5 Q37.5 18 32 18 H0 V5 Q0 0 5 0 Z"
+    );
+
+    const levelBadgeText = document.createElementNS(svgNamespace, "text");
+    levelBadgeText.classList.add("levelBadgeText");
+    levelBadgeText.setAttribute("x", "20");
+    levelBadgeText.setAttribute("y", "13");
+    levelBadgeText.setAttribute("text-anchor", "middle");
+
+    const levelBadgePrefix = document.createElementNS(svgNamespace, "tspan");
+    levelBadgePrefix.classList.add("levelBadgePrefix");
+    levelBadgePrefix.textContent = "Lv.";
+
+    const levelBadgeValue = document.createElementNS(svgNamespace, "tspan");
+    levelBadgeValue.classList.add("levelBadgeValue");
+    levelBadgeValue.textContent = String.fromCharCode(0xFF10 + Number(level));
+
+    levelBadgeText.append(levelBadgePrefix, levelBadgeValue);
+    levelBadge.append(levelBadgeShape, levelBadgeText);
 
     const label = document.createElement("div");
     label.className = "label";
@@ -431,7 +498,7 @@ function createCards() {
     labelText.append(initial, document.createTextNode(eventName.slice(1)));
     label.appendChild(labelText);
 
-    inner.append(label, foreground, border);
+    inner.append(label, border, levelBadge);
     card.appendChild(inner);
 
     card.addEventListener("click", event => {
@@ -590,9 +657,23 @@ window.addEventListener("load", () => {
   updateFilteredEvents(true);
   createCards();
   bindInteractions();
+
+  const viewport = document.getElementById("viewport");
+  if (screen === "event") {
+    viewport.classList.add("initial-event-ready");
+  }
+
   setScreen(screen);
 
   preloadImages().then(() => {
-    document.getElementById("viewport").style.opacity = 1;
+    viewport.style.opacity = 1;
+
+    if (viewport.classList.contains("initial-event-ready")) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          viewport.classList.remove("initial-event-ready");
+        });
+      });
+    }
   });
 });

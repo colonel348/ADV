@@ -128,6 +128,10 @@ function getBnrBackPath(evt) {
   return getEvtDir(evt) + "/00.タイトル/bnr2.png";
 }
 
+function getBnrPath(evt) {
+  return getEvtDir(evt) + "/00.タイトル/bnr.png";
+}
+
 function getSelPath(evt, cpt) {
   return getEvtDir(evt) + "/00.タイトル/sel.png";
 }
