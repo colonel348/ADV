@@ -70,6 +70,15 @@
   <div id="titleArea">
     <div id="titleText"></div>
   </div>
+  <div id="eventEndDialog" class="eventEndDialog" aria-hidden="true">
+    <div class="eventEndDialogPanel" role="dialog" aria-modal="true" aria-labelledby="eventEndDialogMessage">
+      <p id="eventEndDialogMessage" class="eventEndDialogMessage"></p>
+      <div id="eventEndDialogButtons" class="eventEndDialogButtons">
+        <button id="eventEndCancelBtn" class="eventEndDialogButton eventEndDialogButton-cancel" type="button">キャンセル</button>
+        <button id="eventEndNextBtn" class="eventEndDialogButton eventEndDialogButton-primary" type="button">進む</button>
+      </div>
+    </div>
+  </div>
   <script src="../data/evtData.js"></script>
   <script src="../js/event.js"></script>
 </body>

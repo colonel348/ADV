@@ -23,6 +23,12 @@ const characterNames = {
   SA: "白石杏"
 };
 
+const modeIconMap = {
+  R: "../img/romance-mode.png",
+  S: "../img/serious-mode.png",
+  C: "../img/control-mode.png"
+};
+
 function readSelectionParams() {
   const params = new URLSearchParams(window.location.search);
   const requestedEvtId = (params.get("evtId") || "").trim();
@@ -57,6 +63,10 @@ function preloadImages() {
 
   chrList.forEach(chr => {
     urls.push(getChrSelPath(chr));
+  });
+
+  Object.values(modeIconMap).forEach(url => {
+    urls.push(url);
   });
 
   evtData.forEach(evt => {
@@ -253,11 +263,6 @@ function confirmCharacter() {
 
 function showModeChoices(backgroundDirection = "right") {
   const characterImage = getChrSelPath(chrId);
-  const modeIconMap = {
-    R: "../img/romance-mode.png",
-    S: "../img/serious-mode.png",
-    C: "../img/control-mode.png"
-  };
   const modeLabelMap = {
     R: "恋愛モード",
     S: "本気モード",

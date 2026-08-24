@@ -99,6 +99,97 @@ html, body {
   opacity: 1;
 }
 
+/* =================================================
+ * イベント終了ダイアログ
+ * ================================================= */
+.eventEndDialog {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: rgba(17, 19, 42, 0.58);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.24s ease, visibility 0s linear 0.24s;
+}
+
+.eventEndDialog.show {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.eventEndDialogPanel {
+  width: min(78vw, 720px);
+  padding: clamp(28px, 5vh, 48px) clamp(28px, 5vw, 58px) clamp(24px, 4vh, 38px);
+  box-sizing: border-box;
+  border-radius: 22px;
+  background: rgba(247, 247, 252, 0.98);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  color: #414563;
+  transform: translateY(10px) scale(0.98);
+  transition: transform 0.24s ease;
+}
+
+.eventEndDialog.show .eventEndDialogPanel {
+  transform: translateY(0) scale(1);
+}
+
+.eventEndDialogMessage {
+  margin: 0 0 clamp(26px, 5vh, 46px);
+  text-align: center;
+  font-size: clamp(18px, 2.7vw, 30px);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.eventEndDialogButtons {
+  display: flex;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 24px);
+}
+
+.eventEndDialogButton {
+  width: clamp(160px, 18vw, 210px);
+  max-width: 210px;
+  min-width: 0;
+  flex: 1 1 160px;
+  height: auto;
+  min-height: 43px;
+  padding: 12px 24px;
+  border: 1px solid rgba(70, 74, 99, 0.22);
+  border-radius: 999px;
+  box-shadow: 0 3px 8px rgba(27, 30, 50, 0.2);
+  color: #3e4260;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.eventEndDialogButton:active {
+  transform: scale(0.97);
+}
+
+.eventEndDialogButton-cancel {
+  background: #fff;
+}
+
+.eventEndDialogButton-primary {
+  background: #70e1d2;
+}
+
+.eventEndDialog.is-leaving {
+  pointer-events: none;
+  opacity: 0;
+}
+
 #msgText {
   font-size: 15px;
   line-height: 1.8;

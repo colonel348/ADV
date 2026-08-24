@@ -5,7 +5,7 @@
     { cptId: "2", plcNm: "美術教室", fadeFlg: "0" },
     { cptId: "3", plcNm: "美術教室", fadeFlg: "1" }
   ]},
-
+  
   { evtId: "SA-R2", evtNm: "雨の日の秘密", cpt:[
     { cptId: "1", plcNm: "彰人の家 - 玄関", fadeFlg: "0" },
     { cptId: "2", plcNm: "バスルーム", fadeFlg: "1" },

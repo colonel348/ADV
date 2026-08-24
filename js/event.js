@@ -50,6 +50,10 @@ let aPlaybackSequence = 0;
 
 let autoTimer = null;
 
+let isEventEndDialogOpen = false;
+let eventEndDialogTimer = null;
+let nextEventAtCompletion = null;
+
 let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
@@ -352,6 +356,8 @@ window.addEventListener("load", () => {
   standbyLoopVideo = videoL2;
   
   fade = document.getElementById("fade");
+
+  bindEventEndDialog();
 
   init();
 
@@ -1279,6 +1285,116 @@ function getContinuousAIndex(index) {
 }
 
 /*************************************************
+ * イベント終了ダイアログ
+ *************************************************/
+function getNextEventAtCompletion() {
+
+  const currentPrefix = evtId.substring(0, 4);
+  const currentLevelText = evtId.charAt(4);
+  const currentLevel = Number(currentLevelText);
+
+  if (!currentPrefix || !/^[1-4]$/.test(currentLevelText)) {
+    return null;
+  }
+
+  return evtData
+    .filter(data =>
+      data.evtId.substring(0, 4) === currentPrefix &&
+      /^[1-4]$/.test(data.evtId.charAt(4)) &&
+      Number(data.evtId.charAt(4)) > currentLevel
+    )
+    .sort((a, b) =>
+      Number(a.evtId.charAt(4)) - Number(b.evtId.charAt(4))
+    )[0] || null;
+
+}
+
+function showEventEndDialog(delay = 0) {
+
+  if (isEventEndDialogOpen) return;
+
+  isEventEndDialogOpen = true;
+  isNextReady = false;
+  clearTimeout(autoTimer);
+  clearATextTimer();
+
+  const dialog = document.getElementById("eventEndDialog");
+  const message = document.getElementById("eventEndDialogMessage");
+  const nextButton = document.getElementById("eventEndNextBtn");
+  const controlArea = document.getElementById("controlArea");
+
+  nextEventAtCompletion = getNextEventAtCompletion();
+
+  message.textContent = nextEventAtCompletion
+    ? "次のイベントに進みますか？"
+    : "タイトルに戻りますか？";
+
+  nextButton.textContent = nextEventAtCompletion ? "進む" : "戻る";
+  controlArea.classList.remove("show");
+  document.getElementById("msgArea").style.opacity = 0;
+
+  // 動画を黒フェードで完全に隠してからダイアログを表示する。
+  setFade(true, "B");
+
+  clearTimeout(eventEndDialogTimer);
+  eventEndDialogTimer = setTimeout(() => {
+
+    if (currentVideo) {
+      currentVideo.pause();
+    }
+
+    dialog.classList.remove("is-leaving");
+    dialog.classList.add("show");
+    dialog.setAttribute("aria-hidden", "false");
+
+  }, Math.max(delay, BLACK_FADE_TIME));
+
+}
+
+function moveFromEventEndDialog(targetEvent) {
+
+  const dialog = document.getElementById("eventEndDialog");
+  dialog.classList.add("is-leaving");
+
+  setTimeout(() => {
+
+    if (!targetEvent) {
+      location.href = './select.html?chrId=' + encodeURIComponent(chrId);
+      return;
+    }
+
+    const firstCptId = targetEvent.cpt[0]?.cptId || "1";
+
+    location.href =
+      './select.html?chrId=' + encodeURIComponent(chrId) +
+      '&evtId=' + encodeURIComponent(targetEvent.evtId) +
+      '&cptId=' + encodeURIComponent(firstCptId) +
+      '&autoFlg=' + encodeURIComponent(autoFlg);
+
+  }, 800);
+
+}
+
+function bindEventEndDialog() {
+
+  const cancelButton = document.getElementById("eventEndCancelBtn");
+  const nextButton = document.getElementById("eventEndNextBtn");
+
+  cancelButton.addEventListener("click", event => {
+    event.stopPropagation();
+    moveFromEventEndDialog(
+      evtData.find(data => data.evtId === evtId) || tgtEvtData
+    );
+  });
+
+  nextButton.addEventListener("click", event => {
+    event.stopPropagation();
+    moveFromEventEndDialog(nextEventAtCompletion);
+  });
+
+}
+
+/*************************************************
  * select遷移
  *************************************************/
 function moveSelect(
@@ -1288,20 +1404,19 @@ function moveSelect(
   // 同一イベント内の次チャプターがあればイベント画面を継続します。
   const immediateNextCpt = getImmediateNextCpt();
 
+  // 最終チャプターでは自動遷移せず、遷移先を選択します。
+  if (!immediateNextCpt) {
+    showEventEndDialog(transitionTime);
+    return;
+  }
+
   setFade(true);
 
   document.getElementById("msgArea").style.opacity = 0;
 
-  const nextCpt = getNextCpt();
-
   setTimeout(() => {
 
-    if (immediateNextCpt) {
-      location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&cptId=' + immediateNextCpt.cptId + '&autoFlg=' + autoFlg;
-      return;
-    }
-
-    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
+    location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&cptId=' + immediateNextCpt.cptId + '&autoFlg=' + autoFlg;
 
   }, transitionTime);
 
@@ -2469,15 +2584,30 @@ function playSeamlessMovie(srcA, srcL, movId) {
         return;
       }
 
-      isBusy = false;
+      // 動画が黒フェードの背面で再生されたままにならないよう、
+      // 実再生開始を基準にフェード解除を始める。
+      setFade(false);
 
-      if (waitMovie) {
-        waitMovie = false;
-      } else {
-        nextStep();
-      }
+      setTimeout(() => {
 
-    }, FIRST_A_MSG_DELAY_TIME);
+        if (
+          playbackSequence !== aPlaybackSequence ||
+          currentVideo !== videoA
+        ) {
+          return;
+        }
+
+        isBusy = false;
+
+        if (waitMovie) {
+          waitMovie = false;
+        } else {
+          nextStep();
+        }
+
+      }, FIRST_A_MSG_DELAY_TIME);
+
+    }, BLACK_FADE_TIME);
 
   }, { once: true });
 
@@ -2493,15 +2623,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
     currentVideo = videoA;
 
-    videoA.play().then(() => {
-
-      setTimeout(() => {
-
-        setFade(false);
-
-      }, BLACK_FADE_TIME);
-
-    });
+    videoA.play().catch(() => {});
 
   });
 
@@ -2545,9 +2667,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
         // 黒画面を少し保持してから遷移
         setTimeout(() => {
 
-          videoA.classList.remove("show");
           videoA.pause();
-          videoA.style.display = "none";
 
           currentVideo = null;
           isBusy = false;
