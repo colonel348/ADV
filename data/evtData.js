@@ -1,5 +1,9 @@
 ﻿const evtData = [
 
+  { evtId: "AK-S1", evtNm: "描かれる身体", cpt:[
+    { cptId: "1", plcNm: "RADWEEKEND CAFE", fadeFlg: "0" },
+  ]},
+
   { evtId: "AK-C2", evtNm: "描かれる身体", cpt:[
     { cptId: "1", plcNm: "美術教室", fadeFlg: "1" },
     { cptId: "2", plcNm: "美術教室", fadeFlg: "0" },
