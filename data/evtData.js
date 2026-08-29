@@ -1,7 +1,8 @@
 ﻿const evtData = [
 
   { evtId: "AK-S1", evtNm: "描かれる身体", cpt:[
-    { cptId: "1", plcNm: "RADWEEKEND CAFE", fadeFlg: "0" },
+    { cptId: "1", plcNm: "RADWEEKEND CAFE", fadeFlg: "1" },
+    { cptId: "2", plcNm: "RADWEEKEND CAFE", fadeFlg: "1" },
   ]},
 
   { evtId: "AK-C2", evtNm: "描かれる身体", cpt:[
