@@ -6,9 +6,8 @@
   ]},
 
   { evtId: "AK-C2", evtNm: "描かれる身体", cpt:[
-    { cptId: "1", plcNm: "美術教室", fadeFlg: "1" },
-    { cptId: "2", plcNm: "美術教室", fadeFlg: "0" },
-    { cptId: "3", plcNm: "美術教室", fadeFlg: "1" }
+    { cptId: "1", plcNm: "美術教室", fadeFlg: "0" },
+    { cptId: "2", plcNm: "美術教室", fadeFlg: "1" },
   ]},
 
   { evtId: "SA-R2", evtNm: "雨の日の秘密", cpt:[
