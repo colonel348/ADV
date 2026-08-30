@@ -57,9 +57,9 @@ let nextEventAtCompletion = null;
 let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
-const ACTION_SWITCH_BEFORE = 0.20;
+const ACTION_SWITCH_BEFORE = 0.16;
 // 初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
-const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.50;
+const FIRST_LOOP_FADE_SWITCH_BEFORE = 1.00;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.25;
 // 次L動画play後
@@ -69,6 +69,8 @@ const LOOP_FADE_WAIT = 230;
 const LOOP_FADE_TIME = 500;
 // fade時間
 const BLACK_FADE_TIME = 750;
+// イベント終了時、黒フェード完了後にダイアログ表示まで黒画面を保持する時間
+const EVENT_END_DIALOG_WAIT = 1000;
 
 const AFTER_TITLE_NEXT_EVT_TIME = 200;
 const AFTER_TITLE_BLACK_FADE_TIME = 200;
@@ -1347,7 +1349,10 @@ function showEventEndDialog(delay = 0) {
     dialog.classList.add("show");
     dialog.setAttribute("aria-hidden", "false");
 
-  }, Math.max(delay, BLACK_FADE_TIME));
+  }, Math.max(
+    delay,
+    BLACK_FADE_TIME + EVENT_END_DIALOG_WAIT
+  ));
 
 }
 

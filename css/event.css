@@ -111,7 +111,7 @@ html, body {
   justify-content: center;
   padding: 24px;
   box-sizing: border-box;
-  background: rgba(17, 19, 42, 0.58);
+  background: #000;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.24s ease, visibility 0s linear 0.24s;
