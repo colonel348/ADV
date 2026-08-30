@@ -1,17 +1,15 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: " " },
-    { msgId: "L", msgTxt: " " },
-
+    { msgId: "N", msgTxt: "杏ちゃんのためにも、どんな特訓でもやるよ！　私、弱点をもっと克服したいんだ…っ！" },
+    { msgId: "L", msgTxt: "えっと、東雲くん……？　動じないための特訓って、これから何をするの？" },
   { movId: "evt2" },
-    { msgId: "A", msgTxt: " " },
-    { msgId: "A", msgTxt: " " },
-    { msgId: "L", msgTxt: " " },
-
+    { msgId: "A", msgTxt: "（東雲くん、どうしたんだろう……　上着……今回の練習に邪魔なのかな……？）" },
+    { msgId: "A", msgTxt: "きゃっ……！　待って……っ！なんで服を脱がすの……っ！？" },
+    { msgId: "L", msgTxt: "うぅ……っ、動じないでいるなんて無理だよ……　こんなの……恥ずかしすぎるよ……！" },
   { movId: "evt3" },
-    { msgId: "A", msgTxt: " " },
-    { msgId: "A", msgTxt: " " },
-    { msgId: "L", msgTxt: " " }
-    
+    { msgId: "A", msgTxt: "このまま歌うなんて……　……ひゃうっ……！？あッ……んあぁっ……" },
+    { msgId: "A", msgTxt: "（弱気になっちゃダメだ……っ！　これを乗り越えなきゃ、私……変われない……！）" },
+    { msgId: "L", msgTxt: "♪――っ…、うぅ……っ、♪――っ…！　（身体が変な感じがして……うまく歌えないよ……）" }
+
 ];
