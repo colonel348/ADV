@@ -58,7 +58,7 @@ let isFirstLoopPlay = true;
 
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.16;
-// 初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
+// A→Wと初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
 const FIRST_LOOP_FADE_SWITCH_BEFORE = 1.00;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.25;
@@ -2652,13 +2652,20 @@ function playSeamlessMovie(srcA, srcL, movId) {
     const nextItem =
       currentData[currentIndex + 1];
 
-    const switchBefore =
-      moviePattern === "AL" &&
-      isFirstLoopPlay &&
+    const useEarlyWhiteFade =
       nextItem &&
-      !["B", "W", "N"].includes(nextItem.msgId)
-        ? FIRST_LOOP_FADE_SWITCH_BEFORE
-        : ACTION_SWITCH_BEFORE;
+      (
+        nextItem.msgId === "W" ||
+        (
+          moviePattern === "AL" &&
+          isFirstLoopPlay &&
+          !["B", "W", "N"].includes(nextItem.msgId)
+        )
+      );
+
+    const switchBefore = useEarlyWhiteFade
+      ? FIRST_LOOP_FADE_SWITCH_BEFORE
+      : ACTION_SWITCH_BEFORE;
 
     // 終了直前
     if (remain <= switchBefore) {
