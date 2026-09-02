@@ -4,7 +4,6 @@
     { msgId: "N", msgTxt: "" },
     { msgId: "L", msgTxt: "" },
   { movId: "evt2" },
-    { msgId: "N", msgTxt: "" },
     { msgId: "A", msgTxt: "" },
     { msgId: "A", msgTxt: "" },
     { msgId: "A", msgTxt: "" },
