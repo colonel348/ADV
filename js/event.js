@@ -59,7 +59,7 @@ let isFirstLoopPlay = true;
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.16;
 // A→Wと初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
-const FIRST_LOOP_FADE_SWITCH_BEFORE = 1.00;
+const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.70;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.25;
 // 次L動画play後
