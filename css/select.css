@@ -668,10 +668,19 @@ button { font: inherit; }
   overflow: hidden;
   border-radius: 6px;
   transform-origin: left center;
-  transition: transform .28s ease;
+  transition:
+    transform .28s ease,
+    filter .28s ease;
 }
 
-.card.active .cardInner { transform: scale(1.4); }
+.card:not(.active) .cardInner {
+  filter: brightness(.6);
+}
+
+.card.active .cardInner {
+  transform: scale(1.4);
+  filter: brightness(1);
+}
 
 .cardInner::before {
   content: "";
