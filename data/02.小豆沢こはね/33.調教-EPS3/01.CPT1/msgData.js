@@ -1,9 +1,9 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" }
-
+    { msgId: "N", msgTxt: "あの……やめてください……っ！　服……引っ張らないで……っ" },
+    { msgId: "A", msgTxt: "いや……っ！　待ってください……これ以上は本当に……っ" },
+    { msgId: "A", msgTxt: "（どうしよう……力強くて……　手も足も全然動かせないよ……っ）" },
+    { msgId: "L", msgTxt: "東雲く……ん……私……言うこと聞いたら……っ　……杏ちゃんのこと……助けて…くれる……？" }
 
 ];

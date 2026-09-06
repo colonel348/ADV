@@ -10,8 +10,9 @@
     { cptId: "2", plcNm: "美術教室", fadeFlg: "1" },
   ]},
 
-  { evtId: "AK-C3", evtNm: "描かれる身体", cpt:[
-    { cptId: "1", plcNm: "美術教室", fadeFlg: "1" },
+  { evtId: "AK-C3", evtNm: "約束の代償は", cpt:[
+    { cptId: "1", plcNm: "ライブハウス", fadeFlg: "1" },
+    { cptId: "2", plcNm: "ライブハウス", fadeFlg: "0" },
   ]},
 
   { evtId: "SA-R2", evtNm: "雨の日の秘密", cpt:[
