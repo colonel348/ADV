@@ -30,9 +30,6 @@ let isAfterTitle = false;
 
 let pendingLoop = false;
 
-// Kept for the legacy preloadMovies helper. That helper is no longer invoked.
-const videoCache = {};
-
 let moviePattern = "";
 
 let loopWatchActive = false;
@@ -47,6 +44,8 @@ let isNextReady = false;
 
 let aTextTimer = null;
 let aPlaybackSequence = 0;
+let aPlaybackRetryTimer = null;
+let aPlaybackRetryCleanup = null;
 
 let autoTimer = null;
 
@@ -55,6 +54,7 @@ let eventEndDialogTimer = null;
 let nextEventAtCompletion = null;
 
 let isFirstLoopPlay = true;
+let hasConfiguredWhiteFadePlayed = false;
 
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.16;
@@ -98,7 +98,7 @@ function loadEvent() {
 
     const script = document.createElement("script");
 
-    script.src = getMsgDataPath(tgtEvtData, cptId);
+    script.src = getMsgDataPath(tgtEvtData);
 
     script.onload = () => {
       resolve(window.msgData);
@@ -112,146 +112,63 @@ function loadEvent() {
 }
 
 /*************************************************
- * 動画プリロード
+ * 新動画ファイル名の連番取得
  *************************************************/
-function preloadMovies() {
+function getMovieSequenceNo(targetIndex) {
 
-  currentData.forEach(item => {
+  let activeMovId = "";
+  let sequenceNo = 0;
+  let previousVideoType = "";
 
-    // 動画なし
-    if (
-      !item.movId ||
-      item.movPtn === "N"
-    ) {
-      return;
-    }
+  for (let index = 0; index <= targetIndex; index++) {
+    const item = currentData[index];
 
-    // movIdごとの
-    // パターン取得
-    const pattern =  getMoviePattern(currentData.indexOf(item));
-
-    let sources = [];
-
-    // --------------------
-    // A→L
-    // --------------------
-
-    if (pattern === "AL") {
-
-      if (hasSplitA(currentData.indexOf(item))) {
-
-        sources = [
-          getMoviePath(tgtEvtData, cptId, item.movId, "A1"),
-          getMoviePath(tgtEvtData, cptId, item.movId, "A2"),
-          getMoviePath(tgtEvtData, cptId, item.movId, "L")
-        ];
-
-      } else {
-
-        sources = [
-          getMoviePath(tgtEvtData, cptId, item.movId, "A"),
-          getMoviePath(tgtEvtData, cptId, item.movId, "L")
-        ];
-
+    if ("movId" in item) {
+      if (item.movId !== activeMovId) {
+        activeMovId = item.movId;
+        sequenceNo = 0;
       }
-
+      previousVideoType = "";
+      continue;
     }
 
-    // --------------------
-    // Aのみ
-    // --------------------
-
-    else if (pattern === "A") {
-
-      if (hasSplitA(currentData.indexOf(item))) {
-
-        sources = [
-          getMoviePath(tgtEvtData, cptId, item.movId, "A1"),
-          getMoviePath(tgtEvtData, cptId, item.movId, "A2")
-        ];
-
-      } else {
-
-        sources = [
-          getMoviePath(tgtEvtData, cptId, item.movId, "A")
-        ];
-
+    if (item.msgId === "A" || item.msgId === "L") {
+      if (item.msgId !== previousVideoType) {
+        sequenceNo++;
       }
-
+      previousVideoType = item.msgId;
+    } else {
+      previousVideoType = "";
     }
+  }
 
-    // --------------------
-    // Lのみ
-    // --------------------
+  return sequenceNo;
+}
 
-    else if (pattern === "L") {
+function findNextVideoMessageIndex(startIndex, msgId) {
 
-      sources = [
-        getMoviePath(tgtEvtData, cptId, item.movId, "L")
-      ];
+  for (let index = startIndex + 1; index < currentData.length; index++) {
+    const item = currentData[index];
+    if ("movId" in item) break;
+    if (item.msgId === msgId) return index;
+  }
 
-    }
+  return -1;
+}
 
-    sources.forEach(src => {
+function getMovieSrc(msgIndex, ptn) {
 
-      // 重複防止
-      if (videoCache[src]) return;
+  if (msgIndex < 0) return "";
 
-      const v =
-        document.createElement("video");
+  const movIndex = getCurrentMovItemIndex(msgIndex);
+  const movId = movIndex >= 0 ? currentData[movIndex].movId : "";
 
-      v.src = src;
-
-      v.preload = "auto";
-
-      v.muted = true;
-
-      v.playsInline = true;
-
-      v.setAttribute(
-        "webkit-playsinline",
-        "true"
-      );
-
-      // preload開始
-      v.load();
-
-      // キャッシュ保存
-      videoCache[src] = v;
-
-      // iOS向けwarmup
-      const warmup = () => {
-
-        v.play()
-          .then(() => {
-
-            v.pause();
-
-            v.currentTime = 0;
-
-          })
-          .catch(() => {});
-
-      };
-
-      if (v.readyState >= 1) {
-
-        warmup();
-
-      } else {
-
-        v.addEventListener(
-          "loadedmetadata",
-          warmup,
-          { once: true }
-        );
-
-      }
-
-    });
-
-  });
-
+  return getMoviePath(
+    tgtEvtData,
+    movId,
+    getMovieSequenceNo(msgIndex),
+    ptn
+  );
 }
 
 /*************************************************
@@ -299,13 +216,16 @@ function preloadInitialLoopVideo() {
 
   if (movIndex < 0) return;
 
-  const item = currentData[movIndex];
   const pattern = getMoviePattern(movIndex);
 
   if (pattern === "AL" || pattern === "L") {
+    const targetLIndex = findNextVideoMessageIndex(movIndex, "L");
+
+    if (targetLIndex < 0) return;
+
     // 初回表示前に実表示用L動画の読み込みを開始
     prepareLoopVideos(
-      getMoviePath(tgtEvtData, cptId, item.movId, "L")
+      getMovieSrc(targetLIndex, "L")
     );
   }
 }
@@ -620,32 +540,11 @@ async function init() {
     // 初回だけ1秒待つ
     setTimeout(() => {
 
-      // 直前チャプターと同じ場所ならタイトル演出を省略します。
-      if (shouldSkipInitialTitle()) {
-        showCurrent();
-        return;
-      }
-
-      showTitle(tgtEvtData.cpt[cptIdx].plcNm);
+      showTitle(tgtEvtData.plcNm || "");
 
     }, 500);
 
   }
-
-}
-
-/*************************************************
- * 初期タイトルを省略するか判定
- *************************************************/
-function shouldSkipInitialTitle() {
-
-  const currentCpt = tgtEvtData?.cpt?.[cptIdx];
-  const previousCpt = tgtEvtData?.cpt?.[cptIdx - 1];
-
-  // 先頭チャプター、またはタイトルが異なる場合はタイトルを表示します。
-  if (!currentCpt || !previousCpt) return false;
-
-  return currentCpt.plcNm === previousCpt.plcNm;
 
 }
 
@@ -792,15 +691,18 @@ function nextStep() {
     pendingLoop
   ) {
 
-    if (isFirstLoopPlay) {
+    const movItemIndex =
+      getCurrentMovItemIndex(currentIndex);
 
-      const movItemIndex =
-        getCurrentMovItemIndex(currentIndex);
+    const movId =
+      movItemIndex >= 0
+        ? currentData[movItemIndex].movId
+        : "";
 
-      const movId =
-        movItemIndex >= 0
-          ? currentData[movItemIndex].movId
-          : "";
+    if (
+      isFirstLoopPlay ||
+      shouldUseFirstLoopWhiteFade(movId)
+    ) {
 
       const useWhiteFade =
         startInitialLoopVideo(currentSrcL, movId);
@@ -885,92 +787,6 @@ function findMovIndex(movId) {
   );
 
 }
-
-/*************************************************
- * 次のチャプター取得
- *************************************************/
- function getNextCpt() {
-
-  // 現在evtのindex
-  const evtIndex =
-    evtData.findIndex(
-      v => v.evtId === evtId
-    );
-
-  // 見つからない
-  if (evtIndex === -1) {
-    return null;
-  }
-
-  const currentEvt =
-    evtData[evtIndex];
-
-  // --------------------
-  // 同evt内の次cpt
-  // --------------------
-
-  const nextCpt =
-    currentEvt.cpt.find(
-      v => Number(v.cptId) === Number(cptId) + 1
-    );
-
-  // 次cpt存在
-  if (nextCpt) {
-
-    return {
-      evtId: currentEvt.evtId,
-      cptId: nextCpt.cptId
-    };
-
-  }
-
-  // 現evt先頭cpt
-  const firstCurrentCptId =
-    currentEvt.cpt[0].cptId;
-
-  // --------------------
-  // 次evt確認
-  // --------------------
-
-  const nextEvt =
-    evtData[evtIndex + 1];
-
-  // 次evtなし
-  if (!nextEvt) {
-
-    return {
-      evtId: currentEvt.evtId,
-      cptId: firstCurrentCptId
-    };
-
-  }
-
-  // キャラクターIDとモードを比較
-  const currentPrefix =
-    currentEvt.evtId.substring(0, 4);
-
-  const nextPrefix =
-    nextEvt.evtId.substring(0, 4);
-
-  // 別キャラや別モードなら
-  // 現evt先頭へ戻る
-  if (currentPrefix !== nextPrefix) {
-
-    return {
-      evtId: currentEvt.evtId,
-      cptId: firstCurrentCptId
-    };
-
-  }
-
-  // 次evt先頭cpt
-  return {
-    evtId: nextEvt.evtId,
-    cptId: nextEvt.cpt[0].cptId
-  };
-
-}
-
 
 /*************************************************
  * next icon表示
@@ -1118,14 +934,6 @@ function startAutoNext() {
     const aTextTime =
       getATextTime(aTotal);
 
-    const duration =
-      videoA.duration || 0;
-
-    // 5秒以下：Aメッセージはそのまま
-    if (duration <= 5) {
-      return;
-    }
-
     // 次のAがあるなら進める
     if (aIndex < aTotal) {
 
@@ -1151,30 +959,7 @@ function startAutoNext() {
 
     }
 
-    // 最後のAメッセージ
-    // 10秒以下なら最後まで表示
-    if (duration <= 10) {
-      return;
-    }
-
-    // 10秒超なら最後のAメッセージも一定時間後に消す
-    aTextTimer = setTimeout(() => {
-
-      const nowItem =
-        currentData[currentIndex];
-
-      if (
-        !nowItem ||
-        nowItem.msgId !== "A" ||
-        currentVideo !== videoA
-      ) {
-        return;
-      }
-
-      fadeOutCurrentMessage();
-
-    }, aTextTime);
-
+    // 最後のAメッセージはA動画が切り替わるまで表示し続ける。
     return;
   }
 
@@ -1368,12 +1153,9 @@ function moveFromEventEndDialog(targetEvent) {
       return;
     }
 
-    const firstCptId = targetEvent.cpt[0]?.cptId || "1";
-
     location.href =
       './select.html?chrId=' + encodeURIComponent(chrId) +
       '&evtId=' + encodeURIComponent(targetEvent.evtId) +
-      '&cptId=' + encodeURIComponent(firstCptId) +
       '&autoFlg=' + encodeURIComponent(autoFlg);
 
   }, 800);
@@ -1406,37 +1188,7 @@ function moveSelect(
   transitionTime = BLACK_FADE_TIME
 ) {
 
-  // 同一イベント内の次チャプターがあればイベント画面を継続します。
-  const immediateNextCpt = getImmediateNextCpt();
-
-  // 最終チャプターでは自動遷移せず、遷移先を選択します。
-  if (!immediateNextCpt) {
-    showEventEndDialog(transitionTime);
-    return;
-  }
-
-  setFade(true);
-
-  document.getElementById("msgArea").style.opacity = 0;
-
-  setTimeout(() => {
-
-    location.href = './event.html?chrId=' + chrId + '&evtId=' + evtId + '&cptId=' + immediateNextCpt.cptId + '&autoFlg=' + autoFlg;
-
-  }, transitionTime);
-
-}
-
-/*************************************************
- * 同一イベント内の次チャプターを取得
- *************************************************/
-function getImmediateNextCpt() {
-
-  const currentEvt = evtData.find(data => data.evtId === evtId);
-  if (!currentEvt) return null;
-
-  // 同一イベント内で連番となる次チャプターだけを遷移先にします。
-  return currentEvt.cpt.find(data => Number(data.cptId) === Number(cptId) + 1) || null;
+  showEventEndDialog(transitionTime);
 
 }
 
@@ -1455,17 +1207,17 @@ function moveTitle() {
 }
 
 /*************************************************
- * 現在のチャプターをスキップして選択画面へ戻る
+ * 現在のイベントをスキップして選択画面へ戻る
  *************************************************/
 function moveSkip() {
 
   setFade(true);
   document.getElementById("msgArea").style.opacity = 0;
 
-  const nextCpt = getNextCpt();
+  const nextEvent = getNextEventAtCompletion() || tgtEvtData;
 
   setTimeout(() => {
-    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextCpt.evtId + '&cptId=' + nextCpt.cptId + '&autoFlg=' + autoFlg;
+    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextEvent.evtId + '&autoFlg=' + autoFlg;
   }, BLACK_FADE_TIME);
 
 }
@@ -1524,11 +1276,10 @@ function setFade(show, color = null) {
  *************************************************/
 function shouldUseFirstLoopWhiteFade(movId) {
 
-  const currentCpt = tgtEvtData?.cpt?.[cptIdx];
-
   return (
-    String(currentCpt?.fadeFlg) === "1" &&
-    movId === "evt1"
+    !hasConfiguredWhiteFadePlayed &&
+    String(tgtEvtData?.fadeEvt || "") ===
+    String(movId || "").charAt(3)
   );
 
 }
@@ -1541,6 +1292,7 @@ function startInitialLoopVideo(srcL, movId) {
   isFirstLoopPlay = false;
 
   if (useWhiteFade) {
+    hasConfiguredWhiteFadePlayed = true;
     startFirstLoopDoubleBuffer(srcL);
   } else {
     startLoopDoubleBuffer(srcL);
@@ -1629,82 +1381,6 @@ function getMoviePattern(startIndex) {
 
   return "N";
 
-}
-
-/*************************************************
- * 動画A判定
- *************************************************/
-function hasSplitA(startIndex) {
-
-  let foundA = false;
-  let foundFadeAfterA = false;
-
-  for (let i = startIndex + 1; i < currentData.length; i++) {
-
-    const item = currentData[i];
-
-    if ("movId" in item) break;
-
-    if (item.msgId === "A") {
-
-      if (foundFadeAfterA) {
-        return true;
-      }
-
-      foundA = true;
-    }
-
-    if (
-      foundA &&
-      (item.msgId === "B" || item.msgId === "W"|| item.msgId === "N")
-    ) {
-      foundFadeAfterA = true;
-    }
-
-  }
-
-  return false;
-}
-
-function getAFileType(startIndex, msgIndex) {
-
-  if (!hasSplitA(startIndex)) {
-    return "A";
-  }
-
-  let aNo = 1;
-  let foundA = false;
-  let foundFadeAfterA = false;
-
-  for (let i = startIndex + 1; i <= msgIndex; i++) {
-
-    const item = currentData[i];
-
-    if (item.msgId === "A") {
-
-      if (foundFadeAfterA) {
-        aNo++;
-        foundFadeAfterA = false;
-      }
-
-      foundA = true;
-
-      if (i === msgIndex) {
-        return "A" + aNo;
-      }
-
-    }
-
-    if (
-      foundA &&
-      (item.msgId === "B" || item.msgId === "W"|| item.msgId === "N")
-    ) {
-      foundFadeAfterA = true;
-    }
-
-  }
-
-  return "A1";
 }
 
 function findNextAIndex(startIndex) {
@@ -2231,23 +1907,21 @@ function playMovie(item, aMsgIndex = null) {
       ? aMsgIndex
       : findNextAIndex(movStartIndex);
 
-  const aFileType =
-    targetAIndex >= 0
-      ? getAFileType(movStartIndex, targetAIndex)
-      : "A";
+  const targetLIndex =
+    findNextVideoMessageIndex(movStartIndex, "L");
 
-  const srcA =
-    getMoviePath(tgtEvtData, cptId, movId, aFileType);
-
-  const srcL =
-    getMoviePath(tgtEvtData, cptId, movId, "L");
+  const srcA = getMovieSrc(targetAIndex, "A");
+  const srcL = getMovieSrc(targetLIndex, "L");
 
   currentSrcL = srcL;
 
   // Lのみ
   if (moviePattern === "L") {
 
-    if (isFirstLoopPlay) {
+    if (
+      isFirstLoopPlay ||
+      shouldUseFirstLoopWhiteFade(movId)
+    ) {
 
       prepareLoopVideos(srcL);
 
@@ -2541,6 +2215,84 @@ function switchLoopVideo(srcL) {
 }
 
 /*************************************************
+ * A動画再生（読込待ち・一時的なplay失敗時は再試行）
+ *************************************************/
+function startActionVideoPlayback(playbackSequence) {
+
+  if (aPlaybackRetryCleanup) {
+    aPlaybackRetryCleanup();
+  }
+
+  let playPending = false;
+  let playbackStarted = false;
+  let retryCount = 0;
+
+  const cleanup = () => {
+    clearTimeout(aPlaybackRetryTimer);
+    aPlaybackRetryTimer = null;
+    videoA.removeEventListener("loadeddata", retryWhenReady);
+    videoA.removeEventListener("canplay", retryWhenReady);
+    if (aPlaybackRetryCleanup === cleanup) {
+      aPlaybackRetryCleanup = null;
+    }
+  };
+
+  const attemptPlay = () => {
+
+    if (
+      playbackStarted ||
+      playPending ||
+      playbackSequence !== aPlaybackSequence ||
+      currentVideo !== videoA
+    ) {
+      if (playbackSequence !== aPlaybackSequence) cleanup();
+      return;
+    }
+
+    playPending = true;
+
+    const playPromise = videoA.play();
+
+    if (!playPromise || typeof playPromise.then !== "function") {
+      playPending = false;
+      return;
+    }
+
+    playPromise
+      .then(() => {
+        playbackStarted = true;
+        playPending = false;
+        cleanup();
+      })
+      .catch(() => {
+        playPending = false;
+
+        if (playbackSequence !== aPlaybackSequence) {
+          cleanup();
+          return;
+        }
+
+        retryCount++;
+        if (retryCount > 15) return;
+
+        clearTimeout(aPlaybackRetryTimer);
+        aPlaybackRetryTimer = setTimeout(attemptPlay, 200);
+      });
+  };
+
+  function retryWhenReady() {
+    retryCount = 0;
+    attemptPlay();
+  }
+
+  videoA.addEventListener("loadeddata", retryWhenReady);
+  videoA.addEventListener("canplay", retryWhenReady);
+  aPlaybackRetryCleanup = cleanup;
+  attemptPlay();
+
+}
+
+/*************************************************
  * 動画シームレス再生
  *************************************************/
 function playSeamlessMovie(srcA, srcL, movId) {
@@ -2628,7 +2380,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
     currentVideo = videoA;
 
-    videoA.play().catch(() => {});
+    startActionVideoPlayback(playbackSequence);
 
   });
 
@@ -2770,7 +2522,10 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
         } else {
 
-          if (isFirstLoopPlay) {
+          if (
+            isFirstLoopPlay ||
+            shouldUseFirstLoopWhiteFade(movId)
+          ) {
 
             const useWhiteFade =
               shouldUseFirstLoopWhiteFade(movId);

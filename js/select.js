@@ -37,7 +37,6 @@ function readSelectionParams() {
   autoFlg = params.get("autoFlg") || "0";
   evtId = requestedEvtId;
   chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
-  cptId = params.get("cptId") || "1";
 
   const requestedEvent = evtData.find(evt => evt.evtId === requestedEvtId);
 
@@ -45,13 +44,10 @@ function readSelectionParams() {
     tgtEvtData = requestedEvent;
     chrId = requestedEvent.evtId.substring(0, 2);
     modeKbn = requestedEvent.evtId.charAt(3);
-    cptIdx = requestedEvent.cpt.findIndex(cpt => String(cpt.cptId) === String(cptId));
-    if (cptIdx < 0) cptIdx = 0;
     screen = "event";
   } else {
     tgtEvtData = null;
     modeKbn = "R";
-    cptIdx = 0;
     screen = "character";
   }
 
@@ -71,7 +67,7 @@ function preloadImages() {
 
   evtData.forEach(evt => {
     urls.push(getBnrPath(evt));
-    urls.push(getSelPath(evt, evt.cpt[0]));
+    urls.push(getSelPath(evt));
   });
 
   return Promise.all(urls.map(url => new Promise(resolve => {
@@ -333,7 +329,6 @@ function selectMode(mode) {
   modeKbn = mode;
   evtId = "";
   evtIdx = 0;
-  cptIdx = 0;
   updateFilteredEvents(false);
   createCards();
 
@@ -349,10 +344,7 @@ function selectMode(mode) {
 
     // 黒画面の裏側で③へ切り替える
     screenTransitionTimer = setTimeout(async () => {
-      const eventBackground = getSelPath(
-        filteredEvtData[evtIdx],
-        filteredEvtData[evtIdx].cpt[cptIdx]
-      );
+      const eventBackground = getSelPath(filteredEvtData[evtIdx]);
 
       // 前のキャラ画像が一瞬見えないよう、黒画面の裏で描画準備を待つ
       await waitForImage(eventBackground);
@@ -520,7 +512,6 @@ function createCards() {
       event.stopPropagation();
       if (evtIdx === index) return;
       evtIdx = index;
-      cptIdx = 0;
       updateEventSelection(true, "left");
     });
 
@@ -558,7 +549,7 @@ function updateEventSelection(
   }
 
   swapBackground(
-    getSelPath(tgtEvtData, tgtEvtData.cpt[cptIdx]),
+    getSelPath(tgtEvtData),
     direction,
     backgroundAnimated
   );
@@ -585,10 +576,8 @@ function goToEvent() {
   }, 120);
 
   setTimeout(() => {
-    const targetCpt = tgtEvtData.cpt[0];
     location.href = "./event.html?chrId=" + chrId +
       "&evtId=" + tgtEvtData.evtId +
-      "&cptId=" + targetCpt.cptId +
       "&autoFlg=" + autoFlg +
       "&debugMovId=";
   }, 520);
@@ -609,11 +598,9 @@ function handleSwipe(dx, dy) {
   if (Math.abs(dy) > 40) {
     if (dy > 0 && evtIdx > 0) {
       evtIdx--;
-      cptIdx = 0;
       updateEventSelection(true, "right");
     } else if (dy < 0 && evtIdx < filteredEvtData.length - 1) {
       evtIdx++;
-      cptIdx = 0;
       updateEventSelection(true, "left");
     }
   }

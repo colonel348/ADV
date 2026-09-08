@@ -4,7 +4,6 @@
 var evtId;
 var chrId;
 var evtIdx;
-var cptIdx;
 var autoFlg;
 var modeKbn;
 var tgtEvtData;
@@ -16,12 +15,6 @@ var debugMovId;
 function setParam() {
 
     var urlParams = new URLSearchParams(window.location.search);
-
-    if (urlParams.has('cptId')) {
-        cptId = String(urlParams.get('cptId'));
-    } else {
-        cptId = '1';
-    }
 
     if (urlParams.has('chrId')) {
         chrId = String(urlParams.get('chrId'));
@@ -49,9 +42,7 @@ function setParam() {
 
     modeKbn = evtId.substring(3, 4);
 
-    tgtEvtData = evtData.filter(evt => evt.evtId === evtId)[0];
-
-    cptIdx = tgtEvtData.cpt.findIndex(v => v.cptId === cptId);
+    tgtEvtData = evtData.find(evt => evt.evtId === evtId);
 
 }
 
@@ -69,9 +60,9 @@ function sleepSetTimeout(ms, callback) {
  *************************************************/
 function getEvtDir(evt) {
   const chrMap = {
-    FF: "01.ホタル",
-    AK: "02.小豆沢こはね",
-    SA: "03.白石杏"
+    FF: "11.ホタル",
+    AK: "12.小豆沢こはね",
+    SA: "13.白石杏"
   };
 
   const modeMap = {
@@ -89,18 +80,11 @@ function getEvtDir(evt) {
   return "../data/" + chr + "/" + eventDir;
 }
 
-function getCptDir(evt, cptId) {
-  const cptNo = String(cptId);
-  const folderNo = cptNo.padStart(2, "0");
-
-  return getEvtDir(evt) + "/" + folderNo + ".CPT" + cptNo;
-}
-
 function getChrDir(chrId) {
   const chrMap = {
-    FF: "01.ホタル",
-    AK: "02.小豆沢こはね",
-    SA: "03.白石杏"
+    FF: "11.ホタル",
+    AK: "12.小豆沢こはね",
+    SA: "13.白石杏"
   };
 
   return "../data/" + chrMap[chrId];
@@ -110,26 +94,19 @@ function getChrSelPath(chrId) {
   return getChrDir(chrId) + "/00.選択/sel.png";
 }
 
-function getBnrFrontPath(evt) {
-  return getEvtDir(evt) + "/00.タイトル/bnr1.png";
-}
-
-function getBnrBackPath(evt) {
-  return getEvtDir(evt) + "/00.タイトル/bnr2.png";
-}
-
 function getBnrPath(evt) {
-  return getEvtDir(evt) + "/00.タイトル/bnr.png";
+  return getEvtDir(evt) + "/02.sel-B.png";
 }
 
-function getSelPath(evt, cpt) {
-  return getEvtDir(evt) + "/00.タイトル/sel.png";
+function getSelPath(evt) {
+  return getEvtDir(evt) + "/01.sel-M.png";
 }
 
-function getMsgDataPath(evt, cptId) {
-  return getCptDir(evt, cptId) + "/msgData.js";
+function getMsgDataPath(evt) {
+  return getEvtDir(evt) + "/31.msgDat.js";
 }
 
-function getMoviePath(evt, cptId, movId, ptn) {
-  return getCptDir(evt, cptId) + "/" + movId + "-" + ptn + ".mp4";
+function getMoviePath(evt, movId, sequenceNo, ptn) {
+  const movNo = String(movId || "").charAt(3);
+  return getEvtDir(evt) + "/" + movNo + sequenceNo + ".evt-" + ptn + ".mp4";
 }
