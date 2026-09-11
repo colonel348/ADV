@@ -99,6 +99,14 @@ html, body {
   opacity: 1;
 }
 
+#fade.first-loop-black-fade {
+  transition-duration: 1.5s;
+}
+
+#fade.final-video-black-fade {
+  transition-duration: 1.5s;
+}
+
 /* =================================================
  * イベント終了ダイアログ
  * ================================================= */

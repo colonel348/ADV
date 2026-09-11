@@ -53,13 +53,14 @@ let isEventEndDialogOpen = false;
 let eventEndDialogTimer = null;
 let nextEventAtCompletion = null;
 
-let isFirstLoopPlay = true;
 let hasConfiguredWhiteFadePlayed = false;
 
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.16;
+// 最後ではないAのみ動画は、終了前に黒フェードが完了するよう少し早める
+const ACTION_ONLY_FADE_BEFORE = 0.55;
 // A→Wと初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
-const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.65;
+const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.60;
 // L動画終了何秒前に次を開始するか
 const LOOP_SWITCH_BEFORE = 0.25;
 // 次L動画play後
@@ -69,6 +70,11 @@ const LOOP_FADE_WAIT = 230;
 const LOOP_FADE_TIME = 500;
 // fade時間
 const BLACK_FADE_TIME = 750;
+// 初回L動画を黒画面から表示する際のフェード時間
+const FIRST_LOOP_BLACK_FADE_TIME = 1500;
+// 最後のA動画は終了前から黒フェードを開始する
+const FINAL_ACTION_FADE_BEFORE = 2;
+const FINAL_VIDEO_FADE_TIME = 1500;
 // イベント終了時、黒フェード完了後にダイアログ表示まで黒画面を保持する時間
 const EVENT_END_DIALOG_WAIT = 1000;
 
@@ -80,6 +86,8 @@ const NEXT_EVT_TIME = 500;
 const NEXT_TEXT_TIME = 4000;
 // メッセージのみの自動送り時間
 const NEXT_MSG_TEXT_TIME = 3000;
+// Nメッセージ表示後、次へ進むまで追加で待つ時間
+const N_NEXT_WAIT_TIME = 800;
 // タイトル後の時間
 const NEXT_TITLE_TIME = 1200;
 // 次のメッセージ遅らせ
@@ -513,13 +521,16 @@ async function init() {
 
       currentIndex = movIndex;
 
-      // evt1以外からデバッグ開始時は
-      // 初回L演出をスキップ
-      if (debugMovId !== "evt1") {
-
-        isFirstLoopPlay = false;
-
-      }
+      // 出現順指定で途中のブロックへ移動した場合、スキップした範囲の
+      // 白フェードを再実行しない。
+      const fadeMovNo = String(tgtEvtData?.fadeEvt || "");
+      hasConfiguredWhiteFadePlayed = Boolean(fadeMovNo) &&
+        currentData
+          .slice(0, movIndex)
+          .some(item =>
+            item.movId &&
+            String(item.movId).charAt(3) === fadeMovNo
+          );
 
     }
 
@@ -620,6 +631,11 @@ function nextStep() {
   const currentItem =
     currentData[currentIndex];
 
+  const isFinalLoopClick =
+    currentItem?.msgId === "L" &&
+    currentVideo !== videoA &&
+    currentIndex === currentData.length - 1;
+
   if (!isAutoMode || !currentItem.movId) {
 
     fadeOutCurrentMessage();
@@ -699,8 +715,11 @@ function nextStep() {
         ? currentData[movItemIndex].movId
         : "";
 
+    const isFirstMovIdBlock =
+      isFirstBlockAfterMovIdChange(movItemIndex);
+
     if (
-      isFirstLoopPlay ||
+      isFirstMovIdBlock ||
       shouldUseFirstLoopWhiteFade(movId)
     ) {
 
@@ -711,7 +730,9 @@ function nextStep() {
 
       setTimeout(() => {
 
-        if (!useWhiteFade) {
+        if (!useWhiteFade && moviePattern === "L" && isFirstMovIdBlock) {
+          hideFirstLoopBlackFade();
+        } else if (!useWhiteFade) {
           setFade(false);
         }
 
@@ -765,6 +786,11 @@ function nextStep() {
 
   if (currentIndex >= currentData.length) {
 
+    if (isFinalLoopClick) {
+      startFinalVideoBlackFade(currentVideo);
+      return;
+    }
+
     // 画面遷移
     moveSelect();
 
@@ -778,13 +804,32 @@ function nextStep() {
 
 /*************************************************
  * movId位置取得
+ * evt2     : evt2の1つ目
+ * evt2-2   : evt2の2つ目
  *************************************************/
-function findMovIndex(movId) {
+function findMovIndex(debugMovValue) {
 
-  return currentData.findIndex(
-    item =>
-      item.movId === movId
-  );
+  const value = String(debugMovValue || "");
+  const occurrenceMatch = value.match(/^(.*)-([1-9]\d*)$/);
+  const movId = occurrenceMatch
+    ? occurrenceMatch[1]
+    : value;
+  const targetOccurrence = occurrenceMatch
+    ? Number(occurrenceMatch[2])
+    : 1;
+
+  let occurrence = 0;
+
+  return currentData.findIndex(item => {
+
+    if (item.movId !== movId) {
+      return false;
+    }
+
+    occurrence++;
+    return occurrence === targetOccurrence;
+
+  });
 
 }
 
@@ -856,16 +901,16 @@ function isWaitMessage() {
   const nextItem =
     currentData[currentIndex + 1];
 
-  // 最終メッセージ
-  if (!nextItem) {
-    return currentItem && currentItem.msgId === "L";
-  }
-  // 次が動画
-  if ("movId" in nextItem) {
-      return true;
+  // L動画ループ上の最後のLメッセージだけクリック待ちにする。
+  if (
+    !currentItem ||
+    currentItem.msgId !== "L" ||
+    currentVideo === videoA
+  ) {
+    return false;
   }
 
-  return false;
+  return !nextItem || "movId" in nextItem;
 
 }
 
@@ -1006,9 +1051,13 @@ function startAutoNext() {
  *************************************************/
 function getMessageWaitTime(item) {
 
+  if (item && item.msgId === "N") {
+    return NEXT_MSG_TEXT_TIME + N_NEXT_WAIT_TIME;
+  }
+
   if (
     item &&
-    ["N", "B", "W"].includes(item.msgId)
+    ["B", "W"].includes(item.msgId)
   ) {
     return NEXT_MSG_TEXT_TIME;
   }
@@ -1289,8 +1338,6 @@ function startInitialLoopVideo(srcL, movId) {
   const useWhiteFade =
     shouldUseFirstLoopWhiteFade(movId);
 
-  isFirstLoopPlay = false;
-
   if (useWhiteFade) {
     hasConfiguredWhiteFadePlayed = true;
     startFirstLoopDoubleBuffer(srcL);
@@ -1413,6 +1460,31 @@ function getCurrentMovItemIndex(index) {
   return -1;
 }
 
+// movIdが別の値へ切り替わった直後の最初のブロックかを判定する。
+// 同じmovIdが連続する後続ブロックは初回として扱わない。
+function isFirstBlockAfterMovIdChange(movItemIndex) {
+
+  if (
+    movItemIndex < 0 ||
+    !currentData[movItemIndex] ||
+    !("movId" in currentData[movItemIndex])
+  ) {
+    return false;
+  }
+
+  const movId = currentData[movItemIndex].movId;
+
+  for (let i = movItemIndex - 1; i >= 0; i--) {
+
+    if ("movId" in currentData[i]) {
+      return currentData[i].movId !== movId;
+    }
+
+  }
+
+  return true;
+}
+
 /*************************************************
  * 現在行表示
  *************************************************/
@@ -1460,16 +1532,24 @@ function showCurrent() {
           msgId === "L"
         ) {
 
+          const movItemIndex =
+            getCurrentMovItemIndex(currentIndex);
+
           const isFirstLoopOnly =
             msgId === "L" &&
             moviePattern === "L" &&
-            isFirstLoopPlay;
+            (
+              isFirstBlockAfterMovIdChange(movItemIndex) ||
+              shouldUseFirstLoopWhiteFade(waitItem?.movId)
+            );
 
           delayMessage = true;
 
           playMovie(waitItem, currentIndex);
 
-          if (isFirstLoopOnly) {
+          // Aメッセージは、A動画のフレームが実際に表示されたことを
+          // 確認した後にshowCurrentを再実行して表示する。
+          if (msgId === "A" || isFirstLoopOnly) {
             return;
           }
 
@@ -1902,6 +1982,9 @@ function playMovie(item, aMsgIndex = null) {
   const movStartIndex =
     getCurrentMovItemIndex(currentIndex);
 
+  const isFirstMovIdBlock =
+    isFirstBlockAfterMovIdChange(movStartIndex);
+
   const targetAIndex =
     aMsgIndex !== null
       ? aMsgIndex
@@ -1919,7 +2002,7 @@ function playMovie(item, aMsgIndex = null) {
   if (moviePattern === "L") {
 
     if (
-      isFirstLoopPlay ||
+      isFirstMovIdBlock ||
       shouldUseFirstLoopWhiteFade(movId)
     ) {
 
@@ -1931,7 +2014,7 @@ function playMovie(item, aMsgIndex = null) {
       setTimeout(() => {
 
         if (!useWhiteFade) {
-          setFade(false);
+          hideFirstLoopBlackFade();
         }
 
         isBusy = false;
@@ -2292,12 +2375,58 @@ function startActionVideoPlayback(playbackSequence) {
 
 }
 
+function hideFirstLoopBlackFade() {
+
+  fade.classList.add("first-loop-black-fade");
+  void fade.offsetWidth;
+  setFade(false);
+
+  setTimeout(() => {
+    fade.classList.remove("first-loop-black-fade");
+  }, FIRST_LOOP_BLACK_FADE_TIME);
+
+}
+
+function startFinalVideoBlackFade(targetVideo) {
+
+  fade.classList.add("final-video-black-fade");
+  void fade.offsetWidth;
+  setFade(true, "B");
+
+  setTimeout(() => {
+
+    if (targetVideo) {
+      targetVideo.pause();
+    }
+
+    currentVideo = null;
+    isBusy = false;
+    fade.classList.remove("final-video-black-fade");
+
+  }, FINAL_VIDEO_FADE_TIME);
+
+  moveSelect(
+    FINAL_VIDEO_FADE_TIME + EVENT_END_DIALOG_WAIT
+  );
+
+}
+
 /*************************************************
  * 動画シームレス再生
  *************************************************/
 function playSeamlessMovie(srcA, srcL, movId) {
 
   const playbackSequence = ++aPlaybackSequence;
+
+  const actionMovItemIndex =
+    getCurrentMovItemIndex(currentIndex);
+
+  const isFinalActionVideo =
+    moviePattern === "A" &&
+    currentData[currentData.length - 1]?.msgId === "A" &&
+    !currentData.slice(actionMovItemIndex + 1).some(item =>
+      "movId" in item
+    );
 
   videoA.classList.remove("show");
   videoL1.classList.remove("show");
@@ -2328,11 +2457,16 @@ function playSeamlessMovie(srcA, srcL, movId) {
   // preload
   videoA.load();
 
-  // A動画が実際に再生を開始してから、最初のメッセージ表示を待つ。
-  // Safariなどで読み込みに時間がかかっても、動画より先には表示しない。
+  // playingだけではSafariで映像フレームの描画前に通知される場合がある。
+  // 実際のフレーム描画（非対応環境ではcurrentTimeの進行）を確認してから
+  // 黒フェード解除と最初のメッセージ表示を開始する。
   videoA.addEventListener("playing", () => {
 
-    setTimeout(() => {
+    let playbackConfirmed = false;
+
+    const onPlaybackConfirmed = () => {
+
+      if (playbackConfirmed) return;
 
       if (
         playbackSequence !== aPlaybackSequence ||
@@ -2341,9 +2475,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
         return;
       }
 
-      // 動画が黒フェードの背面で再生されたままにならないよう、
-      // 実再生開始を基準にフェード解除を始める。
-      setFade(false);
+      playbackConfirmed = true;
 
       setTimeout(() => {
 
@@ -2354,17 +2486,64 @@ function playSeamlessMovie(srcA, srcL, movId) {
           return;
         }
 
-        isBusy = false;
+        setFade(false);
 
-        if (waitMovie) {
-          waitMovie = false;
-        } else {
-          nextStep();
-        }
+        setTimeout(() => {
 
-      }, FIRST_A_MSG_DELAY_TIME);
+          if (
+            playbackSequence !== aPlaybackSequence ||
+            currentVideo !== videoA
+          ) {
+            return;
+          }
 
-    }, BLACK_FADE_TIME);
+          isBusy = false;
+
+          if (waitMovie) {
+            waitMovie = false;
+            showCurrent();
+          } else {
+            nextStep();
+          }
+
+        }, FIRST_A_MSG_DELAY_TIME);
+
+      }, BLACK_FADE_TIME);
+
+    };
+
+    if (typeof videoA.requestVideoFrameCallback === "function") {
+
+      videoA.requestVideoFrameCallback(() => {
+        onPlaybackConfirmed();
+      });
+
+      return;
+    }
+
+    const waitForCurrentTime = () => {
+
+      if (
+        playbackSequence !== aPlaybackSequence ||
+        currentVideo !== videoA
+      ) {
+        return;
+      }
+
+      if (
+        !videoA.paused &&
+        videoA.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        videoA.currentTime > 0.03
+      ) {
+        onPlaybackConfirmed();
+        return;
+      }
+
+      requestAnimationFrame(waitForCurrentTime);
+
+    };
+
+    waitForCurrentTime();
 
   }, { once: true });
 
@@ -2410,17 +2589,32 @@ function playSeamlessMovie(srcA, srcL, movId) {
         nextItem.msgId === "W" ||
         (
           moviePattern === "AL" &&
-          isFirstLoopPlay &&
+          shouldUseFirstLoopWhiteFade(movId) &&
           !["B", "W", "N"].includes(nextItem.msgId)
         )
       );
 
     const switchBefore = useEarlyWhiteFade
       ? FIRST_LOOP_FADE_SWITCH_BEFORE
-      : ACTION_SWITCH_BEFORE;
+      : isFinalActionVideo
+        ? FINAL_ACTION_FADE_BEFORE
+        : moviePattern === "A"
+          ? ACTION_ONLY_FADE_BEFORE
+          : ACTION_SWITCH_BEFORE;
 
     // 終了直前
     if (remain <= switchBefore) {
+
+      // イベント末尾のA動画は、停止フレームが見える前に
+      // 終了2秒前から1.5秒かけて黒で覆う。
+      if (isFinalActionVideo) {
+
+        currentIndex = currentData.length;
+        clearATextTimer();
+        startFinalVideoBlackFade(videoA);
+
+        return;
+      }
 
       // 最後のAメッセージでイベント終了
       if (!nextItem) {
@@ -2522,8 +2716,11 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
         } else {
 
+          const movStartIndex =
+            getCurrentMovItemIndex(currentIndex);
+
           if (
-            isFirstLoopPlay ||
+            isFirstBlockAfterMovIdChange(movStartIndex) ||
             shouldUseFirstLoopWhiteFade(movId)
           ) {
 
@@ -2674,7 +2871,15 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
             isBusy = false;
 
-            refreshNextIcon();
+            // 動画終了時点で未表示の連続Aメッセージがあっても、
+            // クリック待ちにはせず次の動画またはイベント終了へ進む。
+            while (
+              currentData[currentIndex + 1]?.msgId === "A"
+            ) {
+              currentIndex++;
+            }
+
+            nextStep();
 
           }, BLACK_FADE_TIME);
 
