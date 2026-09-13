@@ -6,7 +6,7 @@
 
   { evtId: "AK-C3", evtNm: "約束の代償は", fadeEvt: "1", plcNm: "ライブハウス"},
 
-  { evtId: "SA-S1", evtNm: "", fadeEvt: "1", plcNm: "ダンススタジオ"},
+  { evtId: "SA-S1", evtNm: "", fadeEvt: "2", plcNm: "ダンススタジオ"},
   
   { evtId: "SA-R2", evtNm: "雨の日の秘密", fadeEvt: "1", plcNm: "バスルーム"},
 
