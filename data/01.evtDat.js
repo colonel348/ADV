@@ -1,5 +1,7 @@
 ﻿const evtData = [
 
+  { evtId: "FF-R3", evtNm: "約束の代償は", fadeEvt: "2", plcNm: "ピノコニー - 屋上"},
+
   { evtId: "AK-S1", evtNm: "始まりの特訓", fadeEvt: "1", plcNm: "WEEKEND GARAGE"},
 
   { evtId: "AK-C2", evtNm: "描かれる身体", fadeEvt: "2", plcNm: "美術教室"},
