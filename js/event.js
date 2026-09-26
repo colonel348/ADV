@@ -33,6 +33,7 @@ let pendingLoop = false;
 let moviePattern = "";
 
 let loopWatchActive = false;
+let loopPlaybackSequence = 0;
 
 let waitMovie = false;
 let waitItem = null;
@@ -192,6 +193,7 @@ function prepareLoopVideos(srcL) {
   if (video.dataset.loopSrc === srcL) return;
 
   video.pause();
+  delete video.dataset.loopWarmed;
   video.dataset.loopSrc = srcL;
   video.src = srcL;
   video.preload = "auto";
@@ -207,10 +209,101 @@ function prepareStandbyLoopVideo(srcL) {
   if (video.dataset.loopSrc === srcL) return;
 
   video.pause();
+  delete video.dataset.loopWarmed;
   video.dataset.loopSrc = srcL;
   video.src = srcL;
   video.preload = "auto";
   video.load();
+}
+
+/*************************************************
+ * 次に使うA動画の先読み
+ *************************************************/
+function prepareActionVideo(srcA) {
+
+  if (
+    !srcA ||
+    (currentVideo === videoA && !videoA.ended)
+  ) {
+    return;
+  }
+  if (videoA.dataset.actionSrc === srcA) return;
+
+  videoA.pause();
+  videoA.dataset.actionSrc = srcA;
+  videoA.src = srcA;
+  videoA.preload = "auto";
+  videoA.load();
+
+}
+
+function findNextMovIndexWithVideo(startIndex, msgId) {
+
+  for (let index = startIndex + 1; index < currentData.length; index++) {
+
+    if (!("movId" in currentData[index])) continue;
+
+    if (findNextVideoMessageIndex(index, msgId) >= 0) {
+      return index;
+    }
+
+  }
+
+  return -1;
+}
+
+function preloadNextActionVideo(startMovIndex) {
+
+  const nextMovIndex =
+    findNextMovIndexWithVideo(startMovIndex, "A");
+
+  if (nextMovIndex < 0) return;
+
+  const nextAIndex =
+    findNextVideoMessageIndex(nextMovIndex, "A");
+
+  prepareActionVideo(
+    getMovieSrc(nextAIndex, "A")
+  );
+
+}
+
+function stopLoopVideosForPreload() {
+
+  loopWatchActive = false;
+  loopPlaybackSequence++;
+
+  videoL1.pause();
+  videoL2.pause();
+  videoL1.classList.remove("show");
+  videoL2.classList.remove("show");
+  videoL1.style.display = "none";
+  videoL2.style.display = "none";
+
+  if (currentVideo === videoL1 || currentVideo === videoL2) {
+    currentVideo = null;
+  }
+
+}
+
+function preloadMovBlockMedia(movIndex, preloadLoop) {
+
+  const nextAIndex = findNextVideoMessageIndex(movIndex, "A");
+
+  if (nextAIndex >= 0) {
+    prepareActionVideo(getMovieSrc(nextAIndex, "A"));
+  }
+
+  if (!preloadLoop) return;
+
+  const nextLIndex = findNextVideoMessageIndex(movIndex, "L");
+
+  if (nextLIndex < 0) return;
+
+  stopLoopVideosForPreload();
+  prepareLoopVideos(getMovieSrc(nextLIndex, "L"));
+  warmupLoopVideo(activeLoopVideo);
+
 }
 
 /*************************************************
@@ -225,6 +318,12 @@ function preloadInitialLoopVideo() {
   if (movIndex < 0) return;
 
   const pattern = getMoviePattern(movIndex);
+
+  const targetAIndex = findNextVideoMessageIndex(movIndex, "A");
+
+  if (targetAIndex >= 0) {
+    prepareActionVideo(getMovieSrc(targetAIndex, "A"));
+  }
 
   if (pattern === "AL" || pattern === "L") {
     const targetLIndex = findNextVideoMessageIndex(movIndex, "L");
@@ -1609,6 +1708,13 @@ function showCurrent() {
       const nextItem = currentData[currentIndex + 1];
       const nextMsgId = nextItem.msgId;
 
+      // 次ブロックのAは空いているvideoAへ先読みする。
+      // Lのみの開始前にNがある場合は、黒画面中にL要素も実再生準備する。
+      preloadMovBlockMedia(
+        currentIndex,
+        nextMsgId === "N" && moviePattern === "L"
+      );
+
       // 次がフェードなら動画再生しない
       if (nextMsgId === "N" || nextMsgId === "B" || nextMsgId === "W") {
 
@@ -2109,6 +2215,9 @@ function startFirstLoopDoubleBuffer(srcL) {
  *************************************************/
 function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
+  loopWatchActive = false;
+  const loopSequence = ++loopPlaybackSequence;
+
   // A再生開始時に読み込んだ実表示用のL動画をそのまま使う。
   // ここでsrc設定とload()をやり直すと、iOS Safariではデコード待ちが発生する。
   prepareLoopVideos(srcL);
@@ -2172,14 +2281,14 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
     prepareStandbyLoopVideo(srcL);
   }, 300);
 
-  watchLoopSeamless(srcL);
+  watchLoopSeamless(srcL, loopSequence);
 
 }
 
 /*************************************************
  * L動画シームレス監視
  *************************************************/
-function watchLoopSeamless(srcL) {
+function watchLoopSeamless(srcL, loopSequence) {
 
   if (loopWatchActive) {
     return;
@@ -2188,6 +2297,13 @@ function watchLoopSeamless(srcL) {
   loopWatchActive = true;
 
   const watch = () => {
+
+    if (
+      !loopWatchActive ||
+      loopSequence !== loopPlaybackSequence
+    ) {
+      return;
+    }
 
     if (!activeLoopVideo.duration) {
 
@@ -2204,7 +2320,7 @@ function watchLoopSeamless(srcL) {
     // 終了直前
     if (remain <= LOOP_SWITCH_BEFORE) {
 
-      switchLoopVideo(srcL);
+      switchLoopVideo(srcL, loopSequence);
 
       return;
 
@@ -2221,7 +2337,7 @@ function watchLoopSeamless(srcL) {
 /*************************************************
  * L動画切替
  *************************************************/
-function switchLoopVideo(srcL) {
+function switchLoopVideo(srcL, loopSequence) {
 
   const current = activeLoopVideo;
   const next = standbyLoopVideo;
@@ -2244,6 +2360,11 @@ function switchLoopVideo(srcL) {
   next.play()
     .then(() => {
 
+      if (loopSequence !== loopPlaybackSequence) {
+        next.pause();
+        return;
+      }
+
       // --------------------
       // ② Safari decode待機
       // --------------------
@@ -2252,6 +2373,11 @@ function switchLoopVideo(srcL) {
       next.classList.add("front");
 
       setTimeout(() => {
+
+        if (loopSequence !== loopPlaybackSequence) {
+          next.pause();
+          return;
+        }
 
         loopWatchActive = false;
 
@@ -2289,7 +2415,7 @@ function switchLoopVideo(srcL) {
         currentVideo = activeLoopVideo;
         standbyLoopVideo = current;
 
-        watchLoopSeamless(srcL);
+        watchLoopSeamless(srcL, loopSequence);
 
       }, LOOP_FADE_WAIT);
 
@@ -2418,6 +2544,10 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
   const playbackSequence = ++aPlaybackSequence;
 
+  // LからAへ移る場合、旧Lループの監視を確実に終了する。
+  loopWatchActive = false;
+  loopPlaybackSequence++;
+
   const actionMovItemIndex =
     getCurrentMovItemIndex(currentIndex);
 
@@ -2450,12 +2580,25 @@ function playSeamlessMovie(srcA, srcL, movId) {
     prepareLoopVideos(srcL);
   }
 
-  // ソース設定
-  videoA.src = srcA;
+  // 先読み済みならsrc設定とload()をやり直さず、Safariのバッファを維持する。
+  if (videoA.dataset.actionSrc !== srcA) {
+    videoA.dataset.actionSrc = srcA;
+    videoA.src = srcA;
+    videoA.preload = "auto";
+    videoA.load();
+  }
+
   videoA.currentTime = 0;
 
-  // preload
-  videoA.load();
+  videoA.addEventListener("ended", () => {
+
+    if (playbackSequence !== aPlaybackSequence) return;
+
+    videoA.classList.remove("show");
+    videoA.style.display = "none";
+    preloadNextActionVideo(actionMovItemIndex);
+
+  }, { once: true });
 
   // playingだけではSafariで映像フレームの描画前に通知される場合がある。
   // 実際のフレーム描画（非対応環境ではcurrentTimeの進行）を確認してから
