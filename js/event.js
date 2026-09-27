@@ -647,10 +647,10 @@ async function init() {
   // 通常開始
   else {
 
-    // 初回だけ1秒待つ
+    // 場所名はselect画面で表示済みのため、event画面では直接開始する。
     setTimeout(() => {
 
-      showTitle(tgtEvtData.plcNm || "");
+      showCurrent();
 
     }, 500);
 
@@ -1224,23 +1224,13 @@ function getContinuousAIndex(index) {
  *************************************************/
 function getNextEventAtCompletion() {
 
-  const currentPrefix = evtId.substring(0, 4);
-  const currentLevelText = evtId.charAt(4);
-  const currentLevel = Number(currentLevelText);
+  const currentLevel = Number(evtId.charAt(4));
 
-  if (!currentPrefix || !/^[1-4]$/.test(currentLevelText)) {
+  if (!Number.isInteger(currentLevel) || currentLevel < 1 || currentLevel >= 4) {
     return null;
   }
 
-  return evtData
-    .filter(data =>
-      data.evtId.substring(0, 4) === currentPrefix &&
-      /^[1-4]$/.test(data.evtId.charAt(4)) &&
-      Number(data.evtId.charAt(4)) > currentLevel
-    )
-    .sort((a, b) =>
-      Number(a.evtId.charAt(4)) - Number(b.evtId.charAt(4))
-    )[0] || null;
+  return { selectLevel: currentLevel + 1 };
 
 }
 
@@ -1301,6 +1291,14 @@ function moveFromEventEndDialog(targetEvent) {
       return;
     }
 
+    if (targetEvent.selectLevel) {
+      location.href =
+        './select.html?chrId=' + encodeURIComponent(chrId) +
+        '&level=' + encodeURIComponent(targetEvent.selectLevel) +
+        '&autoFlg=' + encodeURIComponent(autoFlg);
+      return;
+    }
+
     location.href =
       './select.html?chrId=' + encodeURIComponent(chrId) +
       '&evtId=' + encodeURIComponent(targetEvent.evtId) +
@@ -1317,9 +1315,9 @@ function bindEventEndDialog() {
 
   cancelButton.addEventListener("click", event => {
     event.stopPropagation();
-    moveFromEventEndDialog(
-      evtData.find(data => data.evtId === evtId) || tgtEvtData
-    );
+    moveFromEventEndDialog({
+      selectLevel: Math.min(4, Math.max(1, Number(evtId.charAt(4)) || 1))
+    });
   });
 
   nextButton.addEventListener("click", event => {
@@ -1362,10 +1360,10 @@ function moveSkip() {
   setFade(true);
   document.getElementById("msgArea").style.opacity = 0;
 
-  const nextEvent = getNextEventAtCompletion() || tgtEvtData;
+  const nextLevel = Math.min(4, (Number(evtId.charAt(4)) || 1) + 1);
 
   setTimeout(() => {
-    location.href = './select.html?chrId=' + chrId + '&evtId=' + nextEvent.evtId + '&autoFlg=' + autoFlg;
+    location.href = './select.html?chrId=' + chrId + '&level=' + nextLevel + '&autoFlg=' + autoFlg;
   }, BLACK_FADE_TIME);
 
 }

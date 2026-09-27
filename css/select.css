@@ -11,6 +11,14 @@ body {
 
 button { font: inherit; }
 
+.modeIconFilterDefs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 #viewport {
   position: relative;
   width: 100%;
@@ -70,6 +78,10 @@ button { font: inherit; }
 #viewport.screen-leaving .selectStage {
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+#viewport.screen-transitioning {
+  pointer-events: none;
 }
 
 #viewport.screen-leaving #sidebar,
@@ -653,6 +665,12 @@ button { font: inherit; }
   transition: transform .35s ease, opacity .2s ease;
 }
 
+#cardList.cards-switching {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+}
+
 .card {
   position: relative;
   width: 140px;
@@ -687,7 +705,7 @@ button { font: inherit; }
   position: absolute;
   inset: 3px;
   border-radius: 3px;
-  background: var(--card-bg) center / cover no-repeat;
+  background: #333 var(--card-bg) center / 100% auto no-repeat;
 }
 
 .cardInner::after {
@@ -890,4 +908,393 @@ button { font: inherit; }
     bottom: 48px;
     min-width: 250px;
   }
+}
+
+/* =================================================
+ * 2画面版：キャラクター選択 → レベル別イベント選択
+ * ================================================= */
+#bgImg { z-index: 0; }
+
+.selectMovie {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.selectMovie.front { z-index: 2; }
+.selectMovie.show { opacity: 1; }
+
+.selectPreloadMovie {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#viewport[data-screen="event"] #bgImg,
+#viewport[data-screen="preview"] #bgImg {
+  opacity: 0 !important;
+}
+#viewport[data-screen="event"] #backBtn {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+#viewport[data-screen="preview"] #backBtn {
+  z-index: 32;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+#viewport[data-screen="character"] #characterStage {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+#levelSelector {
+  --level-color: #39c7e8;
+  --level-edge-color: #d9f8ff;
+  position: absolute;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(22px, env(safe-area-inset-right));
+  z-index: 26;
+  width: 126px;
+  height: 64px;
+  padding: 4px 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,.38));
+  transition: opacity .3s ease, transform .18s ease, visibility 0s linear .3s;
+}
+
+#viewport[data-screen="event"] #levelSelector {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+#levelSelector:active { transform: scale(.92); }
+
+.levelSelectorLabel {
+  position: relative;
+  z-index: 1;
+  margin-right: -5px;
+  padding: 7px 10px 7px 8px;
+  border-radius: 7px 0 0 7px;
+  background: #4a4961;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#levelValue {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--level-edge-color);
+  border-radius: 50%;
+  background: var(--level-color);
+  color: #4a4961;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1;
+  box-sizing: border-box;
+  box-shadow:
+    0 0 4px var(--level-edge-color),
+    0 0 10px var(--level-color),
+    inset 0 0 4px rgba(255,255,255,.34);
+}
+
+#selectionTitleArea {
+  position: absolute;
+  inset: 0;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .35s ease, visibility 0s linear .35s;
+}
+
+#selectionTitleArea.show {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+#selectionTitleText {
+  width: 70%;
+  padding: 12px;
+  box-sizing: border-box;
+  color: #fff;
+  background: linear-gradient(to right,
+    rgba(35,35,45,0), rgba(35,35,45,.35) 5%,
+    rgba(35,35,45,.78) 30% 70%, rgba(35,35,45,.35) 95%,
+    rgba(50,50,60,0));
+  border-radius: 4px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .12em;
+  text-align: center;
+}
+
+#selectionTitleText.slide-in {
+  animation: selectionTitleSlideIn .45s ease forwards;
+}
+
+@keyframes selectionTitleSlideIn {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+#viewport.screen-leaving #levelSelector,
+#viewport.screen-leaving #selectionTitleArea {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ②→③の黒フェード中も操作ボタンは常に最前面へ残す。 */
+#viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #backBtn,
+#viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #decisionArea,
+#viewport.screen-transitioning[data-screen="preview"] #backBtn {
+  z-index: 32;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#viewport[data-screen="event"] #decisionArea {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#viewport[data-screen="preview"] #decisionArea {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#previewTapPrompt {
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  z-index: 28;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: .8px rgba(151,218,242,.98);
+  paint-order: stroke fill;
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .18em;
+  white-space: nowrap;
+  text-shadow:
+    -1px 0 0 rgba(151,224,248,.88),
+    1px 0 0 rgba(213,190,246,.82),
+    0 2px 2px rgba(15,31,48,.9),
+    0 4px 8px rgba(10,24,39,.82),
+    0 0 10px rgba(118,211,246,.78);
+}
+
+#viewport[data-screen="preview"] #previewTapPrompt {
+  visibility: visible;
+  animation: previewTapPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes previewTapPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+#viewport[data-screen="preview"] #sidebar,
+#viewport[data-screen="preview"] #levelSelector {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#viewport[data-screen="event"] #decideBtn.disabled {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 黒画面の裏で②を完成位置へ配置してからフェード解除する。 */
+#viewport.screen-transitioning[data-screen="event"] #sidebar,
+#viewport.screen-transitioning[data-screen="event"] #levelSelector,
+#viewport.screen-transitioning[data-screen="event"] #decisionArea {
+  transition: none;
+}
+
+#viewport[data-screen="event"] .card:not(.active) .cardInner {
+  transform: scale(1);
+  filter: brightness(.62);
+}
+
+#viewport[data-screen="event"] .card.active .cardInner {
+  transform: scale(1.4);
+  filter: brightness(1);
+}
+
+/* カード画像の角丸は疑似要素側で保ち、モードアイコンだけ上へ張り出せるようにする。 */
+#viewport[data-screen="event"] .cardInner {
+  overflow: visible;
+}
+
+/* イベントカードサイズ */
+#viewport[data-screen="event"] .card {
+  width: 130px;
+  height: 68px;
+  margin: 28px 8px;
+}
+
+#viewport[data-screen="event"] .card.active {
+  margin: 38px 8px;
+}
+
+.cardModeBadge {
+  --mode-color: #8d7ed0;
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  z-index: 8;
+  min-width: 59px;
+  height: 18px;
+  padding: 0 9px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  background: transparent;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .04em;
+}
+
+.cardModeBadge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 5px 0 8px 0;
+  background: var(--mode-color);
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
+}
+
+.cardModeIconFrame {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  display: block;
+  transform: translateY(-1px);
+}
+
+.cardModeIconFrame::before {
+  content: none;
+}
+
+.cardModeIcon {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.card[data-mode="R"] .cardModeIcon { filter: url("#modeIconOutlineR"); }
+.card[data-mode="S"] .cardModeIcon { filter: url("#modeIconOutlineS"); }
+.card[data-mode="C"] .cardModeIcon { filter: url("#modeIconOutlineC"); }
+
+/* 羞恥アイコンはPNG内の透明余白が広いため、見た目の占有率を他モードへ揃える。 */
+.card[data-mode="C"] .cardModeIconFrame {
+  width: 27px;
+  height: 27px;
+  left: -2px;
+  transform: translate(-2px, -2px);
+}
+
+.card[data-mode="R"] .cardModeBadge {
+  --mode-color: #dc7ca2;
+}
+
+.card[data-mode="S"] .cardModeBadge {
+  --mode-color: #dc8745;
+}
+
+.card[data-mode="C"] .cardModeBadge {
+  --mode-color: #8d7ed0;
+}
+
+#viewport[data-screen="event"] .label {
+  left: 12px;
+  top: 57%;
+  min-height: 20px;
+  padding: 0;
+  overflow: visible;
+  color: #fff;
+  background: transparent;
+  font-size: 11px;
+  line-height: 1.15;
+  isolation: isolate;
+  transform: translateY(-50%);
+}
+
+#viewport[data-screen="event"] .labelText {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  color: #fff;
+  -webkit-text-stroke: 2.8px rgba(62,62,76,.94);
+  paint-order: stroke fill;
+  text-shadow: 0 1px 2px rgba(0,0,0,.42);
+}
+
+#viewport[data-screen="event"] .labelInitial { color: inherit; }
+
+@supports (-webkit-touch-callout: none) {
+  #viewport[data-screen="event"] .labelText { transform: none; }
 }

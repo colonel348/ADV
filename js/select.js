@@ -1,10 +1,8 @@
-let cardList;
-let bgImg;
-let bgFade;
-let fade;
-let decideBtn;
-
+let cardList, bgImg, bgFade, fade, decideBtn;
+let levelSelector, levelValue, selectionTitleArea, selectionTitleText;
+let selectVideo1, selectVideo2, selectPreloadVideo, activeSelectVideo, standbySelectVideo;
 let screen = "character";
+let selectedLevel = 1;
 let startX = 0;
 let startY = 0;
 let isDragging = false;
@@ -12,8 +10,11 @@ let suppressCharacterClick = false;
 let isDeciding = false;
 let screenTransitionTimer = null;
 let characterAnimationTimer = null;
-
-let chrList = ["FF", "AK", "SA"];
+let selectionChangeTimer = null;
+let levelSwitchTimer = null;
+let selectVideoSequence = 0;
+let selectLoopWatching = false;
+const chrList = ["FF", "AK", "SA"];
 let chrIdx = 1;
 let filteredEvtData = [];
 
@@ -23,122 +24,74 @@ const characterNames = {
   SA: "白石杏"
 };
 
-const modeIconMap = {
+const levelColors = {
+  1: "#39c7e8",
+  2: "#f3ad25",
+  3: "#ef4f78",
+  4: "#b443df"
+};
+
+const levelEdgeColors = {
+  1: "#d9f8ff",
+  2: "#fff4ce",
+  3: "#ffe0e8",
+  4: "#f3ddff"
+};
+
+const modeLabels = {
+  R: "魅惑",
+  S: "鍛錬",
+  C: "羞恥"
+};
+
+const modeIconPaths = {
   R: "../img/romance-mode.png",
   S: "../img/serious-mode.png",
-  C: "../img/control-mode.png"
+  C: "../img/shame-mode-v10.png"
 };
 
 function readSelectionParams() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(location.search);
   const requestedEvtId = (params.get("evtId") || "").trim();
   const requestedChrId = (params.get("chrId") || "AK").trim();
-
-  autoFlg = params.get("autoFlg") || "0";
-  evtId = requestedEvtId;
-  chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
-
+  const requestedLevel = Number(params.get("level"));
   const requestedEvent = evtData.find(evt => evt.evtId === requestedEvtId);
 
-  if (requestedEvent) {
-    tgtEvtData = requestedEvent;
-    chrId = requestedEvent.evtId.substring(0, 2);
-    modeKbn = requestedEvent.evtId.charAt(3);
+  autoFlg = params.get("autoFlg") || "0";
+  chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
+  if (requestedEvent) chrId = requestedEvent.evtId.substring(0, 2);
+
+  if (Number.isInteger(requestedLevel) && requestedLevel >= 1 && requestedLevel <= 4) {
+    selectedLevel = requestedLevel;
     screen = "event";
-  } else {
-    tgtEvtData = null;
-    modeKbn = "R";
-    screen = "character";
+  } else if (requestedEvent) {
+    selectedLevel = Number(requestedEvent.evtId.charAt(4)) || 1;
+    screen = "event";
   }
 
+  evtId = "";
+  evtIdx = -1;
+  tgtEvtData = null;
   chrIdx = chrList.indexOf(chrId);
 }
 
+function getCharacterLoopPath() {
+  return getChrDir(chrId) + "/00.選択/01.evt-L.mp4";
+}
+
+function getEventLoopPath(evt) {
+  return getEvtDir(evt) + "/02.evt-L.mp4";
+}
+
 function preloadImages() {
-  const urls = [];
-
-  chrList.forEach(chr => {
-    urls.push(getChrSelPath(chr));
-  });
-
-  Object.values(modeIconMap).forEach(url => {
-    urls.push(url);
-  });
-
-  evtData.forEach(evt => {
-    urls.push(getBnrPath(evt));
-    urls.push(getSelPath(evt));
-  });
-
+  const urls = chrList.map(getChrSelPath).concat(Object.values(modeIconPaths));
+  evtData.forEach(evt => urls.push(getBnrPath(evt)));
   return Promise.all(urls.map(url => new Promise(resolve => {
-    const img = new Image();
-    img.onload = resolve;
-    img.onerror = resolve;
-    img.src = url;
-  })));
-}
-
-function waitForImage(src) {
-  return new Promise(resolve => {
     const image = new Image();
-
-    image.onload = async () => {
-      try {
-        if (image.decode) await image.decode();
-      } catch (error) {
-      }
-      resolve();
-    };
-
+    image.onload = resolve;
     image.onerror = resolve;
-    image.src = src;
-  });
-}
-
-function setScreen(
-  nextScreen,
-  delayed = false,
-  preserveCurrent = false
-) {
-  const viewport = document.getElementById("viewport");
-
-  clearTimeout(screenTransitionTimer);
-
-  if (delayed) {
-    if (!preserveCurrent) {
-      viewport.classList.add("screen-leaving");
-    }
-
-    screenTransitionTimer = setTimeout(() => {
-      screen = nextScreen;
-      viewport.dataset.screen = screen;
-      showScreenContent(nextScreen, true);
-
-      // 次画面を透明状態で一度描画してから表示し、背景マスクの急な切替を防ぐ
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          viewport.classList.remove("screen-leaving");
-        });
-      });
-    }, 300);
-
-    return;
-  }
-
-  screen = nextScreen;
-  viewport.dataset.screen = screen;
-  showScreenContent(nextScreen);
-}
-
-function showScreenContent(nextScreen, fromTransition = false) {
-
-  if (nextScreen === "character") {
-    showCharacter();
-  } else if (nextScreen === "mode") {
-    showModeChoices();
-  } else {
-    showEventSelection(false, fromTransition);
-  }
+    image.src = url;
+  })));
 }
 
 function swapBackground(src, direction = "left", animated = true) {
@@ -150,20 +103,13 @@ function swapBackground(src, direction = "left", animated = true) {
   }
 
   bgImg.style.opacity = 0;
-
   setTimeout(() => {
-    const startOffset =
-      direction === "none"
-        ? "0px"
-        : direction === "right"
-          ? "60px"
-          : "-60px";
+    const offset = direction === "right" ? "60px" : "-60px";
     bgImg.style.transition = "none";
-    bgImg.style.transform = `translate(${startOffset}, -50%)`;
-    bgImg.offsetHeight;
+    bgImg.style.transform = `translate(${offset}, -50%)`;
     bgImg.src = src;
-    bgImg.style.transition = "opacity .4s ease, transform .4s ease, filter .4s ease";
-
+    bgImg.offsetHeight;
+    bgImg.style.transition = "opacity .4s ease, transform .4s ease";
     requestAnimationFrame(() => {
       bgImg.style.opacity = 1;
       bgImg.style.transform = "translate(0, -50%)";
@@ -174,7 +120,6 @@ function swapBackground(src, direction = "left", animated = true) {
 function showCharacter(animated = false, direction = "left") {
   const stage = document.getElementById("characterStage");
   const nameText = document.getElementById("characterNameText");
-
   clearTimeout(characterAnimationTimer);
 
   if (!animated) {
@@ -186,33 +131,30 @@ function showCharacter(animated = false, direction = "left") {
 
   stage.classList.remove("character-reveal");
   stage.classList.add("character-changing");
-
-  // スワイプ直後から現在のキャラクター画像をフェードアウト
   bgImg.style.opacity = 0;
-
   characterAnimationTimer = setTimeout(() => {
     nameText.textContent = characterNames[chrId];
     nameText.dataset.name = characterNames[chrId];
-
-    const startOffset = direction === "right" ? "60px" : "-60px";
-    bgImg.style.transition = "none";
-    bgImg.style.transform = `translate(${startOffset}, -50%)`;
-    bgImg.src = getChrSelPath(chrId);
-    bgImg.offsetHeight;
-    bgImg.style.transition = "opacity .4s ease, transform .4s ease, filter .4s ease";
-
-    requestAnimationFrame(() => {
-      bgImg.style.opacity = 1;
-      bgImg.style.transform = "translate(0, -50%)";
-    });
-
+    swapBackground(getChrSelPath(chrId), direction, true);
     stage.classList.remove("character-changing");
     stage.classList.add("character-reveal");
-
-    setTimeout(() => {
-      stage.classList.remove("character-reveal");
-    }, 650);
+    setTimeout(() => stage.classList.remove("character-reveal"), 650);
   }, 260);
+}
+
+function animateCharacterCursor(step) {
+  const cursor = document.querySelector(step < 0 ? ".characterCursor-left" : ".characterCursor-right");
+  if (!cursor) return;
+  cursor.classList.remove("cursor-activated");
+  cursor.offsetHeight;
+  cursor.classList.add("cursor-activated");
+  setTimeout(() => {
+    cursor.classList.remove("cursor-activated");
+    const cursors = document.querySelectorAll(".characterCursor");
+    cursors.forEach(item => { item.style.animation = "none"; });
+    cursor.offsetHeight;
+    requestAnimationFrame(() => cursors.forEach(item => { item.style.animation = ""; }));
+  }, 360);
 }
 
 function changeCharacter(step) {
@@ -222,342 +164,383 @@ function changeCharacter(step) {
   showCharacter(true, step < 0 ? "right" : "left");
 }
 
-function animateCharacterCursor(step) {
-  const cursor = document.querySelector(
-    step < 0 ? ".characterCursor-left" : ".characterCursor-right"
-  );
+function setScreen(nextScreen, delayed = false) {
+  const viewport = document.getElementById("viewport");
+  clearTimeout(screenTransitionTimer);
+  const isCharacterToEvent = delayed && screen === "character" && nextScreen === "event";
+  viewport.classList.toggle("character-to-event", isCharacterToEvent);
 
-  if (!cursor) return;
+  const apply = (onReady = null) => {
+    screen = nextScreen;
+    viewport.dataset.screen = screen;
+    if (screen === "character") {
+      stopSelectionVideos();
+      showCharacter();
+      if (onReady) onReady();
+    } else {
+      showEventSelection(true, onReady);
+    }
+    requestAnimationFrame(() => viewport.classList.remove("screen-leaving"));
+  };
 
-  cursor.classList.remove("cursor-activated");
-  cursor.offsetHeight;
-  cursor.classList.add("cursor-activated");
+  if (!delayed) {
+    viewport.classList.remove("character-to-event");
+    return apply();
+  }
+  viewport.classList.add("screen-transitioning");
+  fade.classList.add("show");
 
-  setTimeout(() => {
-    cursor.classList.remove("cursor-activated");
-
-    // 片側だけ位相がずれないよう、左右の通常アニメーションを同時再開
-    const cursors = document.querySelectorAll(".characterCursor");
-    cursors.forEach(item => {
-      item.style.animation = "none";
-    });
-
-    cursor.offsetHeight;
-
-    requestAnimationFrame(() => {
-      cursors.forEach(item => {
-        item.style.animation = "";
+  // 完全に黒くなってから画面を入れ替え、その後黒を解除する。
+  screenTransitionTimer = setTimeout(() => {
+    viewport.classList.add("screen-leaving");
+    apply(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          fade.classList.remove("show");
+          setTimeout(() => {
+            viewport.classList.remove("screen-transitioning", "character-to-event");
+          }, 500);
+        });
       });
     });
-  }, 360);
+  }, 500);
 }
 
 function confirmCharacter() {
   if (suppressCharacterClick) return;
-  setScreen("mode", true);
+  selectedLevel = 1;
+  evtIdx = -1;
+  tgtEvtData = null;
+  setScreen("event", true);
 }
 
-function showModeChoices(backgroundDirection = "right") {
-  const characterImage = getChrSelPath(chrId);
-  const modeLabelMap = {
-    R: "恋愛モード",
-    S: "本気モード",
-    C: "調教モード"
-  };
+function updateFilteredEvents() {
+  const order = { R: 0, S: 1, C: 2 };
+  filteredEvtData = evtData
+    .filter(evt => evt.evtId.substring(0, 2) === chrId && Number(evt.evtId.charAt(4)) === selectedLevel)
+    .sort((a, b) => (order[a.evtId.charAt(3)] ?? 9) - (order[b.evtId.charAt(3)] ?? 9));
+}
 
-  // ③から戻った場合は、選択中キャラクターのタイトル画像へ戻す
-  if (bgImg.getAttribute("src") !== characterImage) {
-    swapBackground(characterImage, backgroundDirection, true);
-  }
+function updateLevelSelector() {
+  levelValue.textContent = selectedLevel;
+  levelSelector.dataset.level = selectedLevel;
+  levelSelector.style.setProperty("--level-color", levelColors[selectedLevel]);
+  levelSelector.style.setProperty("--level-edge-color", levelEdgeColors[selectedLevel]);
+  levelSelector.setAttribute("aria-label", `特訓レベル${selectedLevel}。押すと次のレベル`);
+}
 
-  document.querySelectorAll(".modeChoice").forEach(choice => {
-    const mode = choice.dataset.mode;
-    const image = choice.querySelector(".modeChoiceImage");
-    const label = choice.querySelector(".modeChoiceLabel");
-    const text = choice.querySelector(".modeChoiceText");
-    const availableNumbers = new Set(
-      evtData
-        .filter(evt =>
-          evt.evtId.substring(0, 2) === chrId &&
-          evt.evtId.charAt(3) === mode &&
-          /^[1-4]$/.test(evt.evtId.charAt(4))
-        )
-        .map(evt => Number(evt.evtId.charAt(4)))
-    );
-
-    let availability = text.querySelector(".modeAvailability");
-    if (!availability) {
-      availability = document.createElement("span");
-      availability.className = "modeAvailability";
-      text.appendChild(availability);
-    }
-
-    availability.replaceChildren();
-    for (let number = 1; number <= 4; number++) {
-      const diamond = document.createElement("span");
-      diamond.className = "modeAvailabilityDiamond";
-      diamond.dataset.level = number;
-      diamond.classList.toggle("is-available", availableNumbers.has(number));
-      diamond.setAttribute("aria-label", `${number}: ${availableNumbers.has(number) ? "あり" : "なし"}`);
-      availability.appendChild(diamond);
-    }
-
-    const isEmpty = availableNumbers.size === 0;
-    choice.classList.remove("mode-selected", "mode-dimmed", "mode-empty");
-    choice.classList.toggle("mode-empty", isEmpty);
-    choice.disabled = isEmpty;
-    choice.setAttribute("aria-disabled", String(isEmpty));
-    label.textContent = modeLabelMap[mode];
-    image.style.opacity = 1;
-    image.src = modeIconMap[mode];
+function centerUnselectedCards() {
+  requestAnimationFrame(() => {
+    const sidebar = document.getElementById("sidebar");
+    const offset = Math.max(0, (sidebar.clientHeight - cardList.scrollHeight) / 2);
+    cardList.style.transform = `translateY(${offset}px)`;
   });
-}
-
-function selectMode(mode) {
-  const viewport = document.getElementById("viewport");
-  const selectedChoice = document.querySelector(`.modeChoice[data-mode="${mode}"]`);
-  if (!selectedChoice || selectedChoice.disabled) return;
-
-  viewport.classList.add("mode-transitioning");
-
-  document.querySelectorAll(".modeChoice").forEach(choice => {
-    const isSelected = choice.dataset.mode === mode;
-    choice.classList.toggle("mode-selected", isSelected);
-    choice.classList.toggle("mode-dimmed", !isSelected);
-  });
-
-  modeKbn = mode;
-  evtId = "";
-  evtIdx = 0;
-  updateFilteredEvents(false);
-  createCards();
-
-  // ②を300ms保持した後、そのまま黒フェードで覆う
-  clearTimeout(screenTransitionTimer);
-  screenTransitionTimer = setTimeout(() => {
-    bgFade.classList.add("show");
-
-    // ③表示の約0.2秒前から②のボタンを消し始める
-    setTimeout(() => {
-      viewport.classList.add("mode-buttons-leaving");
-    }, 300);
-
-    // 黒画面の裏側で③へ切り替える
-    screenTransitionTimer = setTimeout(async () => {
-      const eventBackground = getSelPath(filteredEvtData[evtIdx]);
-
-      // 前のキャラ画像が一瞬見えないよう、黒画面の裏で描画準備を待つ
-      await waitForImage(eventBackground);
-
-      // 黒画面の裏で左ぼかしを完成状態にしておく
-      viewport.classList.add("event-prepared");
-      screen = "event";
-      viewport.dataset.screen = screen;
-      viewport.classList.remove("mode-buttons-leaving");
-
-      showEventSelection(false, false);
-
-      // 初回のイベント背景は横スライドさせず通常位置で表示
-      bgImg.style.transition = "none";
-      bgImg.style.opacity = 1;
-      bgImg.style.transform = "translate(0, -50%)";
-      bgImg.offsetHeight;
-      bgImg.style.transition = "opacity .5s ease, transform .4s ease, filter .4s ease";
-
-      bgFade.classList.remove("show");
-
-      // 背景とぼかしを先に見せ、カードと決定ボタンを後から表示
-      setTimeout(() => {
-        viewport.classList.remove("event-prepared");
-      }, 100);
-
-      setTimeout(() => {
-        viewport.classList.remove("mode-transitioning");
-      }, 500);
-    }, 500);
-  }, 300);
-}
-
-function goBackSelection() {
-  if (screen === "event") {
-    // ③→②は、先にカードを消してから②を表示する
-    const viewport = document.getElementById("viewport");
-    viewport.classList.add("returning-to-mode", "event-cards-leaving");
-
-    // 戻るボタン押下直後から現在のイベント背景を暗くする
-    bgImg.style.transition = "opacity .3s ease";
-    bgImg.style.opacity = 0;
-
-    clearTimeout(screenTransitionTimer);
-    screenTransitionTimer = setTimeout(async () => {
-      const characterBackground = getChrSelPath(chrId);
-
-      // 完全に暗い状態で切り替え先画像の描画準備を待つ
-      await waitForImage(characterBackground);
-
-      // キャラ画像を表示する前に、②の暗色・ぼかしを完成状態で配置
-      viewport.classList.add("mode-prepared");
-      screen = "mode";
-      viewport.dataset.screen = screen;
-
-      bgImg.style.transition = "none";
-      bgImg.src = characterBackground;
-      bgImg.style.transform = "translate(0, -50%)";
-      viewport.offsetHeight;
-      showModeChoices("none");
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          bgImg.style.transition = "opacity .4s ease";
-          bgImg.style.opacity = 1;
-          viewport.classList.remove("mode-prepared");
-        });
-      });
-
-      setTimeout(() => {
-        viewport.classList.remove("returning-to-mode", "event-cards-leaving");
-      }, 500);
-    }, 300);
-  } else if (screen === "mode") {
-    setScreen("character", true);
-  }
-}
-
-function updateFilteredEvents(keepRequestedEvent = true) {
-  filteredEvtData = evtData.filter(evt =>
-    evt.evtId.startsWith(chrId) && evt.evtId.charAt(3) === modeKbn
-  );
-
-  const requestedIndex = keepRequestedEvent
-    ? filteredEvtData.findIndex(evt => evt.evtId === evtId)
-    : -1;
-
-  evtIdx = requestedIndex >= 0 ? requestedIndex : 0;
-  tgtEvtData = filteredEvtData[evtIdx] || null;
 }
 
 function createCards() {
   cardList.innerHTML = "";
+  decideBtn.classList.add("disabled");
 
   if (!filteredEvtData.length) {
     const empty = document.createElement("div");
     empty.id = "emptyEvents";
-    empty.textContent = "このモードのイベントはまだありません";
+    empty.textContent = `特訓Lv${selectedLevel}のイベントはまだありません`;
     cardList.appendChild(empty);
-    decideBtn.classList.add("disabled");
+    centerUnselectedCards();
     return;
   }
-
-  decideBtn.classList.remove("disabled");
 
   filteredEvtData.forEach((data, index) => {
     const card = document.createElement("div");
     card.className = "card";
     card.dataset.mode = data.evtId.charAt(3);
-
     const inner = document.createElement("div");
     inner.className = "cardInner";
     inner.style.setProperty("--card-bg", `url("${getBnrPath(data)}")`);
-
     const border = document.createElement("div");
     border.className = "innerBorder";
-
-    const level = data.evtId.charAt(4);
-    const svgNamespace = "http://www.w3.org/2000/svg";
-    const levelBadge = document.createElementNS(svgNamespace, "svg");
-    levelBadge.classList.add("levelBadgeSvg");
-    levelBadge.dataset.level = level;
-    levelBadge.setAttribute("viewBox", "0 0 42 18");
-    levelBadge.setAttribute("aria-label", `Lv${level}`);
-
-    const levelBadgeShape = document.createElementNS(svgNamespace, "path");
-    levelBadgeShape.classList.add("levelBadgeShape");
-    levelBadgeShape.setAttribute(
-      "d",
-      "M5 0 H42 L38.5 12.5 Q37.5 18 32 18 H0 V5 Q0 0 5 0 Z"
-    );
-
-    const levelBadgeText = document.createElementNS(svgNamespace, "text");
-    levelBadgeText.classList.add("levelBadgeText");
-    levelBadgeText.setAttribute("x", "20");
-    levelBadgeText.setAttribute("y", "13");
-    levelBadgeText.setAttribute("text-anchor", "middle");
-
-    const levelBadgePrefix = document.createElementNS(svgNamespace, "tspan");
-    levelBadgePrefix.classList.add("levelBadgePrefix");
-    levelBadgePrefix.textContent = "Lv.";
-
-    const levelBadgeValue = document.createElementNS(svgNamespace, "tspan");
-    levelBadgeValue.classList.add("levelBadgeValue");
-    levelBadgeValue.textContent = String.fromCharCode(0xFF10 + Number(level));
-
-    levelBadgeText.append(levelBadgePrefix, levelBadgeValue);
-    levelBadge.append(levelBadgeShape, levelBadgeText);
-
+    const modeBadge = document.createElement("div");
+    modeBadge.className = "cardModeBadge";
+    const mode = data.evtId.charAt(3);
+    const modeIconFrame = document.createElement("span");
+    modeIconFrame.className = "cardModeIconFrame";
+    const modeIcon = document.createElement("img");
+    modeIcon.className = "cardModeIcon";
+    modeIcon.src = modeIconPaths[mode] || "";
+    modeIcon.alt = "";
+    modeIconFrame.appendChild(modeIcon);
+    const modeText = document.createElement("span");
+    modeText.textContent = modeLabels[mode] || "";
+    modeBadge.append(modeIconFrame, modeText);
     const label = document.createElement("div");
     label.className = "label";
     const labelText = document.createElement("span");
     labelText.className = "labelText";
-    const eventName = String(data.evtNm || "");
+    const name = String(data.evtNm || "");
     const initial = document.createElement("span");
     initial.className = "labelInitial";
-    initial.textContent = eventName.charAt(0);
-    labelText.append(initial, document.createTextNode(eventName.slice(1)));
+    initial.textContent = name.charAt(0);
+    labelText.append(initial, document.createTextNode(name.slice(1)));
     label.appendChild(labelText);
-
-    inner.append(label, border, levelBadge);
+    inner.append(label, border, modeBadge);
     card.appendChild(inner);
-
     card.addEventListener("click", event => {
       event.stopPropagation();
-      if (evtIdx === index) return;
-      evtIdx = index;
-      updateEventSelection(true, "left");
+      selectEvent(index);
     });
-
     cardList.appendChild(card);
   });
+  selectEvent(0, true);
 }
 
-function updateEventSelection(
-  animated = true,
-  direction = "left",
-  backgroundAnimated = animated
-) {
-  if (!filteredEvtData.length) return;
-
-  tgtEvtData = filteredEvtData[evtIdx];
+function selectEvent(index, instant = false) {
+  if (evtIdx === index) return;
+  evtIdx = index;
+  tgtEvtData = filteredEvtData[index];
   evtId = tgtEvtData.evtId;
+  decideBtn.classList.remove("disabled");
 
   const cards = document.querySelectorAll(".card");
-  cards.forEach((card, index) => card.classList.toggle("active", index === evtIdx));
-
-  const activeCard = cards[evtIdx];
+  cards.forEach((card, i) => card.classList.toggle("active", i === index));
+  const activeCard = cards[index];
   if (activeCard) {
-    const offset = activeCard.offsetTop - ((document.getElementById("sidebar").clientHeight - activeCard.offsetHeight) / 2);
+    const sidebar = document.getElementById("sidebar");
+    const offset = activeCard.offsetTop - ((sidebar.clientHeight - activeCard.offsetHeight) / 2);
 
-    if (!animated) {
+    if (instant) {
       cardList.style.transition = "none";
     }
 
     cardList.style.transform = `translateY(${-offset}px)`;
 
-    if (!animated) {
+    if (instant) {
       cardList.offsetHeight;
       cardList.style.transition = "";
     }
   }
-
-  swapBackground(
-    getSelPath(tgtEvtData),
-    direction,
-    backgroundAnimated
-  );
+  preloadSelectedEventVideo(tgtEvtData);
 }
 
-function showEventSelection(animated = true, backgroundAnimated = animated) {
+function preloadSelectedEventVideo(evt) {
+  const src = getEventLoopPath(evt);
+  if (selectPreloadVideo.dataset.src === src) return;
+  selectPreloadVideo.pause();
+  selectPreloadVideo.dataset.src = src;
+  selectPreloadVideo.src = src;
+  selectPreloadVideo.preload = "auto";
+  selectPreloadVideo.load();
+}
+
+function enterEventPreview() {
+  if (!tgtEvtData) return;
+  const viewport = document.getElementById("viewport");
+  clearTimeout(selectionChangeTimer);
+  decideBtn.classList.add("pressed");
+  setTimeout(() => decideBtn.classList.remove("pressed"), 500);
+  viewport.classList.add("screen-transitioning");
+  fade.classList.add("show");
+
+  selectionChangeTimer = setTimeout(() => {
+    screen = "preview";
+    viewport.dataset.screen = screen;
+    selectionTitleText.textContent = tgtEvtData.plcNm || "";
+    selectionTitleText.classList.remove("slide-in");
+    selectionTitleText.offsetHeight;
+    selectionTitleText.classList.add("slide-in");
+    selectionTitleArea.classList.add("show");
+
+    playSelectionLoop(getEventLoopPath(tgtEvtData), () => {
+      setTimeout(() => {
+        fade.classList.remove("show");
+        setTimeout(() => viewport.classList.remove("screen-transitioning"), 500);
+
+        // 場所名は黒フェード解除中も残し、映像表示後に少し間を置いて消す。
+        setTimeout(() => {
+          if (screen === "preview") {
+            selectionTitleArea.classList.remove("show");
+          }
+        }, 900);
+      }, 700);
+    });
+  }, 500);
+}
+
+function returnToEventSelection() {
+  const viewport = document.getElementById("viewport");
+  viewport.classList.add("screen-transitioning");
+  fade.classList.add("show");
+
+  clearTimeout(selectionChangeTimer);
+  selectionChangeTimer = setTimeout(() => {
+    screen = "event";
+    viewport.dataset.screen = screen;
+    selectionTitleArea.classList.remove("show");
+    playSelectionLoop(getCharacterLoopPath(), () => {
+      fade.classList.remove("show");
+      setTimeout(() => viewport.classList.remove("screen-transitioning"), 500);
+    });
+  }, 500);
+}
+
+function showPlaceAndEventVideo(evt) {
+  // 旧呼び出しとの互換用。場所名と動画切替は③への遷移時だけ行う。
+  if (!evt) return;
+  selectionTitleText.textContent = evt.plcNm || "";
+}
+
+function prepareSelectionVideo(video, src) {
+  if (video.dataset.src === src) return;
+  video.pause();
+  video.dataset.src = src;
+  video.src = src;
+  video.preload = "auto";
+  video.load();
+}
+
+function playSelectionLoop(src, onReady = null) {
+  const sequence = ++selectVideoSequence;
+  selectLoopWatching = false;
+  const first = activeSelectVideo;
+  const second = standbySelectVideo;
+  [first, second].forEach(video => {
+    video.pause();
+    video.classList.remove("show", "front");
+    video.style.display = "none";
+  });
+  prepareSelectionVideo(first, src);
+  prepareSelectionVideo(second, src);
+  first.currentTime = 0;
+  second.currentTime = 0;
+  first.style.display = "block";
+  first.classList.add("front");
+
+  let playPending = false;
+  let retryCount = 0;
+  let readyNotified = false;
+
+  const notifyReady = () => {
+    if (readyNotified) return;
+    readyNotified = true;
+    if (onReady) onReady();
+  };
+
+  const start = () => {
+    if (sequence !== selectVideoSequence || playPending) return;
+    playPending = true;
+    first.play().then(() => {
+      playPending = false;
+      if (sequence !== selectVideoSequence) return;
+      first.classList.add("show");
+      notifyReady();
+      watchSelectionLoop(src, sequence);
+    }).catch(() => {
+      playPending = false;
+      if (sequence !== selectVideoSequence || retryCount >= 12) return;
+      retryCount++;
+      setTimeout(start, 200);
+    });
+  };
+
+  first.addEventListener("error", () => {
+    if (sequence !== selectVideoSequence) return;
+    notifyReady();
+    bgFade.classList.remove("show");
+  }, { once: true });
+
+  if (first.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) start();
+  else first.addEventListener("canplay", start, { once: true });
+}
+
+function watchSelectionLoop(src, sequence) {
+  selectLoopWatching = true;
+  const watch = () => {
+    if (!selectLoopWatching || sequence !== selectVideoSequence) return;
+    if (!activeSelectVideo.duration) return requestAnimationFrame(watch);
+    if (activeSelectVideo.duration - activeSelectVideo.currentTime <= .25) {
+      switchSelectionLoop(src, sequence);
+      return;
+    }
+    requestAnimationFrame(watch);
+  };
+  watch();
+}
+
+function switchSelectionLoop(src, sequence) {
+  const current = activeSelectVideo;
+  const next = standbySelectVideo;
+  next.currentTime = 0;
+  next.style.display = "block";
+  current.classList.remove("front");
+  next.classList.add("front");
+  next.play().then(() => {
+    if (sequence !== selectVideoSequence) return;
+    next.classList.add("show");
+    setTimeout(() => {
+      if (sequence !== selectVideoSequence) return;
+      current.classList.remove("show", "front");
+      current.pause();
+      current.currentTime = 0;
+      current.style.display = "none";
+      activeSelectVideo = next;
+      standbySelectVideo = current;
+      selectLoopWatching = false;
+      watchSelectionLoop(src, sequence);
+    }, 300);
+  }).catch(() => {});
+}
+
+function stopSelectionVideos() {
+  selectLoopWatching = false;
+  selectVideoSequence++;
+  [selectVideo1, selectVideo2].forEach(video => {
+    video.pause();
+    video.classList.remove("show", "front");
+    video.style.display = "none";
+  });
+}
+
+function showEventSelection(restartCommonVideo = true, onVideoReady = null) {
+  evtIdx = -1;
+  evtId = "";
+  tgtEvtData = null;
+  updateFilteredEvents();
+  updateLevelSelector();
   updateDecideButton();
-  updateEventSelection(animated, "left", backgroundAnimated);
+  createCards();
+  bgImg.src = getChrSelPath(chrId);
+  // 選択動画が遅れても①のキャラクター画像を見せず、黒背景を維持する。
+  bgImg.style.opacity = 0;
+  if (restartCommonVideo) {
+    playSelectionLoop(getCharacterLoopPath(), onVideoReady);
+  } else if (onVideoReady) {
+    onVideoReady();
+  }
+}
+
+function changeLevel() {
+  if (cardList.classList.contains("cards-switching")) return;
+
+  clearTimeout(levelSwitchTimer);
+  cardList.classList.add("cards-switching");
+
+  levelSwitchTimer = setTimeout(() => {
+    selectedLevel = selectedLevel >= 4 ? 1 : selectedLevel + 1;
+    showEventSelection(false);
+
+    // 非表示中にカードと選択位置を確定してから表示する。
+    cardList.offsetHeight;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => cardList.classList.remove("cards-switching"));
+    });
+  }, 220);
+}
+
+function goBackSelection() {
+  if (screen === "preview") {
+    returnToEventSelection();
+  } else if (screen === "event") {
+    setScreen("character", true);
+  }
 }
 
 function updateDecideButton() {
@@ -569,83 +552,60 @@ function goToEvent() {
   if (isDeciding || !tgtEvtData) return;
   isDeciding = true;
   decideBtn.classList.add("pressed", "disabled");
-
-  // ボタンを発光させてから画面を暗転
+  setTimeout(() => fade.classList.add("show"), 120);
   setTimeout(() => {
-    fade.classList.add("show");
-  }, 120);
-
-  setTimeout(() => {
-    location.href = "./event.html?chrId=" + chrId +
-      "&evtId=" + tgtEvtData.evtId +
-      "&autoFlg=" + autoFlg +
-      "&debugMovId=";
+    location.href = "./event.html?chrId=" + chrId + "&evtId=" + tgtEvtData.evtId +
+      "&autoFlg=" + autoFlg + "&debugMovId=";
   }, 520);
 }
 
-function handleSwipe(dx, dy) {
-  if (screen === "character") {
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-      changeCharacter(dx < 0 ? 1 : -1);
-      suppressCharacterClick = true;
-      setTimeout(() => { suppressCharacterClick = false; }, 350);
-    }
-    return;
-  }
-
-  if (screen !== "event" || !tgtEvtData) return;
-
-  if (Math.abs(dy) > 40) {
-    if (dy > 0 && evtIdx > 0) {
-      evtIdx--;
-      updateEventSelection(true, "right");
-    } else if (dy < 0 && evtIdx < filteredEvtData.length - 1) {
-      evtIdx++;
-      updateEventSelection(true, "left");
-    }
+function handleDecision() {
+  if (screen === "event") {
+    enterEventPreview();
+  } else if (screen === "preview") {
+    goToEvent();
   }
 }
 
 function bindInteractions() {
   const viewport = document.getElementById("viewport");
-
+  viewport.addEventListener("click", event => {
+    if (screen !== "preview" || event.target.closest("#backBtn")) return;
+    goToEvent();
+  });
   viewport.addEventListener("touchstart", event => {
     if (event.target.closest("button") || event.target.closest(".card")) return;
     isDragging = true;
     startX = event.touches[0].clientX;
     startY = event.touches[0].clientY;
   }, { passive: true });
-
   viewport.addEventListener("touchend", event => {
     if (!isDragging) return;
     isDragging = false;
-    handleSwipe(
-      event.changedTouches[0].clientX - startX,
-      event.changedTouches[0].clientY - startY
-    );
+    const dx = event.changedTouches[0].clientX - startX;
+    const dy = event.changedTouches[0].clientY - startY;
+    if (screen === "character" && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      changeCharacter(dx < 0 ? 1 : -1);
+      suppressCharacterClick = true;
+      setTimeout(() => { suppressCharacterClick = false; }, 350);
+    }
   }, { passive: true });
-
   document.getElementById("characterStage").addEventListener("click", confirmCharacter);
-
   document.querySelectorAll(".characterCursor").forEach(cursor => {
     cursor.addEventListener("click", event => {
       event.stopPropagation();
       changeCharacter(Number(cursor.dataset.step));
     });
   });
-
   document.getElementById("backBtn").addEventListener("click", event => {
     event.stopPropagation();
     goBackSelection();
   });
-
-  document.querySelectorAll(".modeChoice").forEach(choice => {
-    const image = choice.querySelector(".modeChoiceImage");
-    image.addEventListener("error", () => { image.style.opacity = 0; });
-    choice.addEventListener("click", () => selectMode(choice.dataset.mode));
+  levelSelector.addEventListener("click", event => {
+    event.stopPropagation();
+    changeLevel();
   });
-
-  decideBtn.addEventListener("click", goToEvent);
+  decideBtn.addEventListener("click", handleDecision);
 }
 
 window.addEventListener("load", () => {
@@ -654,28 +614,17 @@ window.addEventListener("load", () => {
   bgFade = document.getElementById("bgFade");
   fade = document.getElementById("fade");
   decideBtn = document.getElementById("decideBtn");
-
+  levelSelector = document.getElementById("levelSelector");
+  levelValue = document.getElementById("levelValue");
+  selectionTitleArea = document.getElementById("selectionTitleArea");
+  selectionTitleText = document.getElementById("selectionTitleText");
+  selectVideo1 = document.getElementById("selectVideo1");
+  selectVideo2 = document.getElementById("selectVideo2");
+  selectPreloadVideo = document.getElementById("selectPreloadVideo");
+  activeSelectVideo = selectVideo1;
+  standbySelectVideo = selectVideo2;
   readSelectionParams();
-  updateFilteredEvents(true);
-  createCards();
   bindInteractions();
-
-  const viewport = document.getElementById("viewport");
-  if (screen === "event") {
-    viewport.classList.add("initial-event-ready");
-  }
-
   setScreen(screen);
-
-  preloadImages().then(() => {
-    viewport.style.opacity = 1;
-
-    if (viewport.classList.contains("initial-event-ready")) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          viewport.classList.remove("initial-event-ready");
-        });
-      });
-    }
-  });
+  preloadImages().then(() => { document.getElementById("viewport").style.opacity = 1; });
 });

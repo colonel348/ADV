@@ -11,9 +11,37 @@
     <script src="../js/select.js"></script>
   </head>
   <body>
+    <svg class="modeIconFilterDefs" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="modeIconOutlineR" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.55" result="expanded" />
+          <feComposite in="expanded" in2="SourceAlpha" operator="out" result="outlineShape" />
+          <feFlood flood-color="#dc7ca2" result="outlineColor" />
+          <feComposite in="outlineColor" in2="outlineShape" operator="in" result="outline" />
+          <feMerge><feMergeNode in="outline" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <filter id="modeIconOutlineS" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.55" result="expanded" />
+          <feComposite in="expanded" in2="SourceAlpha" operator="out" result="outlineShape" />
+          <feFlood flood-color="#dc8745" result="outlineColor" />
+          <feComposite in="outlineColor" in2="outlineShape" operator="in" result="outline" />
+          <feMerge><feMergeNode in="outline" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <filter id="modeIconOutlineC" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.55" result="expanded" />
+          <feComposite in="expanded" in2="SourceAlpha" operator="out" result="outlineShape" />
+          <feFlood flood-color="#8d7ed0" result="outlineColor" />
+          <feComposite in="outlineColor" in2="outlineShape" operator="in" result="outline" />
+          <feMerge><feMergeNode in="outline" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+    </svg>
     <div id="viewport">
       <div id="bgWrap">
         <img id="bgImg" />
+        <video id="selectVideo1" class="selectMovie" playsinline muted webkit-playsinline preload="auto"></video>
+        <video id="selectVideo2" class="selectMovie" playsinline muted webkit-playsinline preload="auto"></video>
+        <video id="selectPreloadVideo" class="selectPreloadMovie" playsinline muted webkit-playsinline preload="auto"></video>
       </div>
       <div id="bgFade"></div>
 
@@ -25,6 +53,11 @@
         <div id="cardList"></div>
       </div>
 
+      <button id="levelSelector" type="button" aria-label="特訓レベル1。押すと次のレベル">
+        <span class="levelSelectorLabel">特訓Lv.</span>
+        <span id="levelValue">1</span>
+      </button>
+
       <div id="characterStage" class="selectStage">
         <button class="characterCursor characterCursor-left" data-step="-1" type="button" aria-label="前のキャラクター"></button>
         <button class="characterCursor characterCursor-right" data-step="1" type="button" aria-label="次のキャラクター"></button>
@@ -32,22 +65,11 @@
         <div id="characterName"><span id="characterNameText"></span></div>
       </div>
 
-      <div id="modeStage" class="selectStage">
-        <div id="modePanel">
-          <button class="modeChoice" data-mode="R" data-story="ROMANCE" type="button">
-            <span class="modeChoiceText"><span class="modeChoiceLabel"><span class="modeInitial">恋</span>愛編</span></span>
-            <span class="modeChoiceVisual"><img class="modeChoiceImage" alt=""></span>
-          </button>
-          <button class="modeChoice" data-mode="S" data-story="SERIOUS" type="button">
-            <span class="modeChoiceText"><span class="modeChoiceLabel"><span class="modeInitial">本</span>気編</span></span>
-            <span class="modeChoiceVisual"><img class="modeChoiceImage" alt=""></span>
-          </button>
-          <button class="modeChoice" data-mode="C" data-story="CONTROL" type="button">
-            <span class="modeChoiceText"><span class="modeChoiceLabel"><span class="modeInitial">調</span>教編</span></span>
-            <span class="modeChoiceVisual"><img class="modeChoiceImage" alt=""></span>
-          </button>
-        </div>
+      <div id="selectionTitleArea">
+        <div id="selectionTitleText"></div>
       </div>
+
+      <div id="previewTapPrompt">TAP TO START</div>
 
       <div id="decisionArea">
         <div id="decideBtn" class="decideBtn">決定</div>

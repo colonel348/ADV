@@ -95,7 +95,7 @@ function getChrSelPath(chrId) {
 }
 
 function getBnrPath(evt) {
-  return getEvtDir(evt) + "/02.sel-B.png";
+  return getEvtDir(evt) + "/01.evt-B.png";
 }
 
 function getSelPath(evt) {
