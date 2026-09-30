@@ -14,6 +14,8 @@ let selectionChangeTimer = null;
 let levelSwitchTimer = null;
 let selectVideoSequence = 0;
 let selectLoopWatching = false;
+const PREVIEW_PLACE_DISPLAY_TIME = 1500;
+const PREVIEW_PLACE_FADE_TIME = 350;
 const chrList = ["FF", "AK", "SA"];
 let chrIdx = 1;
 let filteredEvtData = [];
@@ -334,6 +336,7 @@ function preloadSelectedEventVideo(evt) {
 function enterEventPreview() {
   if (!tgtEvtData) return;
   const viewport = document.getElementById("viewport");
+  const previewEvtId = tgtEvtData.evtId;
   clearTimeout(selectionChangeTimer);
   decideBtn.classList.add("pressed");
   setTimeout(() => decideBtn.classList.remove("pressed"), 500);
@@ -349,19 +352,38 @@ function enterEventPreview() {
     selectionTitleText.classList.add("slide-in");
     selectionTitleArea.classList.add("show");
 
-    playSelectionLoop(getEventLoopPath(tgtEvtData), () => {
-      setTimeout(() => {
-        fade.classList.remove("show");
-        setTimeout(() => viewport.classList.remove("screen-transitioning"), 500);
+    let videoReady = false;
+    let placeHidden = false;
 
-        // 場所名は黒フェード解除中も残し、映像表示後に少し間を置いて消す。
-        setTimeout(() => {
-          if (screen === "preview") {
-            selectionTitleArea.classList.remove("show");
-          }
-        }, 900);
-      }, 700);
+    const revealPreview = () => {
+      if (
+        !videoReady ||
+        !placeHidden ||
+        screen !== "preview" ||
+        tgtEvtData?.evtId !== previewEvtId
+      ) {
+        return;
+      }
+
+      fade.classList.remove("show");
+      setTimeout(() => viewport.classList.remove("screen-transitioning"), 500);
+    };
+
+    playSelectionLoop(getEventLoopPath(tgtEvtData), () => {
+      videoReady = true;
+      revealPreview();
     });
+
+    // 黒画面上で場所名を約1.5秒表示し、完全に消えてから映像を見せる。
+    setTimeout(() => {
+      if (screen !== "preview" || tgtEvtData?.evtId !== previewEvtId) return;
+      selectionTitleArea.classList.remove("show");
+
+      setTimeout(() => {
+        placeHidden = true;
+        revealPreview();
+      }, PREVIEW_PLACE_FADE_TIME);
+    }, PREVIEW_PLACE_DISPLAY_TIME);
   }, 500);
 }
 

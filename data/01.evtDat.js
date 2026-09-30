@@ -1,6 +1,6 @@
 ﻿const evtData = [
 
-  { evtId: "FF-R3", evtNm: "約束の代償は", fadeEvt: "2", plcNm: "ピノコニー - 屋上"},
+  { evtId: "FF-R3", evtNm: "約束の代償は", fadeEvt: "2", plcNm: "ピノコニー 屋上"},
 
   { evtId: "AK-S1", evtNm: "始まりの特訓", fadeEvt: "1", plcNm: "WEEKEND GARAGE"},
 
@@ -10,10 +10,10 @@
 
   { evtId: "SA-S1", evtNm: "並び立つ覚悟", fadeEvt: "2", plcNm: "ダンススタジオ"},
   
-  { evtId: "SA-S4", evtNm: "並び立つ覚悟", fadeEvt: "1", plcNm: "ダンススタジオ"},
+  { evtId: "SA-S4", evtNm: "並び立つ覚悟", fadeEvt: "1", plcNm: "ビビッドストリート"},
   
   { evtId: "SA-R2", evtNm: "雨の日の秘密", fadeEvt: "1", plcNm: "バスルーム"},
 
-  { evtId: "SA-C2", evtNm: "放課後の熱気", fadeEvt: "1", plcNm: "神山高校 - 教室"}
+  { evtId: "SA-C2", evtNm: "放課後の熱気", fadeEvt: "1", plcNm: "神山高校 教室"}
 
 ];
