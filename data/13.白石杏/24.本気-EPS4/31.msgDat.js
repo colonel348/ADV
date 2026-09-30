@@ -1,21 +1,21 @@
 ﻿window.msgData = [
 
  { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "遠慮も躊躇いも全部脱ぎ捨てて……　こはねと真っ向からぶつかりたいの……っ！" },
+    { msgId: "A", msgTxt: "……ふぅ、よし……　最後まで全力で、いくよ……！" },
+    { msgId: "L", msgTxt: "♪――――――っ！！" },
 
  { movId: "evt1" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
+    { msgId: "A", msgTxt: "（もっと遠くへ……！　過去の自分も、あの壁もすべて越えていく……っ！）" },
+    { msgId: "A", msgTxt: "♪――――――っ！！！！　……はぁ……、すぅ……っ、はぁっ……！" },
 
  { movId: "evt2" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "（頭がぼーっとする……　私、今の歌でちゃんと自分を超えられたのかな……っ）" },
+    { msgId: "A", msgTxt: "はぁ、はぁ……っ、杏、ちゃん……！　……やっぱり……凄い、な……っ！" },
+    { msgId: "L", msgTxt: "ありがとね、こはね……！ こはねとだから、全部出し切ることができたんだよ" },
 
  { movId: "evt2" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" }
+    { msgId: "A", msgTxt: "（あ……彰人、今の私の歌、彰人にも届いたかな……）" },
+    { msgId: "L", msgTxt: "ここまで強くなれたのは彰人のおかげだよ　私達で絶対にRADWEEKENDを超えようね…っ！" }
 
 ];

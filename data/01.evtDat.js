@@ -10,7 +10,7 @@
 
   { evtId: "SA-S1", evtNm: "並び立つ覚悟", fadeEvt: "2", plcNm: "ダンススタジオ"},
   
-  { evtId: "SA-S4", evtNm: "並び立つ覚悟", fadeEvt: "1", plcNm: "ビビッドストリート"},
+  { evtId: "SA-S4", evtNm: "こはねと真剣勝負", fadeEvt: "1", plcNm: "ビビッドストリート"},
   
   { evtId: "SA-R2", evtNm: "雨の日の秘密", fadeEvt: "1", plcNm: "バスルーム"},
 

@@ -1120,6 +1120,14 @@ button { font: inherit; }
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition:
+    opacity .3s ease,
+    visibility 0s linear .3s;
+}
+
+/* ②→③では決定ボタンを黒画面の手前に残し、フェード完了後に隠す。 */
+#viewport.screen-transitioning[data-screen="preview"] #decisionArea {
+  z-index: 32;
 }
 
 #previewTapPrompt {
@@ -1132,18 +1140,13 @@ button { font: inherit; }
   pointer-events: none;
   transform: translate(-50%, -50%);
   color: #fff;
-  -webkit-text-fill-color: #fff;
-  -webkit-text-stroke: 1.2px rgba(72,108,137,.98);
-  paint-order: stroke fill;
   font-family: inherit;
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: .24em;
+  letter-spacing: .14em;
   white-space: nowrap;
-  text-shadow:
-    0 2px 1px rgba(15,31,48,.66),
-    0 4px 5px rgba(10,24,39,.44);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, .75);
 }
 
 #viewport[data-screen="preview"] #previewTapPrompt {

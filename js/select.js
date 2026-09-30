@@ -144,6 +144,46 @@ function showCharacter(animated = false, direction = "left") {
   }, 260);
 }
 
+function preloadCharacterLoopVideo() {
+  const src = getCharacterLoopPath();
+
+  stopSelectionVideos();
+
+  const sequence = selectVideoSequence;
+  const video = selectVideo1;
+  activeSelectVideo = selectVideo1;
+  standbySelectVideo = selectVideo2;
+  prepareSelectionVideo(video, src);
+  video.currentTime = 0;
+  video.style.display = "block";
+
+  const warmup = () => {
+    if (screen !== "character" || sequence !== selectVideoSequence) return;
+
+    video.play().then(() => {
+      if (screen !== "character" || sequence !== selectVideoSequence) return;
+
+      const pauseAtFirstFrame = () => {
+        if (screen !== "character" || sequence !== selectVideoSequence) return;
+        video.pause();
+        video.currentTime = 0;
+      };
+
+      if (typeof video.requestVideoFrameCallback === "function") {
+        video.requestVideoFrameCallback(pauseAtFirstFrame);
+      } else {
+        requestAnimationFrame(pauseAtFirstFrame);
+      }
+    }).catch(() => {});
+  };
+
+  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    warmup();
+  } else {
+    video.addEventListener("loadeddata", warmup, { once: true });
+  }
+}
+
 function animateCharacterCursor(step) {
   const cursor = document.querySelector(step < 0 ? ".characterCursor-left" : ".characterCursor-right");
   if (!cursor) return;
@@ -164,6 +204,7 @@ function changeCharacter(step) {
   chrIdx = (chrIdx + step + chrList.length) % chrList.length;
   chrId = chrList[chrIdx];
   showCharacter(true, step < 0 ? "right" : "left");
+  preloadCharacterLoopVideo();
 }
 
 function setScreen(nextScreen, delayed = false) {
@@ -176,8 +217,8 @@ function setScreen(nextScreen, delayed = false) {
     screen = nextScreen;
     viewport.dataset.screen = screen;
     if (screen === "character") {
-      stopSelectionVideos();
       showCharacter();
+      preloadCharacterLoopVideo();
       if (onReady) onReady();
     } else {
       showEventSelection(true, onReady);

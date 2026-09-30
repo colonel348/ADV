@@ -2618,6 +2618,11 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
       playbackConfirmed = true;
 
+      // 実フレームを確認できた時点で、すぐ黒フェードを解除する。
+      // ここでさらに BLACK_FADE_TIME 待つと、再生済みのA動画が
+      // 約1秒間黒画面の裏で進んでしまう。
+      setFade(false);
+
       setTimeout(() => {
 
         if (
@@ -2627,29 +2632,16 @@ function playSeamlessMovie(srcA, srcL, movId) {
           return;
         }
 
-        setFade(false);
+        isBusy = false;
 
-        setTimeout(() => {
+        if (waitMovie) {
+          waitMovie = false;
+          showCurrent();
+        } else {
+          nextStep();
+        }
 
-          if (
-            playbackSequence !== aPlaybackSequence ||
-            currentVideo !== videoA
-          ) {
-            return;
-          }
-
-          isBusy = false;
-
-          if (waitMovie) {
-            waitMovie = false;
-            showCurrent();
-          } else {
-            nextStep();
-          }
-
-        }, FIRST_A_MSG_DELAY_TIME);
-
-      }, BLACK_FADE_TIME);
+      }, FIRST_A_MSG_DELAY_TIME);
 
     };
 
