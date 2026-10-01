@@ -14,6 +14,6 @@
   
   { evtId: "SA-R2", evtNm: "雨の日の秘密", fadeEvt: "1", plcNm: "バスルーム"},
 
-  { evtId: "SA-C2", evtNm: "放課後の熱気", fadeEvt: "1", plcNm: "神山高校 教室"}
+  { evtId: "SA-C2", evtNm: "放課後に全裸指導", fadeEvt: "1", plcNm: "神山高校 教室"}
 
 ];
