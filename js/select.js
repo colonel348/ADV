@@ -85,7 +85,9 @@ function getCharacterLoopPath() {
     S: "12.evt-L.mp4",
     C: "13.evt-L.mp4"
   };
-  const loopFile = loopFileByMode[befEvtId.charAt(3)] || "01.evt-L.mp4";
+  // ①を経由して②へ進む場合は、前イベントのモードを引き継がない。
+  const previousMode = screen === "character" ? "" : befEvtId.charAt(3);
+  const loopFile = loopFileByMode[previousMode] || "01.evt-L.mp4";
   return getChrDir(chrId) + "/00.選択/" + loopFile;
 }
 
@@ -222,7 +224,11 @@ function setScreen(nextScreen, delayed = false) {
   const isEventToCharacter = delayed && screen === "event" && nextScreen === "character";
   const keepCardsStatic = isCharacterToEvent || isEventToCharacter;
   viewport.classList.toggle("character-to-event", isCharacterToEvent);
+  viewport.classList.toggle("event-to-character", isEventToCharacter);
   viewport.classList.toggle("event-cards-static", keepCardsStatic);
+  const useSafeScreenFade = isCharacterToEvent || isEventToCharacter;
+  const fadeOutTime = useSafeScreenFade ? 650 : 500;
+  const fadeInWait = useSafeScreenFade ? 750 : 500;
 
   const apply = (onReady = null) => {
     screen = nextScreen;
@@ -238,7 +244,11 @@ function setScreen(nextScreen, delayed = false) {
   };
 
   if (!delayed) {
-    viewport.classList.remove("character-to-event", "event-cards-static");
+    viewport.classList.remove(
+      "character-to-event",
+      "event-to-character",
+      "event-cards-static"
+    );
     return apply();
   }
   viewport.classList.add("screen-transitioning");
@@ -255,17 +265,19 @@ function setScreen(nextScreen, delayed = false) {
             viewport.classList.remove(
               "screen-transitioning",
               "character-to-event",
+              "event-to-character",
               "event-cards-static"
             );
-          }, 500);
+          }, fadeOutTime);
         });
       });
     });
-  }, 500);
+  }, fadeInWait);
 }
 
 function confirmCharacter() {
   if (suppressCharacterClick) return;
+  befEvtId = "";
   selectedLevel = 1;
   evtIdx = -1;
   tgtEvtData = null;

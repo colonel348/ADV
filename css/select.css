@@ -906,6 +906,12 @@ button { font: inherit; }
 
 #fade.show { opacity: 1; }
 
+/* ①⇔②は完全に黒くしてから切り替え、前画面の残像を見せない。 */
+#viewport.character-to-event #fade,
+#viewport.event-to-character #fade {
+  transition-duration: .65s;
+}
+
 #preloadImageStage {
   position: fixed;
   left: -9999px;
@@ -946,6 +952,13 @@ button { font: inherit; }
 
 .selectMovie.front { z-index: 2; }
 .selectMovie.show { opacity: 1; }
+
+/* ①では事前準備中の動画要素を描画せず、キャラクター画像だけを見せる。 */
+#viewport[data-screen="character"] .selectMovie {
+  opacity: 0 !important;
+  visibility: hidden;
+  transition: none !important;
+}
 
 .selectPreloadMovie {
   position: fixed;
