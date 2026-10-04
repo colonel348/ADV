@@ -1287,7 +1287,9 @@ function moveFromEventEndDialog(targetEvent) {
   setTimeout(() => {
 
     if (!targetEvent) {
-      location.href = './select.html?chrId=' + encodeURIComponent(chrId);
+      location.href =
+        './select.html?chrId=' + encodeURIComponent(chrId) +
+        '&befEvtId=' + encodeURIComponent(evtId);
       return;
     }
 
@@ -1295,14 +1297,16 @@ function moveFromEventEndDialog(targetEvent) {
       location.href =
         './select.html?chrId=' + encodeURIComponent(chrId) +
         '&level=' + encodeURIComponent(targetEvent.selectLevel) +
-        '&autoFlg=' + encodeURIComponent(autoFlg);
+        '&autoFlg=' + encodeURIComponent(autoFlg) +
+        '&befEvtId=' + encodeURIComponent(evtId);
       return;
     }
 
     location.href =
       './select.html?chrId=' + encodeURIComponent(chrId) +
       '&evtId=' + encodeURIComponent(targetEvent.evtId) +
-      '&autoFlg=' + encodeURIComponent(autoFlg);
+      '&autoFlg=' + encodeURIComponent(autoFlg) +
+      '&befEvtId=' + encodeURIComponent(evtId);
 
   }, 800);
 
@@ -1347,7 +1351,9 @@ function moveTitle() {
   document.getElementById("msgArea").style.opacity = 0;
 
   setTimeout(() => {
-    location.href = './select.html?chrId=' + chrId;
+    location.href =
+      './select.html?chrId=' + encodeURIComponent(chrId) +
+      '&befEvtId=' + encodeURIComponent(evtId);
   }, BLACK_FADE_TIME);
 
 }
@@ -1363,7 +1369,11 @@ function moveSkip() {
   const nextLevel = Math.min(4, (Number(evtId.charAt(4)) || 1) + 1);
 
   setTimeout(() => {
-    location.href = './select.html?chrId=' + chrId + '&level=' + nextLevel + '&autoFlg=' + autoFlg;
+    location.href =
+      './select.html?chrId=' + encodeURIComponent(chrId) +
+      '&level=' + encodeURIComponent(nextLevel) +
+      '&autoFlg=' + encodeURIComponent(autoFlg) +
+      '&befEvtId=' + encodeURIComponent(evtId);
   }, BLACK_FADE_TIME);
 
 }

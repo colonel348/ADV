@@ -3,6 +3,7 @@ let levelSelector, levelValue, selectionTitleArea, selectionTitleText;
 let selectVideo1, selectVideo2, selectPreloadVideo, activeSelectVideo, standbySelectVideo;
 let screen = "character";
 let selectedLevel = 1;
+let befEvtId = "";
 let startX = 0;
 let startY = 0;
 let isDragging = false;
@@ -41,9 +42,9 @@ const levelEdgeColors = {
 };
 
 const modeLabels = {
-  R: "魅惑",
-  S: "鍛錬",
-  C: "羞恥"
+  R: "休息",
+  S: "特訓",
+  C: "調教"
 };
 
 const modeIconPaths = {
@@ -55,6 +56,7 @@ const modeIconPaths = {
 function readSelectionParams() {
   const params = new URLSearchParams(location.search);
   const requestedEvtId = (params.get("evtId") || "").trim();
+  befEvtId = (params.get("befEvtId") || "").trim();
   const requestedChrId = (params.get("chrId") || "AK").trim();
   const requestedLevel = Number(params.get("level"));
   const requestedEvent = evtData.find(evt => evt.evtId === requestedEvtId);
@@ -78,7 +80,13 @@ function readSelectionParams() {
 }
 
 function getCharacterLoopPath() {
-  return getChrDir(chrId) + "/00.選択/01.evt-L.mp4";
+  const loopFileByMode = {
+    R: "11.evt-L.mp4",
+    S: "12.evt-L.mp4",
+    C: "13.evt-L.mp4"
+  };
+  const loopFile = loopFileByMode[befEvtId.charAt(3)] || "01.evt-L.mp4";
+  return getChrDir(chrId) + "/00.選択/" + loopFile;
 }
 
 function getEventLoopPath(evt) {

@@ -65,13 +65,17 @@ function getEvtDir(evt) {
     SA: "13.白石杏"
   };
 
+  const chrCode = evt.evtId.substring(0, 2);
   const modeMap = {
-    R: { prefix: "1", name: "恋愛" },
-    S: { prefix: "2", name: "本気" },
+    R: { prefix: "2", name: "休息" },
+    S: {
+      prefix: "1",
+      name: chrCode === "FF" ? "開拓" : "特訓"
+    },
     C: { prefix: "3", name: "調教" }
   };
 
-  const chr = chrMap[evt.evtId.substring(0, 2)];
+  const chr = chrMap[chrCode];
   const mode = modeMap[evt.evtId.charAt(3)];
   const episode = evt.evtId.charAt(4);
   const eventDir =

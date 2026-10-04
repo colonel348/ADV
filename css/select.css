@@ -1266,7 +1266,7 @@ button { font: inherit; }
 .card[data-mode="S"] .cardModeIcon { filter: url("#modeIconOutlineS"); }
 .card[data-mode="C"] .cardModeIcon { filter: url("#modeIconOutlineC"); }
 
-/* 羞恥アイコンはPNG内の透明余白が広いため、見た目の占有率を他モードへ揃える。 */
+/* 調教アイコンはPNG内の透明余白が広いため、見た目の占有率を他モードへ揃える。 */
 .card[data-mode="C"] .cardModeIconFrame {
   width: 27px;
   height: 27px;
