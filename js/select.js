@@ -219,7 +219,10 @@ function setScreen(nextScreen, delayed = false) {
   const viewport = document.getElementById("viewport");
   clearTimeout(screenTransitionTimer);
   const isCharacterToEvent = delayed && screen === "character" && nextScreen === "event";
+  const isEventToCharacter = delayed && screen === "event" && nextScreen === "character";
+  const keepCardsStatic = isCharacterToEvent || isEventToCharacter;
   viewport.classList.toggle("character-to-event", isCharacterToEvent);
+  viewport.classList.toggle("event-cards-static", keepCardsStatic);
 
   const apply = (onReady = null) => {
     screen = nextScreen;
@@ -235,7 +238,7 @@ function setScreen(nextScreen, delayed = false) {
   };
 
   if (!delayed) {
-    viewport.classList.remove("character-to-event");
+    viewport.classList.remove("character-to-event", "event-cards-static");
     return apply();
   }
   viewport.classList.add("screen-transitioning");
@@ -249,7 +252,11 @@ function setScreen(nextScreen, delayed = false) {
         requestAnimationFrame(() => {
           fade.classList.remove("show");
           setTimeout(() => {
-            viewport.classList.remove("screen-transitioning", "character-to-event");
+            viewport.classList.remove(
+              "screen-transitioning",
+              "character-to-event",
+              "event-cards-static"
+            );
           }, 500);
         });
       });

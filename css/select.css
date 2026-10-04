@@ -84,6 +84,18 @@ button { font: inherit; }
   pointer-events: none;
 }
 
+/* ①⇔②の黒フェード中は、前回のカード位置や再配置の動きを見せない。 */
+#viewport.event-cards-static #sidebar,
+#viewport.event-cards-static #cardList,
+#viewport.event-cards-static .card,
+#viewport.event-cards-static .cardInner {
+  transition: none !important;
+}
+
+#viewport.event-cards-static #sidebar {
+  transform: translateX(0) !important;
+}
+
 #viewport.screen-leaving #sidebar,
 #viewport.screen-leaving #decisionArea,
 #viewport.screen-leaving #backBtn {
