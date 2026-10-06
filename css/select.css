@@ -824,6 +824,13 @@ button { font: inherit; }
   pointer-events: auto;
 }
 
+#viewport.event-unselected[data-screen="event"] #decisionArea {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
 #viewport.event-cards-leaving #decisionArea {
   opacity: 0;
   pointer-events: none;
@@ -910,6 +917,11 @@ button { font: inherit; }
 #viewport.character-to-event #fade,
 #viewport.event-to-character #fade {
   transition-duration: .65s;
+}
+
+/* ①→②は黒くなる速さを維持し、黒画面から②を見せる側だけを遅くする。 */
+#viewport.character-to-event.mode-black-reveal #fade {
+  transition-duration: 1.3s;
 }
 
 #preloadImageStage {
@@ -1179,6 +1191,12 @@ button { font: inherit; }
   animation: previewTapPulse 1.5s ease-in-out infinite;
 }
 
+/* old②と③の統合後は、場所名とTAP TO STARTを使用しない。 */
+#selectionTitleArea,
+#previewTapPrompt {
+  display: none !important;
+}
+
 @keyframes previewTapPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .3; }
@@ -1230,7 +1248,12 @@ button { font: inherit; }
 }
 
 #viewport[data-screen="event"] .card.active {
-  margin: 38px 8px;
+  margin: 28px 8px;
+}
+
+/* 1件だけの場合は選択前後で中心座標を変えず、その場で拡大する。 */
+#viewport[data-screen="event"] #cardList.single-card .card.active {
+  margin: 28px 8px;
 }
 
 .cardModeBadge {
@@ -1309,6 +1332,328 @@ button { font: inherit; }
 
 .card[data-mode="C"] .cardModeBadge {
   --mode-color: #8d7ed0;
+}
+
+/* =================================================
+ * 4画面版：①キャラクター → ②モード → old②イベント → ③開始
+ * ================================================= */
+#viewport[data-screen="mode"] #bgImg,
+#viewport[data-screen="event"] #bgImg,
+#viewport[data-screen="preview"] #bgImg {
+  opacity: 0 !important;
+}
+
+#viewport[data-screen="mode"] #modeStage {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+#modeStage {
+  align-items: flex-end;
+  padding: 0 4vw max(12vh, 34px);
+  box-sizing: border-box;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#modePanel {
+  width: min(78vw, 780px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 2.2vw, 24px);
+}
+
+.modeChoice {
+  --mode-bg-top: #efacc7;
+  --mode-bg-bottom: #d979a0;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  padding: clamp(10px, 1.4vw, 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 10px;
+  box-shadow: 0 7px 18px rgba(0,0,0,.34);
+}
+
+.modeChoice::before {
+  width: 28%;
+  height: 28%;
+}
+
+.modeChoice::after {
+  right: 50%;
+  top: 61%;
+  font-size: clamp(28px, 5vw, 55px);
+  letter-spacing: .025em;
+  transform: translate(50%, -50%);
+  -webkit-text-stroke-width: 1.5px;
+  -webkit-text-stroke-color: rgba(255,255,255,.13);
+}
+
+.modeChoiceVisual {
+  order: 0;
+  flex: 0 0 49%;
+  width: 58%;
+  height: 49%;
+  margin: 3% 0 0;
+  overflow: visible;
+  opacity: .86;
+}
+
+.modeChoiceImage {
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+
+.modeChoiceText {
+  order: 1;
+  flex: 1 1 auto;
+  width: 100%;
+  padding: 0;
+  justify-content: flex-end;
+  font-size: clamp(21px, 3.6vw, 37px);
+  line-height: 1;
+}
+
+.modeChoiceText::after { content: none !important; }
+
+.modeChoiceEnglish {
+  order: 2;
+  display: block;
+  margin-top: clamp(7px, 1.2vh, 12px);
+  color: #555463;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(10px, 1.6vw, 16px);
+  font-weight: 800;
+  letter-spacing: .04em;
+  opacity: .52;
+}
+
+.modeChoice.mode-empty {
+  filter: grayscale(.85) brightness(.78);
+  opacity: .72;
+}
+
+/* レベル選択は廃止。イベント一覧では選択モードの全Lvを表示する。 */
+#levelSelector,
+#viewport[data-screen="event"] #levelSelector {
+  display: none !important;
+}
+
+/* ②→old②：動画は維持し、モード消去後にカードと左マスクを同時に表示する。 */
+#viewport.mode-to-event #fade {
+  opacity: 0 !important;
+}
+
+/* backdrop-filterは透明な親の内側だと遅れて合成されるため、親は常時表示しておく。 */
+#viewport[data-screen="mode"] #sidebar {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  pointer-events: none;
+}
+
+#viewport[data-screen="mode"] #sidebar::before {
+  opacity: 0;
+  background: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+#viewport[data-screen="mode"] #cardList {
+  opacity: 0;
+}
+
+#viewport[data-screen="mode"] #sidebar::after {
+  opacity: 0;
+}
+
+#viewport.event-revealing[data-screen="event"] #sidebar {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: none;
+}
+
+#viewport.event-revealing[data-screen="event"] #cardList,
+#viewport.event-revealing[data-screen="event"] #decisionArea,
+#viewport.event-revealing[data-screen="event"] #backBtn {
+  opacity: 0 !important;
+  transition: opacity .4s ease !important;
+}
+
+#viewport.event-revealing[data-screen="event"] #sidebar::before {
+  opacity: 0;
+  background: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity .4s ease !important;
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+#viewport.event-revealing[data-screen="event"] #sidebar::after {
+  opacity: 0;
+  transition: opacity .4s ease !important;
+}
+
+#viewport.event-revealing.event-reveal-visible[data-screen="event"] #cardList,
+#viewport.event-revealing.event-reveal-visible[data-screen="event"] #decisionArea,
+#viewport.event-revealing.event-reveal-visible[data-screen="event"] #backBtn {
+  opacity: 1 !important;
+}
+
+#viewport.event-revealing.event-reveal-visible[data-screen="event"] #sidebar::before {
+  opacity: 1;
+}
+
+#viewport.event-revealing.event-reveal-visible[data-screen="event"] #sidebar::after {
+  opacity: 1;
+}
+
+#viewport.event-revealing.event-reveal-visible[data-screen="event"] #sidebar {
+  pointer-events: auto;
+}
+
+/* 後段のmode表示指定より優先し、②→old②でモードを確実にフェードアウトする。 */
+#viewport.mode-buttons-leaving[data-screen="mode"] #modeStage {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease;
+}
+
+/* old②→②：カードと左マスクを消してから、モードだけをフェード表示する。 */
+#viewport.event-to-mode[data-screen="event"] #cardList,
+#viewport.screen-transitioning.event-to-mode[data-screen="event"] #decisionArea,
+#viewport.event-to-mode[data-screen="event"] #sidebar::after,
+#viewport.screen-transitioning.event-to-mode[data-screen="event"] #backBtn {
+  opacity: 0 !important;
+  transition: opacity .4s ease !important;
+}
+
+#viewport.event-to-mode[data-screen="event"] #sidebar::before {
+  opacity: 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity .4s ease !important;
+}
+
+#viewport.mode-return-preparing[data-screen="mode"] #modeStage {
+  opacity: 0;
+  transition: none;
+}
+
+#viewport.mode-return-preparing.mode-return-visible[data-screen="mode"] #modeStage {
+  opacity: 1;
+  transition: opacity .45s ease;
+}
+
+/* 水玉と白グラデーションは、ぼかしとは別レイヤーで通常のopacityフェードにする。 */
+#sidebar::before {
+  background: none;
+}
+
+#sidebar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 200px;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.18) 30%, rgba(255,255,255,.10) 62%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+#viewport[data-screen="event"] #sidebar::after {
+  opacity: 1;
+}
+
+/* ②では左上の戻るボタンを使わず、右スワイプメニューから①へ戻る。 */
+#viewport[data-screen="mode"] #backBtn {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#selectControlArea {
+  position: absolute;
+  top: max(30px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  z-index: 30;
+  opacity: 0;
+  transform: translateX(24px);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+#selectControlArea.show {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.selectControlBtn {
+  width: 120px;
+  height: 36px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+  color: #3f3a63;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.selectControlIcon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+#viewport:not([data-screen="mode"]) #selectControlArea {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 動画用の黒フェードより、③の操作UIを常に手前へ置く。 */
+#viewport.event-video-switching[data-screen="event"] #sidebar,
+#viewport.event-to-mode[data-screen="event"] #sidebar {
+  z-index: 20;
+}
+
+/* 遷移中の操作ボタン強制表示より、未選択状態を優先する。 */
+#viewport.event-unselected[data-screen="event"] #decisionArea,
+#viewport.screen-transitioning.event-unselected[data-screen="event"] #decisionArea {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+@media (orientation: portrait) {
+  #modePanel { width: min(92vw, 780px); }
+  .modeChoice { height: auto; }
 }
 
 #viewport[data-screen="event"] .label {

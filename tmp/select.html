@@ -49,6 +49,13 @@
         <img src="../img/back.png" alt="">
       </button>
 
+      <div id="selectControlArea">
+        <button id="selectTitleBtn" class="selectControlBtn" type="button">
+          <img src="../img/title.png" class="selectControlIcon" alt="">
+          <span>タイトル</span>
+        </button>
+      </div>
+
       <div id="sidebar">
         <div id="cardList"></div>
       </div>
@@ -63,6 +70,23 @@
         <button class="characterCursor characterCursor-right" data-step="1" type="button" aria-label="次のキャラクター"></button>
         <div id="characterHint">TAP TO START</div>
         <div id="characterName"><span id="characterNameText"></span></div>
+      </div>
+
+      <div id="modeStage" class="selectStage" aria-label="モード選択">
+        <div id="modePanel">
+          <button class="modeChoice" data-mode="R" data-story="REFREH" type="button">
+            <span class="modeChoiceVisual"><img class="modeChoiceImage" src="../img/romance-mode.png" alt=""></span>
+            <span class="modeChoiceText"><span class="modeChoiceLabel">休息</span><span class="modeChoiceEnglish">REFREH</span></span>
+          </button>
+          <button class="modeChoice" data-mode="S" data-story="SERIOUS" type="button">
+            <span class="modeChoiceVisual"><img class="modeChoiceImage" src="../img/serious-mode.png" alt=""></span>
+            <span class="modeChoiceText"><span class="modeChoiceLabel">特訓</span><span class="modeChoiceEnglish">SERIOUS</span></span>
+          </button>
+          <button class="modeChoice" data-mode="C" data-story="CONTROL" type="button">
+            <span class="modeChoiceVisual"><img class="modeChoiceImage" src="../img/control-mode.png" alt=""></span>
+            <span class="modeChoiceText"><span class="modeChoiceLabel">調教</span><span class="modeChoiceEnglish">CONTROL</span></span>
+          </button>
+        </div>
       </div>
 
       <div id="selectionTitleArea">

@@ -3,6 +3,8 @@ let levelSelector, levelValue, selectionTitleArea, selectionTitleText;
 let selectVideo1, selectVideo2, selectPreloadVideo, activeSelectVideo, standbySelectVideo;
 let screen = "character";
 let selectedLevel = 1;
+let selectedMode = "";
+let initialEvtId = "";
 let befEvtId = "";
 let startX = 0;
 let startY = 0;
@@ -50,7 +52,7 @@ const modeLabels = {
 const modeIconPaths = {
   R: "../img/romance-mode.png",
   S: "../img/serious-mode.png",
-  C: "../img/shame-mode-v10.png"
+  C: "../img/control-mode.png"
 };
 
 function readSelectionParams() {
@@ -60,16 +62,15 @@ function readSelectionParams() {
   const requestedChrId = (params.get("chrId") || "AK").trim();
   const requestedLevel = Number(params.get("level"));
   const requestedEvent = evtData.find(evt => evt.evtId === requestedEvtId);
+  initialEvtId = requestedEvent ? requestedEvent.evtId : "";
 
   autoFlg = params.get("autoFlg") || "0";
   chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
   if (requestedEvent) chrId = requestedEvent.evtId.substring(0, 2);
 
-  if (Number.isInteger(requestedLevel) && requestedLevel >= 1 && requestedLevel <= 4) {
-    selectedLevel = requestedLevel;
-    screen = "event";
-  } else if (requestedEvent) {
+  if (requestedEvent) {
     selectedLevel = Number(requestedEvent.evtId.charAt(4)) || 1;
+    selectedMode = requestedEvent.evtId.charAt(3);
     screen = "event";
   }
 
@@ -220,15 +221,78 @@ function changeCharacter(step) {
 function setScreen(nextScreen, delayed = false) {
   const viewport = document.getElementById("viewport");
   clearTimeout(screenTransitionTimer);
-  const isCharacterToEvent = delayed && screen === "character" && nextScreen === "event";
-  const isEventToCharacter = delayed && screen === "event" && nextScreen === "character";
-  const keepCardsStatic = isCharacterToEvent || isEventToCharacter;
+  const isModeToEvent = delayed && screen === "mode" && nextScreen === "event";
+  const isEventToMode = delayed && screen === "event" && nextScreen === "mode";
+  const isCharacterToEvent = delayed && screen === "character" && nextScreen === "mode";
+  const isEventToCharacter = delayed && screen === "mode" && nextScreen === "character";
+  const keepCardsStatic = delayed && (screen === "event" || nextScreen === "event");
   viewport.classList.toggle("character-to-event", isCharacterToEvent);
   viewport.classList.toggle("event-to-character", isEventToCharacter);
   viewport.classList.toggle("event-cards-static", keepCardsStatic);
   const useSafeScreenFade = isCharacterToEvent || isEventToCharacter;
-  const fadeOutTime = useSafeScreenFade ? 650 : 500;
+  const fadeOutTime = isCharacterToEvent ? 1300 : (useSafeScreenFade ? 650 : 500);
   const fadeInWait = useSafeScreenFade ? 750 : 500;
+
+  if (isModeToEvent) {
+    document.getElementById("selectControlArea").classList.remove("show");
+    viewport.classList.add("screen-transitioning", "mode-to-event", "mode-buttons-leaving");
+
+    screenTransitionTimer = setTimeout(() => {
+      screen = "event";
+      viewport.dataset.screen = screen;
+      viewport.classList.add("event-revealing");
+      showEventSelection(false);
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          viewport.classList.add("event-reveal-visible");
+          viewport.classList.remove("mode-buttons-leaving");
+
+          screenTransitionTimer = setTimeout(() => {
+            viewport.classList.remove(
+              "screen-transitioning",
+              "mode-to-event",
+              "event-revealing",
+              "event-reveal-visible",
+              "event-cards-static"
+            );
+          }, 450);
+        });
+      });
+    }, 350);
+    return;
+  }
+
+  if (isEventToMode) {
+    const restoreCommonVideo = Boolean(tgtEvtData);
+    viewport.classList.add("screen-transitioning", "event-to-mode");
+    if (restoreCommonVideo) bgFade.classList.add("show");
+
+    screenTransitionTimer = setTimeout(() => {
+      screen = "mode";
+      viewport.dataset.screen = screen;
+      viewport.classList.add("mode-return-preparing");
+      showModeSelection(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            viewport.classList.add("mode-return-visible");
+            if (restoreCommonVideo) bgFade.classList.remove("show");
+
+            screenTransitionTimer = setTimeout(() => {
+              viewport.classList.remove(
+                "screen-transitioning",
+                "event-to-mode",
+                "mode-return-preparing",
+                "mode-return-visible",
+                "event-cards-static"
+              );
+            }, 500);
+          });
+        });
+      }, restoreCommonVideo);
+    }, restoreCommonVideo ? 500 : 400);
+    return;
+  }
 
   const apply = (onReady = null) => {
     screen = nextScreen;
@@ -237,7 +301,9 @@ function setScreen(nextScreen, delayed = false) {
       showCharacter();
       preloadCharacterLoopVideo();
       if (onReady) onReady();
-    } else {
+    } else if (screen === "mode") {
+      showModeSelection(onReady);
+    } else if (screen === "event") {
       showEventSelection(true, onReady);
     }
     requestAnimationFrame(() => viewport.classList.remove("screen-leaving"));
@@ -260,13 +326,15 @@ function setScreen(nextScreen, delayed = false) {
     apply(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          viewport.classList.toggle("mode-black-reveal", isCharacterToEvent);
           fade.classList.remove("show");
           setTimeout(() => {
             viewport.classList.remove(
               "screen-transitioning",
               "character-to-event",
               "event-to-character",
-              "event-cards-static"
+              "event-cards-static",
+              "mode-black-reveal"
             );
           }, fadeOutTime);
         });
@@ -278,17 +346,58 @@ function setScreen(nextScreen, delayed = false) {
 function confirmCharacter() {
   if (suppressCharacterClick) return;
   befEvtId = "";
-  selectedLevel = 1;
+  selectedMode = "";
   evtIdx = -1;
   tgtEvtData = null;
-  setScreen("event", true);
+  setScreen("mode", true);
 }
 
 function updateFilteredEvents() {
-  const order = { R: 0, S: 1, C: 2 };
   filteredEvtData = evtData
-    .filter(evt => evt.evtId.substring(0, 2) === chrId && Number(evt.evtId.charAt(4)) === selectedLevel)
-    .sort((a, b) => (order[a.evtId.charAt(3)] ?? 9) - (order[b.evtId.charAt(3)] ?? 9));
+    .filter(evt => evt.evtId.substring(0, 2) === chrId && evt.evtId.charAt(3) === selectedMode)
+    .sort((a, b) => Number(a.evtId.charAt(4)) - Number(b.evtId.charAt(4)));
+}
+
+function getModeLabel(mode) {
+  if (mode === "S" && chrId === "FF") return "開拓";
+  return modeLabels[mode] || "";
+}
+
+function showModeSelection(onReady = null, restartCommonVideo = true) {
+  evtIdx = -1;
+  evtId = "";
+  tgtEvtData = null;
+  document.getElementById("viewport").classList.remove("event-unselected");
+  decideBtn.classList.add("disabled");
+
+  document.querySelectorAll(".modeChoice").forEach(button => {
+    const mode = button.dataset.mode;
+    const hasEvent = evtData.some(evt =>
+      evt.evtId.substring(0, 2) === chrId && evt.evtId.charAt(3) === mode
+    );
+    const label = button.querySelector(".modeChoiceLabel");
+    if (label) label.textContent = getModeLabel(mode);
+    button.classList.toggle("mode-empty", !hasEvent);
+    button.disabled = !hasEvent;
+    button.setAttribute("aria-disabled", String(!hasEvent));
+  });
+
+  bgImg.src = getChrSelPath(chrId);
+  bgImg.style.opacity = 0;
+  if (restartCommonVideo) {
+    playSelectionLoop(getCharacterLoopPath(), onReady);
+  } else if (onReady) {
+    onReady();
+  }
+}
+
+function selectMode(mode) {
+  const button = document.querySelector(`.modeChoice[data-mode="${mode}"]`);
+  if (!button || button.disabled) return;
+  document.getElementById("selectControlArea").classList.remove("show");
+  selectedMode = mode;
+  initialEvtId = "";
+  setScreen("event", true);
 }
 
 function updateLevelSelector() {
@@ -300,21 +409,27 @@ function updateLevelSelector() {
 }
 
 function centerUnselectedCards() {
+  const sidebar = document.getElementById("sidebar");
+  const offset = Math.max(0, (sidebar.clientHeight - cardList.scrollHeight) / 2);
+  cardList.style.transition = "none";
+  cardList.style.transform = `translateY(${offset}px)`;
+  cardList.offsetHeight;
   requestAnimationFrame(() => {
-    const sidebar = document.getElementById("sidebar");
-    const offset = Math.max(0, (sidebar.clientHeight - cardList.scrollHeight) / 2);
-    cardList.style.transform = `translateY(${offset}px)`;
+    cardList.style.transition = "";
   });
 }
 
 function createCards() {
+  const viewport = document.getElementById("viewport");
   cardList.innerHTML = "";
+  cardList.classList.toggle("single-card", filteredEvtData.length === 1);
+  viewport.classList.add("event-unselected");
   decideBtn.classList.add("disabled");
 
   if (!filteredEvtData.length) {
     const empty = document.createElement("div");
     empty.id = "emptyEvents";
-    empty.textContent = `特訓Lv${selectedLevel}のイベントはまだありません`;
+    empty.textContent = `${getModeLabel(selectedMode)}のイベントはまだありません`;
     cardList.appendChild(empty);
     centerUnselectedCards();
     return;
@@ -340,7 +455,7 @@ function createCards() {
     modeIcon.alt = "";
     modeIconFrame.appendChild(modeIcon);
     const modeText = document.createElement("span");
-    modeText.textContent = modeLabels[mode] || "";
+    modeText.textContent = getModeLabel(mode);
     modeBadge.append(modeIconFrame, modeText);
     const label = document.createElement("div");
     label.className = "label";
@@ -360,35 +475,50 @@ function createCards() {
     });
     cardList.appendChild(card);
   });
-  selectEvent(0, true);
+  centerUnselectedCards();
+  initialEvtId = "";
 }
 
-function selectEvent(index, instant = false) {
+function selectEvent(index) {
   if (evtIdx === index) return;
   evtIdx = index;
   tgtEvtData = filteredEvtData[index];
   evtId = tgtEvtData.evtId;
-  decideBtn.classList.remove("disabled");
+  decideBtn.classList.add("disabled");
 
   const cards = document.querySelectorAll(".card");
   cards.forEach((card, i) => card.classList.toggle("active", i === index));
   const activeCard = cards[index];
-  if (activeCard) {
+  if (activeCard && filteredEvtData.length > 1) {
     const sidebar = document.getElementById("sidebar");
     const offset = activeCard.offsetTop - ((sidebar.clientHeight - activeCard.offsetHeight) / 2);
 
-    if (instant) {
-      cardList.style.transition = "none";
-    }
-
     cardList.style.transform = `translateY(${-offset}px)`;
-
-    if (instant) {
-      cardList.offsetHeight;
-      cardList.style.transition = "";
-    }
   }
   preloadSelectedEventVideo(tgtEvtData);
+  showSelectedEventVideo(tgtEvtData);
+}
+
+function showSelectedEventVideo(evt) {
+  const viewport = document.getElementById("viewport");
+  const selectedEvtId = evt.evtId;
+  clearTimeout(selectionChangeTimer);
+  viewport.classList.add("screen-transitioning", "event-video-switching");
+  bgFade.classList.add("show");
+
+  selectionChangeTimer = setTimeout(() => {
+    if (screen !== "event" || tgtEvtData?.evtId !== selectedEvtId) return;
+
+    playSelectionLoop(getEventLoopPath(evt), () => {
+      if (screen !== "event" || tgtEvtData?.evtId !== selectedEvtId) return;
+      viewport.classList.remove("event-unselected");
+      decideBtn.classList.remove("disabled");
+      bgFade.classList.remove("show");
+      setTimeout(() => {
+        viewport.classList.remove("screen-transitioning", "event-video-switching");
+      }, 500);
+    });
+  }, 500);
 }
 
 function preloadSelectedEventVideo(evt) {
@@ -514,6 +644,22 @@ function playSelectionLoop(src, onReady = null) {
     if (onReady) onReady();
   };
 
+  const notifyReadyAfterFirstFrame = () => {
+    if (typeof first.requestVideoFrameCallback === "function") {
+      first.requestVideoFrameCallback(() => {
+        if (sequence === selectVideoSequence) notifyReady();
+      });
+      return;
+    }
+
+    // requestVideoFrameCallback非対応環境では、play成功後に2描画待ってから公開する。
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (sequence === selectVideoSequence) notifyReady();
+      });
+    });
+  };
+
   const start = () => {
     if (sequence !== selectVideoSequence || playPending) return;
     playPending = true;
@@ -521,7 +667,7 @@ function playSelectionLoop(src, onReady = null) {
       playPending = false;
       if (sequence !== selectVideoSequence) return;
       first.classList.add("show");
-      notifyReady();
+      notifyReadyAfterFirstFrame();
       watchSelectionLoop(src, sequence);
     }).catch(() => {
       playPending = false;
@@ -594,7 +740,6 @@ function showEventSelection(restartCommonVideo = true, onVideoReady = null) {
   evtId = "";
   tgtEvtData = null;
   updateFilteredEvents();
-  updateLevelSelector();
   updateDecideButton();
   createCards();
   bgImg.src = getChrSelPath(chrId);
@@ -629,6 +774,8 @@ function goBackSelection() {
   if (screen === "preview") {
     returnToEventSelection();
   } else if (screen === "event") {
+    setScreen("mode", true);
+  } else if (screen === "mode") {
     setScreen("character", true);
   }
 }
@@ -651,18 +798,13 @@ function goToEvent() {
 
 function handleDecision() {
   if (screen === "event") {
-    enterEventPreview();
-  } else if (screen === "preview") {
     goToEvent();
   }
 }
 
 function bindInteractions() {
   const viewport = document.getElementById("viewport");
-  viewport.addEventListener("click", event => {
-    if (screen !== "preview" || event.target.closest("#backBtn")) return;
-    goToEvent();
-  });
+  const selectControlArea = document.getElementById("selectControlArea");
   viewport.addEventListener("touchstart", event => {
     if (event.target.closest("button") || event.target.closest(".card")) return;
     isDragging = true;
@@ -674,7 +816,9 @@ function bindInteractions() {
     isDragging = false;
     const dx = event.changedTouches[0].clientX - startX;
     const dy = event.changedTouches[0].clientY - startY;
-    if (screen === "character" && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+    if (screen === "mode" && Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy)) {
+      selectControlArea.classList.toggle("show", dx < 0);
+    } else if (screen === "character" && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
       changeCharacter(dx < 0 ? 1 : -1);
       suppressCharacterClick = true;
       setTimeout(() => { suppressCharacterClick = false; }, 350);
@@ -687,13 +831,20 @@ function bindInteractions() {
       changeCharacter(Number(cursor.dataset.step));
     });
   });
+  document.querySelectorAll(".modeChoice").forEach(button => {
+    button.addEventListener("click", event => {
+      event.stopPropagation();
+      selectMode(button.dataset.mode);
+    });
+  });
   document.getElementById("backBtn").addEventListener("click", event => {
     event.stopPropagation();
     goBackSelection();
   });
-  levelSelector.addEventListener("click", event => {
+  document.getElementById("selectTitleBtn").addEventListener("click", event => {
     event.stopPropagation();
-    changeLevel();
+    selectControlArea.classList.remove("show");
+    setScreen("character", true);
   });
   decideBtn.addEventListener("click", handleDecision);
 }

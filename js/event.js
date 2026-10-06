@@ -441,7 +441,7 @@ window.addEventListener("load", () => {
     e => {
 
       e.stopPropagation();
-      moveSelect();
+      moveNextControl();
 
     }
   );
@@ -1339,6 +1339,37 @@ function moveSelect(
 ) {
 
   showEventEndDialog(transitionTime);
+
+}
+
+/*************************************************
+ * 右メニュー「次に進む」
+ * evt1中はevt2の先頭へ進み、evt2中はスキップと同じ扱いで終了する。
+ *************************************************/
+function moveNextControl() {
+
+  const movIndex = getCurrentMovItemIndex(currentIndex);
+  const currentMovId = movIndex >= 0
+    ? String(currentData[movIndex].movId || "")
+    : "";
+  const evt2Index = findMovIndex("evt2");
+
+  if (currentMovId === "evt1" && evt2Index >= 0) {
+    setFade(true);
+    document.getElementById("msgArea").style.opacity = 0;
+    document.getElementById("controlArea").classList.remove("show");
+
+    setTimeout(() => {
+      location.href =
+        './event.html?chrId=' + encodeURIComponent(chrId) +
+        '&evtId=' + encodeURIComponent(evtId) +
+        '&autoFlg=' + encodeURIComponent(autoFlg) +
+        '&debugMovId=evt2';
+    }, BLACK_FADE_TIME);
+    return;
+  }
+
+  moveSkip();
 
 }
 
