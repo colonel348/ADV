@@ -160,6 +160,14 @@ button { font: inherit; }
   pointer-events: none;
 }
 
+body.event-start-leaving #backBtn,
+body.event-start-leaving #previewTapPrompt {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity .65s ease, visibility 0s linear .65s !important;
+}
+
 #backBtn::before {
   content: none;
 }

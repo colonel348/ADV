@@ -84,14 +84,30 @@ function updateEventLevelStatus(evt = null, blinkPending = false) {
   const preview = getPreviewLvKbn(evt);
   const value = document.getElementById("eventLevelStatusValue");
   const segments = status.querySelectorAll(".eventLevelSegments span");
-  value.textContent = preview.length;
+  const nextValue = String(preview.length);
+  if (value.textContent !== nextValue) {
+    value.classList.remove("value-changing");
+    value.offsetWidth;
+    value.textContent = nextValue;
+    value.classList.add("value-changing");
+  }
   status.setAttribute("aria-label", `レベル${preview.length}`);
   segments.forEach((segment, index) => {
     const mode = preview.charAt(index);
     if (mode) segment.dataset.mode = mode;
     else delete segment.dataset.mode;
-    segment.classList.toggle("pending", blinkPending && index >= current.length && index < preview.length);
+    segment.classList.remove("pending");
   });
+
+  if (blinkPending && preview.length > current.length) {
+    // 追加済み区画も含めて同一フレームで再開し、点滅の位相を揃える。
+    status.offsetWidth;
+    segments.forEach((segment, index) => {
+      if (index >= current.length && index < preview.length) {
+        segment.classList.add("pending");
+      }
+    });
+  }
 }
 
 function readSelectionParams() {
@@ -422,8 +438,7 @@ function confirmCharacter() {
     fade.classList.add("show");
     setTimeout(() => {
       location.href = "./event.html?chrId=" + encodeURIComponent(chrId) +
-        "&screen=mode&autoFlg=" + encodeURIComponent(autoFlg) +
-        "&LvKbn=" + encodeURIComponent(normalizeLvKbn(lvKbn));
+        "&screen=mode&autoFlg=" + encodeURIComponent(autoFlg);
     }, 500);
     return;
   }
@@ -485,6 +500,7 @@ function selectMode(mode) {
   const button = document.querySelector(`.modeChoice[data-mode="${mode}"]`);
   if (!button || button.disabled) return;
   document.getElementById("selectControlArea").classList.remove("show");
+  lvKbn = "";
   selectedMode = mode;
   initialEvtId = "";
   setScreen("event", true);
@@ -956,13 +972,14 @@ function goToEvent() {
   }
 
   isDeciding = true;
+  document.body.classList.add("event-start-leaving");
   decideBtn.classList.add("pressed", "disabled");
   setTimeout(() => fade.classList.add("show"), 120);
   setTimeout(() => {
     stopSelectionVideos();
     eventPlaybackPreloadVideos.forEach(video => video.pause());
     window.startEmbeddedEventPlayback(tgtEvtData.evtId, autoFlg, getPreviewLvKbn(tgtEvtData));
-  }, 520);
+  }, 780);
 }
 
 function handleDecision() {
@@ -1028,8 +1045,7 @@ function bindInteractions() {
     event.stopPropagation();
     selectControlArea.classList.remove("show");
     if (document.body.dataset.selectionHost === "event") {
-      location.href = "./select.html?chrId=" + encodeURIComponent(chrId) +
-        "&LvKbn=" + encodeURIComponent(normalizeLvKbn(lvKbn));
+      location.href = "./select.html?chrId=" + encodeURIComponent(chrId);
       return;
     }
     setScreen("character", true);

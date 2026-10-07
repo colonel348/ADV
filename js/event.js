@@ -398,6 +398,7 @@ function startEventPlayback() {
   eventPlaybackStarted = true;
 
   document.body.classList.add("event-playback");
+  document.body.classList.remove("event-start-leaving");
 
   videoA = document.getElementById("videoA");
   videoL1 = document.getElementById("videoL1");
@@ -1347,8 +1348,7 @@ function moveFromEventEndDialog(targetEvent) {
     if (!targetEvent) {
       location.href =
         './select.html?chrId=' + encodeURIComponent(chrId) +
-        '&befEvtId=' + encodeURIComponent(evtId) +
-        '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn));
+        '&befEvtId=' + encodeURIComponent(evtId);
       return;
     }
 
@@ -1435,8 +1435,7 @@ function moveTitle() {
 
   setTimeout(() => {
     location.href =
-      './select.html?chrId=' + encodeURIComponent(chrId) +
-      '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn));
+      './select.html?chrId=' + encodeURIComponent(chrId);
   }, BLACK_FADE_TIME);
 
 }
