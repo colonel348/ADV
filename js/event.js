@@ -1226,11 +1226,16 @@ function getNextEventAtCompletion() {
 
   const currentLevel = Number(evtId.charAt(4));
 
-  if (!Number.isInteger(currentLevel) || currentLevel < 1 || currentLevel >= 4) {
+  if (!Number.isInteger(currentLevel) || currentLevel < 1) {
     return null;
   }
 
-  return { selectLevel: currentLevel + 1 };
+  const hasNextEvent = evtData.some(evt =>
+    evt.evtId.substring(0, 2) === chrId &&
+    Number(evt.evtId.charAt(4)) > currentLevel
+  );
+
+  return hasNextEvent ? { selectAfterEvent: true } : null;
 
 }
 
@@ -1293,10 +1298,9 @@ function moveFromEventEndDialog(targetEvent) {
       return;
     }
 
-    if (targetEvent.selectLevel) {
+    if (targetEvent.selectAfterEvent) {
       location.href =
         './select.html?chrId=' + encodeURIComponent(chrId) +
-        '&level=' + encodeURIComponent(targetEvent.selectLevel) +
         '&autoFlg=' + encodeURIComponent(autoFlg) +
         '&befEvtId=' + encodeURIComponent(evtId);
       return;
@@ -1320,7 +1324,7 @@ function bindEventEndDialog() {
   cancelButton.addEventListener("click", event => {
     event.stopPropagation();
     moveFromEventEndDialog({
-      selectLevel: Math.min(4, Math.max(1, Number(evtId.charAt(4)) || 1))
+      evtId
     });
   });
 
@@ -1383,8 +1387,7 @@ function moveTitle() {
 
   setTimeout(() => {
     location.href =
-      './select.html?chrId=' + encodeURIComponent(chrId) +
-      '&befEvtId=' + encodeURIComponent(evtId);
+      './select.html?chrId=' + encodeURIComponent(chrId);
   }, BLACK_FADE_TIME);
 
 }

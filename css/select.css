@@ -1191,12 +1191,6 @@ button { font: inherit; }
   animation: previewTapPulse 1.5s ease-in-out infinite;
 }
 
-/* old②と③の統合後は、場所名とTAP TO STARTを使用しない。 */
-#selectionTitleArea,
-#previewTapPrompt {
-  display: none !important;
-}
-
 @keyframes previewTapPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .3; }
@@ -1242,18 +1236,18 @@ button { font: inherit; }
 
 /* イベントカードサイズ */
 #viewport[data-screen="event"] .card {
-  width: 130px;
+  width: 156px;
   height: 68px;
-  margin: 28px 8px;
+  margin: 18px 8px;
 }
 
 #viewport[data-screen="event"] .card.active {
-  margin: 28px 8px;
+  margin: 18px 8px;
 }
 
 /* 1件だけの場合は選択前後で中心座標を変えず、その場で拡大する。 */
 #viewport[data-screen="event"] #cardList.single-card .card.active {
-  margin: 28px 8px;
+  margin: 18px 8px;
 }
 
 .cardModeBadge {
@@ -1559,7 +1553,7 @@ button { font: inherit; }
   transition: opacity .45s ease;
 }
 
-/* 水玉と白グラデーションは、ぼかしとは別レイヤーで通常のopacityフェードにする。 */
+/* 水玉と青グラデーションは、ぼかしとは別レイヤーで通常のopacityフェードにする。 */
 #sidebar::before {
   background: none;
 }
@@ -1573,8 +1567,7 @@ button { font: inherit; }
   z-index: 0;
   width: 200px;
   background:
-    radial-gradient(circle, rgba(255,255,255,.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px,
-    linear-gradient(90deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.18) 30%, rgba(255,255,255,.10) 62%, transparent 100%);
+    radial-gradient(circle, rgba(255,255,255,.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px;
   -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
   mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
   opacity: 0;
@@ -1684,4 +1677,247 @@ button { font: inherit; }
 
 @supports (-webkit-touch-callout: none) {
   #viewport[data-screen="event"] .labelText { transform: none; }
+}
+
+/* =================================================
+ * ③イベント一覧：レベルアイコン＋イベント名
+ * ================================================= */
+#viewport[data-screen="event"] #cardList {
+  margin-left: 40px;
+}
+
+#viewport[data-screen="event"] .cardInner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 7px;
+  box-sizing: border-box;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  transform-origin: center center;
+  isolation: isolate;
+  transition:
+    transform .28s ease,
+    filter .28s ease,
+    background-color .28s ease,
+    border-radius .28s ease,
+    box-shadow .28s ease,
+    color .28s ease;
+}
+
+#viewport[data-screen="event"] .card::before,
+#viewport[data-screen="event"] .card::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 126%;
+  z-index: 0;
+  height: 2px;
+  background: rgba(255,255,255,.24);
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity .25s ease;
+}
+
+#viewport[data-screen="event"] .card::before {
+  display: none;
+  top: -9px;
+}
+
+#viewport[data-screen="event"] .card:first-child::before {
+  display: block;
+}
+
+#viewport[data-screen="event"] .card::after {
+  bottom: -9px;
+}
+
+#viewport[data-screen="event"] .card.active::before,
+#viewport[data-screen="event"] .card.active::after,
+#viewport[data-screen="event"] .card:has(+ .card.active)::after {
+  opacity: 0;
+}
+
+#viewport[data-screen="event"] .card:not(.active) .cardInner {
+  filter: none;
+}
+
+#viewport[data-screen="event"] .cardInner::before,
+#viewport[data-screen="event"] .cardInner::after {
+  content: none;
+}
+
+#viewport[data-screen="event"] .card.active .cardInner {
+  gap: 8px;
+  padding: 8px 7px;
+  border-color: transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #42415d;
+  box-shadow: none;
+  transform: scale(1);
+}
+
+#viewport[data-screen="event"] .cardInner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 8px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  opacity: 0;
+  transform: scale(1.12);
+  transform-origin: center center;
+  transition: opacity .28s ease, transform .28s ease;
+}
+
+#viewport[data-screen="event"] .card.active .cardInner::before {
+  opacity: 1;
+  transform: scale(1.4);
+}
+
+.eventLevelArea {
+  position: relative;
+  flex: 0 0 29px;
+  width: 29px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-10px);
+}
+
+.eventLevelNumber {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--event-level-color, #39c7e8);
+  color: #45435e;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  padding-bottom: 1px;
+  transition: width .28s ease, height .28s ease, font-size .28s ease;
+}
+
+.card.active .eventLevelNumber {
+  width: 30px;
+  height: 30px;
+  font-size: 17.25px;
+}
+
+.eventLevelLabel {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  z-index: 1;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  isolation: isolate;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%);
+  transition: opacity .25s ease, font-size .28s ease, visibility 0s linear .25s;
+}
+
+.eventLevelLabel::before {
+  content: attr(data-label);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: transparent;
+  -webkit-text-stroke: 3.5px #4b4962;
+  paint-order: stroke fill;
+  pointer-events: none;
+}
+
+.card.active .eventLevelLabel {
+  font-size: 11px;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.card.active .eventLevelLabel::before {
+  -webkit-text-stroke-width: 4.8px;
+}
+
+.card[data-level="1"] { --event-level-color: #39c7e8; }
+.card[data-level="2"] { --event-level-color: #f3ad25; }
+.card[data-level="3"] { --event-level-color: #ef4f78; }
+.card[data-level="4"] { --event-level-color: #b443df; }
+
+.eventTextArea {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  transform: translateX(-10px);
+  transition: gap .28s ease;
+}
+
+.eventTitle {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: none;
+  transition: font-size .28s ease, transform .28s ease, color .28s ease;
+}
+
+.card:not(.active) .eventTitle {
+  transform: translateY(1px);
+}
+
+.eventPlace {
+  display: block;
+  overflow: hidden;
+  max-height: 0;
+  color: #5a5870;
+  font-size: 7px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    max-height .28s ease,
+    opacity .22s ease,
+    transform .28s ease;
+}
+
+.card.active .eventTitle {
+  font-size: 15px;
+  font-weight: 900;
+  text-shadow: none;
+}
+
+.card.active .eventTextArea {
+  gap: 3px;
+}
+
+.card.active .eventPlace {
+  max-height: 10px;
+  font-size: 10px;
+  opacity: 1;
+  transform: translateY(0);
 }

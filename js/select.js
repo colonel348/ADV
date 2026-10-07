@@ -6,6 +6,7 @@ let selectedLevel = 1;
 let selectedMode = "";
 let initialEvtId = "";
 let befEvtId = "";
+let previousEventLevel = 0;
 let startX = 0;
 let startY = 0;
 let isDragging = false;
@@ -62,16 +63,25 @@ function readSelectionParams() {
   const requestedChrId = (params.get("chrId") || "AK").trim();
   const requestedLevel = Number(params.get("level"));
   const requestedEvent = evtData.find(evt => evt.evtId === requestedEvtId);
+  const previousEvent = evtData.find(evt => evt.evtId === befEvtId);
   initialEvtId = requestedEvent ? requestedEvent.evtId : "";
 
   autoFlg = params.get("autoFlg") || "0";
   chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
   if (requestedEvent) chrId = requestedEvent.evtId.substring(0, 2);
+  else if (previousEvent) chrId = previousEvent.evtId.substring(0, 2);
 
   if (requestedEvent) {
     selectedLevel = Number(requestedEvent.evtId.charAt(4)) || 1;
     selectedMode = requestedEvent.evtId.charAt(3);
     screen = "event";
+  } else if (previousEvent) {
+    previousEventLevel = Number(previousEvent.evtId.charAt(4)) || 0;
+    const hasNextEvent = evtData.some(evt =>
+      evt.evtId.substring(0, 2) === chrId &&
+      Number(evt.evtId.charAt(4)) > previousEventLevel
+    );
+    screen = hasNextEvent ? "mode" : "character";
   }
 
   evtId = "";
@@ -98,7 +108,6 @@ function getEventLoopPath(evt) {
 
 function preloadImages() {
   const urls = chrList.map(getChrSelPath).concat(Object.values(modeIconPaths));
-  evtData.forEach(evt => urls.push(getBnrPath(evt)));
   return Promise.all(urls.map(url => new Promise(resolve => {
     const image = new Image();
     image.onload = resolve;
@@ -264,7 +273,8 @@ function setScreen(nextScreen, delayed = false) {
   }
 
   if (isEventToMode) {
-    const restoreCommonVideo = Boolean(tgtEvtData);
+    // ③では選択後も共通動画を維持するため、②へ戻る際の動画切替は不要。
+    const restoreCommonVideo = false;
     viewport.classList.add("screen-transitioning", "event-to-mode");
     if (restoreCommonVideo) bgFade.classList.add("show");
 
@@ -346,6 +356,7 @@ function setScreen(nextScreen, delayed = false) {
 function confirmCharacter() {
   if (suppressCharacterClick) return;
   befEvtId = "";
+  previousEventLevel = 0;
   selectedMode = "";
   evtIdx = -1;
   tgtEvtData = null;
@@ -354,7 +365,11 @@ function confirmCharacter() {
 
 function updateFilteredEvents() {
   filteredEvtData = evtData
-    .filter(evt => evt.evtId.substring(0, 2) === chrId && evt.evtId.charAt(3) === selectedMode)
+    .filter(evt =>
+      evt.evtId.substring(0, 2) === chrId &&
+      evt.evtId.charAt(3) === selectedMode &&
+      Number(evt.evtId.charAt(4)) > previousEventLevel
+    )
     .sort((a, b) => Number(a.evtId.charAt(4)) - Number(b.evtId.charAt(4)));
 }
 
@@ -373,7 +388,9 @@ function showModeSelection(onReady = null, restartCommonVideo = true) {
   document.querySelectorAll(".modeChoice").forEach(button => {
     const mode = button.dataset.mode;
     const hasEvent = evtData.some(evt =>
-      evt.evtId.substring(0, 2) === chrId && evt.evtId.charAt(3) === mode
+      evt.evtId.substring(0, 2) === chrId &&
+      evt.evtId.charAt(3) === mode &&
+      Number(evt.evtId.charAt(4)) > previousEventLevel
     );
     const label = button.querySelector(".modeChoiceLabel");
     if (label) label.textContent = getModeLabel(mode);
@@ -438,36 +455,36 @@ function createCards() {
   filteredEvtData.forEach((data, index) => {
     const card = document.createElement("div");
     card.className = "card";
-    card.dataset.mode = data.evtId.charAt(3);
+    const mode = data.evtId.charAt(3);
+    const level = Number(data.evtId.charAt(4)) || 1;
+    card.dataset.mode = mode;
+    card.dataset.level = level;
+
     const inner = document.createElement("div");
     inner.className = "cardInner";
-    inner.style.setProperty("--card-bg", `url("${getBnrPath(data)}")`);
-    const border = document.createElement("div");
-    border.className = "innerBorder";
-    const modeBadge = document.createElement("div");
-    modeBadge.className = "cardModeBadge";
-    const mode = data.evtId.charAt(3);
-    const modeIconFrame = document.createElement("span");
-    modeIconFrame.className = "cardModeIconFrame";
-    const modeIcon = document.createElement("img");
-    modeIcon.className = "cardModeIcon";
-    modeIcon.src = modeIconPaths[mode] || "";
-    modeIcon.alt = "";
-    modeIconFrame.appendChild(modeIcon);
-    const modeText = document.createElement("span");
-    modeText.textContent = getModeLabel(mode);
-    modeBadge.append(modeIconFrame, modeText);
-    const label = document.createElement("div");
-    label.className = "label";
-    const labelText = document.createElement("span");
-    labelText.className = "labelText";
-    const name = String(data.evtNm || "");
-    const initial = document.createElement("span");
-    initial.className = "labelInitial";
-    initial.textContent = name.charAt(0);
-    labelText.append(initial, document.createTextNode(name.slice(1)));
-    label.appendChild(labelText);
-    inner.append(label, border, modeBadge);
+
+    const levelArea = document.createElement("div");
+    levelArea.className = "eventLevelArea";
+    const levelLabel = document.createElement("span");
+    levelLabel.className = "eventLevelLabel";
+    levelLabel.textContent = `${getModeLabel(mode)}Lv.`;
+    levelLabel.dataset.label = levelLabel.textContent;
+    const levelNumber = document.createElement("span");
+    levelNumber.className = "eventLevelNumber";
+    levelNumber.textContent = level;
+    levelArea.append(levelLabel, levelNumber);
+
+    const textArea = document.createElement("div");
+    textArea.className = "eventTextArea";
+    const title = document.createElement("span");
+    title.className = "eventTitle";
+    title.textContent = String(data.evtNm || "");
+    const place = document.createElement("span");
+    place.className = "eventPlace";
+    place.textContent = String(data.plcNm || "");
+    textArea.append(title, place);
+
+    inner.append(levelArea, textArea);
     card.appendChild(inner);
     card.addEventListener("click", event => {
       event.stopPropagation();
@@ -475,28 +492,46 @@ function createCards() {
     });
     cardList.appendChild(card);
   });
-  centerUnselectedCards();
+  selectEvent(0, true);
   initialEvtId = "";
 }
 
-function selectEvent(index) {
+function selectEvent(index, instant = false) {
   if (evtIdx === index) return;
   evtIdx = index;
   tgtEvtData = filteredEvtData[index];
   evtId = tgtEvtData.evtId;
-  decideBtn.classList.add("disabled");
+  document.getElementById("viewport").classList.remove("event-unselected");
+  decideBtn.classList.remove("disabled");
 
   const cards = document.querySelectorAll(".card");
+  if (instant) {
+    cardList.style.transition = "none";
+    cards.forEach(card => {
+      card.style.transition = "none";
+      card.querySelector(".cardInner").style.transition = "none";
+    });
+  }
   cards.forEach((card, i) => card.classList.toggle("active", i === index));
   const activeCard = cards[index];
-  if (activeCard && filteredEvtData.length > 1) {
+  if (activeCard) {
     const sidebar = document.getElementById("sidebar");
     const offset = activeCard.offsetTop - ((sidebar.clientHeight - activeCard.offsetHeight) / 2);
 
     cardList.style.transform = `translateY(${-offset}px)`;
   }
   preloadSelectedEventVideo(tgtEvtData);
-  showSelectedEventVideo(tgtEvtData);
+
+  if (instant) {
+    cardList.offsetHeight;
+    requestAnimationFrame(() => {
+      cardList.style.transition = "";
+      cards.forEach(card => {
+        card.style.transition = "";
+        card.querySelector(".cardInner").style.transition = "";
+      });
+    });
+  }
 }
 
 function showSelectedEventVideo(evt) {
@@ -798,6 +833,8 @@ function goToEvent() {
 
 function handleDecision() {
   if (screen === "event") {
+    enterEventPreview();
+  } else if (screen === "preview") {
     goToEvent();
   }
 }
@@ -805,6 +842,10 @@ function handleDecision() {
 function bindInteractions() {
   const viewport = document.getElementById("viewport");
   const selectControlArea = document.getElementById("selectControlArea");
+  viewport.addEventListener("click", event => {
+    if (screen !== "preview" || event.target.closest("#backBtn")) return;
+    goToEvent();
+  });
   viewport.addEventListener("touchstart", event => {
     if (event.target.closest("button") || event.target.closest(".card")) return;
     isDragging = true;
