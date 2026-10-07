@@ -8,6 +8,7 @@ var autoFlg;
 var modeKbn;
 var tgtEvtData;
 var debugMovId;
+var lvKbn;
 
 //---------------
 // パラメタ設定
@@ -39,6 +40,11 @@ function setParam() {
     } else {
         debugMovId = null;
     }
+
+    lvKbn = String(urlParams.get('LvKbn') || '')
+      .toUpperCase()
+      .replace(/[^RSC]/g, '')
+      .slice(0, 4);
 
     modeKbn = evtId.substring(3, 4);
 

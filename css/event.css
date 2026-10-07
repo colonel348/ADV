@@ -10,6 +10,99 @@ html, body {
   font-family: sans-serif;
 }
 
+body[data-selection-host="event"] #app,
+body[data-selection-host="event"] > #titleArea,
+body[data-selection-host="event"] > #eventEndDialog {
+  display: none;
+}
+
+/* event側の①～③では動画だけを背景に使い、select用キャラクター画像の瞬間表示を防ぐ。 */
+body[data-selection-host="event"] #bgImg {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+body[data-selection-host="event"].event-playback #viewport {
+  display: none;
+}
+
+body[data-selection-host="event"].event-playback #app,
+body[data-selection-host="event"].event-playback > #titleArea,
+body[data-selection-host="event"].event-playback > #eventEndDialog {
+  display: block;
+}
+
+.eventLevelStatus {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  z-index: 80;
+  width: 150px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.38);
+  border-radius: 18px;
+  background: #55576a;
+  box-shadow: 0 2px 7px rgba(0,0,0,.3);
+  color: #fff;
+  font-family: Arial, "Noto Sans JP", sans-serif;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.eventLevelSegments {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.eventLevelSegments span {
+  background: #55576a;
+  border-right: 1px solid rgba(255,255,255,.24);
+  transition: background-color .3s ease, opacity .3s ease;
+}
+
+.eventLevelSegments span:last-child { border-right: 0; }
+.eventLevelSegments span[data-mode="R"] { background: #e97aa7; }
+.eventLevelSegments span[data-mode="S"] { background: #e7a329; }
+.eventLevelSegments span[data-mode="C"] { background: #9278d5; }
+
+.eventLevelSegments span.pending {
+  animation: eventLevelPending 1.5s ease-in-out infinite;
+}
+
+.eventLevelStatusLabel,
+.eventLevelStatusValue {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+}
+
+.eventLevelStatusLabel { font-size: 14px; }
+.eventLevelStatusValue { min-width: 12px; font-size: 21px; line-height: 1; text-align: right; }
+
+@keyframes eventLevelPending {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .28; }
+}
+
+body.event-playback .eventLevelStatus {
+  opacity: 0;
+  visibility: hidden;
+}
+
+body.event-playback.event-dialog-open .eventLevelStatus {
+  opacity: 1;
+  visibility: visible;
+}
+
 #app {
   position: relative;
   width: 100%;

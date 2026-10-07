@@ -1,3 +1,5 @@
+(function () {
+
 let cardList, bgImg, bgFade, fade, decideBtn;
 let levelSelector, levelValue, selectionTitleArea, selectionTitleText;
 let selectVideo1, selectVideo2, selectPreloadVideo, activeSelectVideo, standbySelectVideo;
@@ -11,6 +13,7 @@ let startX = 0;
 let startY = 0;
 let isDragging = false;
 let suppressCharacterClick = false;
+let suppressEventCardClick = false;
 let isDeciding = false;
 let screenTransitionTimer = null;
 let characterAnimationTimer = null;
@@ -18,6 +21,11 @@ let selectionChangeTimer = null;
 let levelSwitchTimer = null;
 let selectVideoSequence = 0;
 let selectLoopWatching = false;
+let eventPlaybackPreloadSequence = 0;
+let eventPlaybackPreloadVideos = [];
+let eventPlaybackPreloadTimer = null;
+let eventCardAnimationTimer = null;
+let eventCardCenterTransforms = [];
 const PREVIEW_PLACE_DISPLAY_TIME = 1500;
 const PREVIEW_PLACE_FADE_TIME = 350;
 const chrList = ["FF", "AK", "SA"];
@@ -56,8 +64,42 @@ const modeIconPaths = {
   C: "../img/control-mode.png"
 };
 
+function normalizeLvKbn(value) {
+  return String(value || "").toUpperCase().replace(/[^RSC]/g, "").slice(0, 4);
+}
+
+function getPreviewLvKbn(evt = null) {
+  const current = normalizeLvKbn(lvKbn);
+  if (!evt || current.length >= 4) return current;
+  const targetLevel = Math.min(4, Math.max(0, Number(evt.evtId.charAt(4)) || 0));
+  const addCount = Math.max(0, targetLevel - current.length);
+  return (current + evt.evtId.charAt(3).repeat(addCount)).slice(0, 4);
+}
+
+function updateEventLevelStatus(evt = null, blinkPending = false) {
+  const status = document.getElementById("eventLevelStatus");
+  if (!status) return;
+
+  const current = normalizeLvKbn(lvKbn);
+  const preview = getPreviewLvKbn(evt);
+  const value = document.getElementById("eventLevelStatusValue");
+  const segments = status.querySelectorAll(".eventLevelSegments span");
+  value.textContent = preview.length;
+  status.setAttribute("aria-label", `レベル${preview.length}`);
+  segments.forEach((segment, index) => {
+    const mode = preview.charAt(index);
+    if (mode) segment.dataset.mode = mode;
+    else delete segment.dataset.mode;
+    segment.classList.toggle("pending", blinkPending && index >= current.length && index < preview.length);
+  });
+}
+
 function readSelectionParams() {
   const params = new URLSearchParams(location.search);
+  const isEventSelectionHost = document.body.dataset.selectionHost === "event";
+  const requestedScreen = isEventSelectionHost
+    ? ((params.get("screen") || "mode").trim())
+    : (params.get("screen") || "").trim();
   const requestedEvtId = (params.get("evtId") || "").trim();
   befEvtId = (params.get("befEvtId") || "").trim();
   const requestedChrId = (params.get("chrId") || "AK").trim();
@@ -67,6 +109,7 @@ function readSelectionParams() {
   initialEvtId = requestedEvent ? requestedEvent.evtId : "";
 
   autoFlg = params.get("autoFlg") || "0";
+  lvKbn = normalizeLvKbn(params.get("LvKbn"));
   chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
   if (requestedEvent) chrId = requestedEvent.evtId.substring(0, 2);
   else if (previousEvent) chrId = previousEvent.evtId.substring(0, 2);
@@ -81,7 +124,16 @@ function readSelectionParams() {
       evt.evtId.substring(0, 2) === chrId &&
       Number(evt.evtId.charAt(4)) > previousEventLevel
     );
-    screen = hasNextEvent ? "mode" : "character";
+    if (!hasNextEvent && isEventSelectionHost) {
+      location.replace("./select.html?chrId=" + encodeURIComponent(chrId));
+      screen = "character";
+    } else {
+      screen = hasNextEvent ? "mode" : "character";
+    }
+  } else if (requestedScreen === "mode") {
+    // event画面の更新・履歴復元・再訪時は、前回イベントによる絞り込みをせず②へ戻す。
+    previousEventLevel = 0;
+    screen = "mode";
   }
 
   evtId = "";
@@ -223,6 +275,7 @@ function changeCharacter(step) {
   animateCharacterCursor(step);
   chrIdx = (chrIdx + step + chrList.length) % chrList.length;
   chrId = chrList[chrIdx];
+  lvKbn = "";
   showCharacter(true, step < 0 ? "right" : "left");
   preloadCharacterLoopVideo();
 }
@@ -243,6 +296,14 @@ function setScreen(nextScreen, delayed = false) {
   const fadeInWait = useSafeScreenFade ? 750 : 500;
 
   if (isModeToEvent) {
+    // ②→①の終了待ち中に再度②へ進んだ場合、旧非表示状態を持ち越さない。
+    viewport.classList.remove(
+      "event-to-mode",
+      "mode-return-preparing",
+      "mode-return-visible",
+      "event-cards-leaving",
+      "returning-to-mode"
+    );
     document.getElementById("selectControlArea").classList.remove("show");
     viewport.classList.add("screen-transitioning", "mode-to-event", "mode-buttons-leaving");
 
@@ -355,6 +416,17 @@ function setScreen(nextScreen, delayed = false) {
 
 function confirmCharacter() {
   if (suppressCharacterClick) return;
+  if (document.body.dataset.selectionHost !== "event") {
+    if (isDeciding) return;
+    isDeciding = true;
+    fade.classList.add("show");
+    setTimeout(() => {
+      location.href = "./event.html?chrId=" + encodeURIComponent(chrId) +
+        "&screen=mode&autoFlg=" + encodeURIComponent(autoFlg) +
+        "&LvKbn=" + encodeURIComponent(normalizeLvKbn(lvKbn));
+    }, 500);
+    return;
+  }
   befEvtId = "";
   previousEventLevel = 0;
   selectedMode = "";
@@ -384,6 +456,7 @@ function showModeSelection(onReady = null, restartCommonVideo = true) {
   tgtEvtData = null;
   document.getElementById("viewport").classList.remove("event-unselected");
   decideBtn.classList.add("disabled");
+  updateEventLevelStatus();
 
   document.querySelectorAll(".modeChoice").forEach(button => {
     const mode = button.dataset.mode;
@@ -488,12 +561,22 @@ function createCards() {
     card.appendChild(inner);
     card.addEventListener("click", event => {
       event.stopPropagation();
+      if (suppressEventCardClick) return;
       selectEvent(index);
     });
     cardList.appendChild(card);
   });
+  cacheEventCardPositions();
   selectEvent(0, true);
   initialEvtId = "";
+}
+
+function cacheEventCardPositions() {
+  const sidebar = document.getElementById("sidebar");
+  const sidebarHeight = sidebar.clientHeight;
+  eventCardCenterTransforms = Array.from(cardList.querySelectorAll(".card"), card =>
+    Math.round(-(card.offsetTop - ((sidebarHeight - card.offsetHeight) / 2)))
+  );
 }
 
 function selectEvent(index, instant = false) {
@@ -501,10 +584,13 @@ function selectEvent(index, instant = false) {
   evtIdx = index;
   tgtEvtData = filteredEvtData[index];
   evtId = tgtEvtData.evtId;
+  updateEventLevelStatus(tgtEvtData, true);
   document.getElementById("viewport").classList.remove("event-unselected");
   decideBtn.classList.remove("disabled");
 
   const cards = document.querySelectorAll(".card");
+  clearTimeout(eventCardAnimationTimer);
+  if (!instant) cardList.classList.add("cards-animating");
   if (instant) {
     cardList.style.transition = "none";
     cards.forEach(card => {
@@ -515,12 +601,19 @@ function selectEvent(index, instant = false) {
   cards.forEach((card, i) => card.classList.toggle("active", i === index));
   const activeCard = cards[index];
   if (activeCard) {
-    const sidebar = document.getElementById("sidebar");
-    const offset = activeCard.offsetTop - ((sidebar.clientHeight - activeCard.offsetHeight) / 2);
-
-    cardList.style.transform = `translateY(${-offset}px)`;
+    const centerTransform = eventCardCenterTransforms[index];
+    if (Number.isFinite(centerTransform)) {
+      cardList.style.transform = `translateY(${centerTransform}px)`;
+    }
   }
-  preloadSelectedEventVideo(tgtEvtData);
+
+  clearTimeout(eventPlaybackPreloadTimer);
+  const preloadDelay = instant ? 650 : 320;
+  const selectedEvent = tgtEvtData;
+  eventPlaybackPreloadTimer = setTimeout(() => {
+    if (screen !== "event" || tgtEvtData?.evtId !== selectedEvent.evtId) return;
+    preloadSelectedEventVideo(selectedEvent);
+  }, preloadDelay);
 
   if (instant) {
     cardList.offsetHeight;
@@ -531,6 +624,10 @@ function selectEvent(index, instant = false) {
         card.querySelector(".cardInner").style.transition = "";
       });
     });
+  } else {
+    eventCardAnimationTimer = setTimeout(() => {
+      cardList.classList.remove("cards-animating");
+    }, 380);
   }
 }
 
@@ -564,6 +661,35 @@ function preloadSelectedEventVideo(evt) {
   selectPreloadVideo.src = src;
   selectPreloadVideo.preload = "auto";
   selectPreloadVideo.load();
+  preloadSelectedEventPlayback(evt);
+}
+
+function preloadSelectedEventPlayback(evt) {
+  const sequence = ++eventPlaybackPreloadSequence;
+
+  EventMedia.loadMessageData(evt).then(data => {
+    if (sequence !== eventPlaybackPreloadSequence || tgtEvtData?.evtId !== evt.evtId) return;
+
+    eventPlaybackPreloadVideos.forEach(video => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      video.remove();
+    });
+    eventPlaybackPreloadVideos = EventMedia.getFirstMovBlockMedia(evt, data).map(src => {
+      const video = document.createElement("video");
+      video.className = "selectPreloadMovie";
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = "auto";
+      video.src = src;
+      video.load();
+      document.getElementById("preloadImageStage").appendChild(video);
+      return video;
+    });
+  }).catch(() => {
+    // 読み込みに失敗しても、本編側の通常読み込みで再試行できるよう選択操作は止めない。
+  });
 }
 
 function enterEventPreview() {
@@ -822,12 +948,20 @@ function updateDecideButton() {
 
 function goToEvent() {
   if (isDeciding || !tgtEvtData) return;
+  if (
+    document.body.dataset.selectionHost !== "event" ||
+    typeof window.startEmbeddedEventPlayback !== "function"
+  ) {
+    return;
+  }
+
   isDeciding = true;
   decideBtn.classList.add("pressed", "disabled");
   setTimeout(() => fade.classList.add("show"), 120);
   setTimeout(() => {
-    location.href = "./event.html?chrId=" + chrId + "&evtId=" + tgtEvtData.evtId +
-      "&autoFlg=" + autoFlg + "&debugMovId=";
+    stopSelectionVideos();
+    eventPlaybackPreloadVideos.forEach(video => video.pause());
+    window.startEmbeddedEventPlayback(tgtEvtData.evtId, autoFlg, getPreviewLvKbn(tgtEvtData));
   }, 520);
 }
 
@@ -847,7 +981,7 @@ function bindInteractions() {
     goToEvent();
   });
   viewport.addEventListener("touchstart", event => {
-    if (event.target.closest("button") || event.target.closest(".card")) return;
+    if (event.target.closest("button") || (screen !== "event" && event.target.closest(".card"))) return;
     isDragging = true;
     startX = event.touches[0].clientX;
     startY = event.touches[0].clientY;
@@ -859,6 +993,14 @@ function bindInteractions() {
     const dy = event.changedTouches[0].clientY - startY;
     if (screen === "mode" && Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy)) {
       selectControlArea.classList.toggle("show", dx < 0);
+    } else if (screen === "event" && Math.abs(dy) > 45 && Math.abs(dy) > Math.abs(dx)) {
+      const nextIndex = Math.max(
+        0,
+        Math.min(filteredEvtData.length - 1, evtIdx + (dy < 0 ? 1 : -1))
+      );
+      if (nextIndex !== evtIdx) selectEvent(nextIndex);
+      suppressEventCardClick = true;
+      setTimeout(() => { suppressEventCardClick = false; }, 400);
     } else if (screen === "character" && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
       changeCharacter(dx < 0 ? 1 : -1);
       suppressCharacterClick = true;
@@ -885,28 +1027,101 @@ function bindInteractions() {
   document.getElementById("selectTitleBtn").addEventListener("click", event => {
     event.stopPropagation();
     selectControlArea.classList.remove("show");
+    if (document.body.dataset.selectionHost === "event") {
+      location.href = "./select.html?chrId=" + encodeURIComponent(chrId) +
+        "&LvKbn=" + encodeURIComponent(normalizeLvKbn(lvKbn));
+      return;
+    }
     setScreen("character", true);
   });
   decideBtn.addEventListener("click", handleDecision);
 }
 
+function hasPendingEventPlaybackEntry() {
+  if (document.body.dataset.selectionHost !== "event") return false;
+
+  const params = new URLSearchParams(location.search);
+  return Boolean((params.get("debugMovId") || "").trim());
+}
+
+function bindCharacterSelectionInteractions() {
+  const viewport = document.getElementById("viewport");
+  viewport.addEventListener("touchstart", event => {
+    isDragging = true;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+  viewport.addEventListener("touchend", event => {
+    if (!isDragging) return;
+    isDragging = false;
+    const dx = event.changedTouches[0].clientX - startX;
+    const dy = event.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) <= 40 || Math.abs(dx) <= Math.abs(dy)) return;
+    changeCharacter(dx < 0 ? 1 : -1);
+    suppressCharacterClick = true;
+    setTimeout(() => { suppressCharacterClick = false; }, 350);
+  }, { passive: true });
+
+  document.getElementById("characterStage").addEventListener("click", confirmCharacter);
+  document.querySelectorAll(".characterCursor").forEach(cursor => {
+    cursor.addEventListener("click", event => {
+      event.stopPropagation();
+      changeCharacter(Number(cursor.dataset.step));
+    });
+  });
+}
+
+function initializeCharacterSelection() {
+  const params = new URLSearchParams(location.search);
+  const requestedChrId = (params.get("chrId") || "AK").trim();
+  chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
+  chrIdx = chrList.indexOf(chrId);
+  autoFlg = params.get("autoFlg") || "0";
+  lvKbn = normalizeLvKbn(params.get("LvKbn"));
+  screen = "character";
+
+  const viewport = document.getElementById("viewport");
+  viewport.dataset.screen = screen;
+  bindCharacterSelectionInteractions();
+  showCharacter();
+  preloadCharacterLoopVideo();
+
+  Promise.all(chrList.map(id => new Promise(resolve => {
+    const image = new Image();
+    image.onload = resolve;
+    image.onerror = resolve;
+    image.src = getChrSelPath(id);
+  }))).then(() => { viewport.style.opacity = 1; });
+}
+
 window.addEventListener("load", () => {
-  cardList = document.getElementById("cardList");
+  // 同じevent.htmlで本編を開始する場合、背後の選択動画を起動して帯域を競合させない。
+  if (hasPendingEventPlaybackEntry()) return;
+
   bgImg = document.getElementById("bgImg");
   bgFade = document.getElementById("bgFade");
-  fade = document.getElementById("fade");
+  fade = document.getElementById("selectionFade");
+  selectVideo1 = document.getElementById("selectVideo1");
+  selectVideo2 = document.getElementById("selectVideo2");
+  activeSelectVideo = selectVideo1;
+  standbySelectVideo = selectVideo2;
+
+  if (document.body.dataset.selectionHost !== "event") {
+    initializeCharacterSelection();
+    return;
+  }
+
+  cardList = document.getElementById("cardList");
   decideBtn = document.getElementById("decideBtn");
   levelSelector = document.getElementById("levelSelector");
   levelValue = document.getElementById("levelValue");
   selectionTitleArea = document.getElementById("selectionTitleArea");
   selectionTitleText = document.getElementById("selectionTitleText");
-  selectVideo1 = document.getElementById("selectVideo1");
-  selectVideo2 = document.getElementById("selectVideo2");
   selectPreloadVideo = document.getElementById("selectPreloadVideo");
-  activeSelectVideo = selectVideo1;
-  standbySelectVideo = selectVideo2;
   readSelectionParams();
   bindInteractions();
   setScreen(screen);
   preloadImages().then(() => { document.getElementById("viewport").style.opacity = 1; });
 });
+
+})();

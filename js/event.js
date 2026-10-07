@@ -56,6 +56,37 @@ let nextEventAtCompletion = null;
 
 let hasConfiguredWhiteFadePlayed = false;
 
+function normalizeEventLvKbn(value) {
+  return String(value || "").toUpperCase().replace(/[^RSC]/g, "").slice(0, 4);
+}
+
+function renderCommittedEventLevel(value) {
+  const status = document.getElementById("eventLevelStatus");
+  if (!status) return;
+  const normalized = normalizeEventLvKbn(value);
+  const valueElement = document.getElementById("eventLevelStatusValue");
+  valueElement.textContent = normalized.length;
+  status.setAttribute("aria-label", `レベル${normalized.length}`);
+  status.querySelectorAll(".eventLevelSegments span").forEach((segment, index) => {
+    const mode = normalized.charAt(index);
+    if (mode) segment.dataset.mode = mode;
+    else delete segment.dataset.mode;
+    segment.classList.remove("pending");
+  });
+}
+
+function moveToEventSelection(options = {}) {
+  const selectionEvtId = String(options.evtId || "");
+  const previousEvtId = String(options.befEvtId || "");
+
+  let href = "./event.html?chrId=" + encodeURIComponent(chrId) +
+    "&screen=mode&autoFlg=" + encodeURIComponent(autoFlg) +
+    "&LvKbn=" + encodeURIComponent(normalizeEventLvKbn(lvKbn));
+  if (selectionEvtId) href += "&evtId=" + encodeURIComponent(selectionEvtId);
+  if (previousEvtId) href += "&befEvtId=" + encodeURIComponent(previousEvtId);
+  location.href = href;
+}
+
 // A動画終了何秒前に次を開始するか
 const ACTION_SWITCH_BEFORE = 0.16;
 // 最後ではないAのみ動画は、終了前に黒フェードが完了するよう少し早める
@@ -102,22 +133,7 @@ const FIRST_LOOP_WHITE_WAIT = 1500;
  * JS読込
  *************************************************/
 function loadEvent() {
-
-  return new Promise((resolve, reject) => {
-
-    const script = document.createElement("script");
-
-    script.src = getMsgDataPath(tgtEvtData);
-
-    script.onload = () => {
-      resolve(window.msgData);
-    };
-
-    script.onerror = reject;
-
-    document.body.appendChild(script);
-
-  });
+  return EventMedia.loadMessageData(tgtEvtData);
 }
 
 /*************************************************
@@ -375,7 +391,13 @@ function warmupLoopVideo(video) {
   }
 }
 
-window.addEventListener("load", () => {
+let eventPlaybackStarted = false;
+
+function startEventPlayback() {
+  if (eventPlaybackStarted) return;
+  eventPlaybackStarted = true;
+
+  document.body.classList.add("event-playback");
 
   videoA = document.getElementById("videoA");
   videoL1 = document.getElementById("videoL1");
@@ -389,6 +411,7 @@ window.addEventListener("load", () => {
   bindEventEndDialog();
 
   init();
+  renderCommittedEventLevel(lvKbn);
 
   // --------------------
   // click
@@ -553,6 +576,34 @@ window.addEventListener("load", () => {
     }
   );
 
+}
+
+window.startEmbeddedEventPlayback = function (selectedEvtId, selectedAutoFlg = "0", selectedLvKbn = "") {
+  const selectedEvent = evtData.find(evt => evt.evtId === selectedEvtId);
+  if (!selectedEvent) return false;
+
+  const selectedChrId = selectedEvtId.substring(0, 2);
+  const committedLvKbn = normalizeEventLvKbn(selectedLvKbn);
+  const nextUrl = "./event.html?chrId=" + encodeURIComponent(selectedChrId) +
+    "&evtId=" + encodeURIComponent(selectedEvtId) +
+    "&autoFlg=" + encodeURIComponent(selectedAutoFlg) +
+    "&LvKbn=" + encodeURIComponent(committedLvKbn) +
+    "&debugMovId=";
+  history.replaceState(null, "", nextUrl);
+  startEventPlayback();
+
+  // 本編開始後のURLには完了済みイベントを残し、更新・再訪時は次の選択状態を復元する。
+  const savedSelectionUrl = "./event.html?chrId=" + encodeURIComponent(selectedChrId) +
+    "&befEvtId=" + encodeURIComponent(selectedEvtId) +
+    "&autoFlg=" + encodeURIComponent(selectedAutoFlg) +
+    "&LvKbn=" + encodeURIComponent(committedLvKbn);
+  history.replaceState(null, "", savedSelectionUrl);
+  return true;
+};
+
+window.addEventListener("load", () => {
+  const params = new URLSearchParams(location.search);
+  if ((params.get("debugMovId") || "").trim()) startEventPlayback();
 });
 
 /*************************************************
@@ -1254,6 +1305,7 @@ function showEventEndDialog(delay = 0) {
   const controlArea = document.getElementById("controlArea");
 
   nextEventAtCompletion = getNextEventAtCompletion();
+  renderCommittedEventLevel(lvKbn);
 
   message.textContent = nextEventAtCompletion
     ? "次のイベントに進みますか？"
@@ -1276,6 +1328,7 @@ function showEventEndDialog(delay = 0) {
     dialog.classList.remove("is-leaving");
     dialog.classList.add("show");
     dialog.setAttribute("aria-hidden", "false");
+    document.body.classList.add("event-dialog-open");
 
   }, Math.max(
     delay,
@@ -1294,23 +1347,17 @@ function moveFromEventEndDialog(targetEvent) {
     if (!targetEvent) {
       location.href =
         './select.html?chrId=' + encodeURIComponent(chrId) +
-        '&befEvtId=' + encodeURIComponent(evtId);
+        '&befEvtId=' + encodeURIComponent(evtId) +
+        '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn));
       return;
     }
 
     if (targetEvent.selectAfterEvent) {
-      location.href =
-        './select.html?chrId=' + encodeURIComponent(chrId) +
-        '&autoFlg=' + encodeURIComponent(autoFlg) +
-        '&befEvtId=' + encodeURIComponent(evtId);
+      moveToEventSelection({ befEvtId: evtId });
       return;
     }
 
-    location.href =
-      './select.html?chrId=' + encodeURIComponent(chrId) +
-      '&evtId=' + encodeURIComponent(targetEvent.evtId) +
-      '&autoFlg=' + encodeURIComponent(autoFlg) +
-      '&befEvtId=' + encodeURIComponent(evtId);
+    moveToEventSelection({ evtId: targetEvent.evtId, befEvtId: evtId });
 
   }, 800);
 
@@ -1368,6 +1415,7 @@ function moveNextControl() {
         './event.html?chrId=' + encodeURIComponent(chrId) +
         '&evtId=' + encodeURIComponent(evtId) +
         '&autoFlg=' + encodeURIComponent(autoFlg) +
+        '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn)) +
         '&debugMovId=evt2';
     }, BLACK_FADE_TIME);
     return;
@@ -1387,7 +1435,8 @@ function moveTitle() {
 
   setTimeout(() => {
     location.href =
-      './select.html?chrId=' + encodeURIComponent(chrId);
+      './select.html?chrId=' + encodeURIComponent(chrId) +
+      '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn));
   }, BLACK_FADE_TIME);
 
 }
@@ -1400,14 +1449,8 @@ function moveSkip() {
   setFade(true);
   document.getElementById("msgArea").style.opacity = 0;
 
-  const nextLevel = Math.min(4, (Number(evtId.charAt(4)) || 1) + 1);
-
   setTimeout(() => {
-    location.href =
-      './select.html?chrId=' + encodeURIComponent(chrId) +
-      '&level=' + encodeURIComponent(nextLevel) +
-      '&autoFlg=' + encodeURIComponent(autoFlg) +
-      '&befEvtId=' + encodeURIComponent(evtId);
+    moveToEventSelection({ befEvtId: evtId });
   }, BLACK_FADE_TIME);
 
 }
