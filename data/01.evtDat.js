@@ -3,6 +3,8 @@
   { evtId: "FF-R3", evtNm: "約束の代償は", fadeEvt: "2", plcNm: "ピノコニー 屋上"},
 
   { evtId: "AK-S1", evtNm: "刺激の中での歌唱", fadeEvt: "1", plcNm: "WEEKEND GARAGE"},
+  
+  { evtId: "AK-S3", evtNm: "全裸登山", fadeEvt: "1", plcNm: "キャンプ場"},
 
   { evtId: "AK-C2", evtNm: "ヌードデッサン", fadeEvt: "2", plcNm: "美術教室"},
 
