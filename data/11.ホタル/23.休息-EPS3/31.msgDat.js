@@ -1,21 +1,21 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "う、ううん、びっくりしただけだよ…！　でも穹がそう言うなら……あたし脱いでみるね" },
+    { msgId: "A", msgTxt: "（誰も来ない場所だけど……　外の風と穹の視線が、すごくドキドキする……）" },
+    { msgId: "L", msgTxt: "（……服を脱いだだけでもこんなに気持ちいいんだ……　全部脱いだら……もっとすごいのかな……）" },
 
   { movId: "evt1" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "A", msgTxt: "（穹に見られてるのに……　もう身体が熱くて我慢できない……！）" },
+    { msgId: "A", msgTxt: "（恥ずかしさもなにもかも脱ぎ捨てちゃえ……！）　えーいっ！" },
+    { msgId: "L", msgTxt: "本当に穹の言う通り……全身で空気を感じられて……　なんだか心まで解き放たれていくみたい……っ" },
 
   { movId: "evt2" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "えっ……写真を撮らせてほしい……！？　表情も身体も魅力的だから残したい、なんて……" },
+    { msgId: "A", msgTxt: "もう……穹っていじわるなんだから……　……ふふっ、しょうがないなあ" },
+    { msgId: "L", msgTxt: "はい、ピース……！こ、これでいいのかな……？　さすがに裸で撮られるのは……やっぱり照れるね……" },
 
   { movId: "evt2" },
-    { msgId: "A", msgTxt: "" }
+    { msgId: "A", msgTxt: "ど、どうかな……？　……えっ、スマホの壁紙に……？もう、穹ったら……" }
 
 ];
