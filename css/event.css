@@ -27,9 +27,12 @@ body[data-selection-host="event"].event-playback #viewport {
 }
 
 body[data-selection-host="event"].event-playback #app,
-body[data-selection-host="event"].event-playback > #titleArea,
-body[data-selection-host="event"].event-playback > #eventEndDialog {
+body[data-selection-host="event"].event-playback > #titleArea {
   display: block;
+}
+
+body[data-selection-host="event"].event-playback > #eventEndDialog {
+  display: flex;
 }
 
 .eventLevelStatus {

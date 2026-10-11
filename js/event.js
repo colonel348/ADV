@@ -392,6 +392,7 @@ function warmupLoopVideo(video) {
 }
 
 let eventPlaybackStarted = false;
+let embeddedPlaybackParams = null;
 
 function startEventPlayback() {
   if (eventPlaybackStarted) return;
@@ -583,22 +584,14 @@ window.startEmbeddedEventPlayback = function (selectedEvtId, selectedAutoFlg = "
   const selectedEvent = evtData.find(evt => evt.evtId === selectedEvtId);
   if (!selectedEvent) return false;
 
-  const selectedChrId = selectedEvtId.substring(0, 2);
-  const committedLvKbn = normalizeEventLvKbn(selectedLvKbn);
-  const nextUrl = "./event.html?chrId=" + encodeURIComponent(selectedChrId) +
-    "&evtId=" + encodeURIComponent(selectedEvtId) +
-    "&autoFlg=" + encodeURIComponent(selectedAutoFlg) +
-    "&LvKbn=" + encodeURIComponent(committedLvKbn) +
-    "&debugMovId=";
-  history.replaceState(null, "", nextUrl);
+  embeddedPlaybackParams = {
+    chrId: selectedEvtId.substring(0, 2),
+    evtId: selectedEvtId,
+    autoFlg: selectedAutoFlg,
+    lvKbn: normalizeEventLvKbn(selectedLvKbn),
+    eventData: selectedEvent
+  };
   startEventPlayback();
-
-  // 本編開始後のURLには完了済みイベントを残し、更新・再訪時は次の選択状態を復元する。
-  const savedSelectionUrl = "./event.html?chrId=" + encodeURIComponent(selectedChrId) +
-    "&befEvtId=" + encodeURIComponent(selectedEvtId) +
-    "&autoFlg=" + encodeURIComponent(selectedAutoFlg) +
-    "&LvKbn=" + encodeURIComponent(committedLvKbn);
-  history.replaceState(null, "", savedSelectionUrl);
   return true;
 };
 
@@ -614,6 +607,17 @@ window.addEventListener("load", () => {
 async function init() {
 
   setParam();
+
+  // ③から④へ進む際はURLを書き換えず、選択中の値を直接本編へ引き継ぐ。
+  if (embeddedPlaybackParams) {
+    chrId = embeddedPlaybackParams.chrId;
+    evtId = embeddedPlaybackParams.evtId;
+    autoFlg = embeddedPlaybackParams.autoFlg;
+    lvKbn = embeddedPlaybackParams.lvKbn;
+    debugMovId = null;
+    modeKbn = evtId.substring(3, 4);
+    tgtEvtData = embeddedPlaybackParams.eventData;
+  }
 
   currentData = await loadEvent();
 
@@ -1346,9 +1350,14 @@ function moveFromEventEndDialog(targetEvent) {
   setTimeout(() => {
 
     if (!targetEvent) {
+      location.href = './select.html?chrId=' + encodeURIComponent(chrId);
+      return;
+    }
+
+    if (targetEvent.resetToEventTop) {
       location.href =
-        './select.html?chrId=' + encodeURIComponent(chrId) +
-        '&befEvtId=' + encodeURIComponent(evtId);
+        './event.html?chrId=' + encodeURIComponent(chrId) +
+        '&screen=mode&autoFlg=' + encodeURIComponent(autoFlg);
       return;
     }
 
@@ -1370,6 +1379,10 @@ function bindEventEndDialog() {
 
   cancelButton.addEventListener("click", event => {
     event.stopPropagation();
+    if (!nextEventAtCompletion) {
+      moveFromEventEndDialog({ resetToEventTop: true });
+      return;
+    }
     moveFromEventEndDialog({
       evtId
     });
@@ -2869,6 +2882,15 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
           const afterFadeItem =
             currentData[currentIndex + 2];
+
+          // A→N→LではAのメッセージウィンドウを一度閉じ、
+          // 黒画面上でNメッセージを改めて表示する。
+          if (
+            nextItem.msgId === "N" &&
+            afterFadeItem?.msgId === "L"
+          ) {
+            document.getElementById("msgArea").style.opacity = 0;
+          }
 
           if (
             afterFadeItem &&

@@ -140,12 +140,12 @@ function readSelectionParams() {
       evt.evtId.substring(0, 2) === chrId &&
       Number(evt.evtId.charAt(4)) > previousEventLevel
     );
-    if (!hasNextEvent && isEventSelectionHost) {
-      location.replace("./select.html?chrId=" + encodeURIComponent(chrId));
-      screen = "character";
-    } else {
-      screen = hasNextEvent ? "mode" : "character";
+    if (!hasNextEvent) {
+      // 完了済みURLを更新・再訪してもselectへ戻さず、eventのトップを表示する。
+      previousEventLevel = 0;
+      befEvtId = "";
     }
+    screen = isEventSelectionHost ? "mode" : "character";
   } else if (requestedScreen === "mode") {
     // event画面の更新・履歴復元・再訪時は、前回イベントによる絞り込みをせず②へ戻す。
     previousEventLevel = 0;
