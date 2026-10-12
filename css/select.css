@@ -1258,7 +1258,7 @@ body.event-start-leaving #previewTapPrompt {
 
 /* イベントカードサイズ */
 #viewport[data-screen="event"] .card {
-  width: 190px;
+  width: 350px;
   height: 68px;
   margin: 18px 8px;
 }
@@ -1733,8 +1733,8 @@ body.event-start-leaving #previewTapPrompt {
 #viewport[data-screen="event"] .card::after {
   content: "";
   position: absolute;
-  left: 50%;
-  width: 126%;
+  left: 95px;
+  width: 240px;
   z-index: 0;
   height: 2px;
   background: rgba(255,255,255,.24);
@@ -1785,20 +1785,23 @@ body.event-start-leaving #previewTapPrompt {
 #viewport[data-screen="event"] .cardInner::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: -38px;
+  width: 350px;
   z-index: -1;
   border-radius: 8px;
   background: rgba(210, 210, 220, .9);
   box-shadow: 0 4px 12px rgba(0,0,0,.2);
   opacity: 0;
-  transform: scale(1.12);
-  transform-origin: center center;
+  transform: scaleY(1.12);
+  transform-origin: left center;
   transition: opacity .28s ease, transform .28s ease;
 }
 
 #viewport[data-screen="event"] .card.active .cardInner::before {
   opacity: 1;
-  transform: scale(1.4);
+  transform: scaleY(1.4);
 }
 
 .eventLevelArea {
