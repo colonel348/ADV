@@ -116,6 +116,10 @@ function getMsgDataPath(evt) {
   return getEvtDir(evt) + "/31.msgDat.js";
 }
 
+function getSelectionMsgDataPath(targetChrId) {
+  return getChrDir(targetChrId) + "/00.選択/41.msgDat.js";
+}
+
 function getMoviePath(evt, movId, sequenceNo, ptn) {
   const movNo = String(movId || "").charAt(3);
   return getEvtDir(evt) + "/" + movNo + sequenceNo + ".evt-" + ptn + ".mp4";

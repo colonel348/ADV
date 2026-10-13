@@ -1367,12 +1367,83 @@ body.event-start-leaving #previewTapPrompt {
 }
 
 #modeStage {
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(14px, 2.2vh, 22px);
   padding: 0 4vw max(12vh, 34px);
   box-sizing: border-box;
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+#modeHomeMessage {
+  position: relative;
+  flex: 0 0 100px;
+  width: min(70vw, 700px);
+  height: 100px;
+  padding: 8px 20px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  border-radius: 18px;
+  background: transparent;
+  isolation: isolate;
+  color: #fff;
+  font-size: clamp(14px, 2.1vw, 20px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: .02em;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .4s ease, visibility 0s linear .4s;
+}
+
+#modeHomeMessage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -20px 0 0;
+  background: rgba(54, 52, 78, .88);
+  filter: drop-shadow(0 4px 7px rgba(0,0,0,.24));
+  clip-path: polygon(
+    0 34px,
+    2px 28px,
+    7px 23px,
+    14px 20px,
+    10% 20px,
+    22% 0,
+    20% 20px,
+    calc(100% - 14px) 20px,
+    calc(100% - 7px) 23px,
+    calc(100% - 2px) 28px,
+    100% 34px,
+    100% calc(100% - 14px),
+    calc(100% - 3px) calc(100% - 7px),
+    calc(100% - 9px) calc(100% - 2px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    7px calc(100% - 2px),
+    2px calc(100% - 7px),
+    0 calc(100% - 14px)
+  );
+}
+
+#modeHomeMessage.show {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+#modeHomeMessageText {
+  width: 100%;
+  height: 4.05em;
+  max-height: 4.05em;
+  overflow: hidden;
 }
 
 #modePanel {
@@ -1577,7 +1648,24 @@ body.event-start-leaving #previewTapPrompt {
 
 /* 動画上のリアルタイムぼかしを避け、軽量な半透明レイヤーで奥行きを作る。 */
 #sidebar::before {
-  background: var(--sidebar-panel-bg);
+  width: 100vw;
+  background: rgba(22, 34, 68, .2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+  pointer-events: none;
+}
+
+#viewport[data-screen="mode"] #sidebar::before,
+#viewport.event-revealing[data-screen="event"] #sidebar::before,
+#viewport.event-to-mode[data-screen="event"] #sidebar::before {
+  width: 100vw;
+  background: rgba(22, 34, 68, .2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 #sidebar::after {
@@ -1587,11 +1675,11 @@ body.event-start-leaving #previewTapPrompt {
   top: 0;
   bottom: 0;
   z-index: 0;
-  width: 190px;
+  width: 100vw;
   background:
     radial-gradient(circle, rgba(255,255,255,.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px;
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
-  mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
+  -webkit-mask-image: none;
+  mask-image: none;
   opacity: 0;
   pointer-events: none;
 }
@@ -1705,7 +1793,15 @@ body.event-start-leaving #previewTapPrompt {
  * ③イベント一覧：レベルアイコン＋イベント名
  * ================================================= */
 #viewport[data-screen="event"] #cardList {
-  margin-left: 50px;
+  width: 100vw;
+  margin-left: 0;
+}
+
+#viewport[data-screen="event"] .card,
+#viewport[data-screen="event"] .card.active,
+#viewport[data-screen="event"] #cardList.single-card .card.active {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #viewport[data-screen="event"] .cardInner {
@@ -1733,8 +1829,8 @@ body.event-start-leaving #previewTapPrompt {
 #viewport[data-screen="event"] .card::after {
   content: "";
   position: absolute;
-  left: 95px;
-  width: 240px;
+  left: 50%;
+  width: 330px;
   z-index: 0;
   height: 2px;
   background: rgba(255,255,255,.24);
@@ -1787,7 +1883,7 @@ body.event-start-leaving #previewTapPrompt {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -38px;
+  left: 0;
   width: 350px;
   z-index: -1;
   border-radius: 8px;
@@ -1812,7 +1908,7 @@ body.event-start-leaving #previewTapPrompt {
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translateX(-26px);
+  transform: translateX(10px);
 }
 
 .eventLevelNumber {
@@ -1891,7 +1987,7 @@ body.event-start-leaving #previewTapPrompt {
   flex-direction: column;
   justify-content: center;
   gap: 0;
-  transform: translateX(-16px);
+  transform: translateX(20px);
   transition: gap .28s ease;
 }
 

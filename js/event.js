@@ -136,6 +136,22 @@ function loadEvent() {
   return EventMedia.loadMessageData(tgtEvtData);
 }
 
+function getPlayableEventData(data) {
+  if (!Array.isArray(data)) return null;
+
+  const playableData = [];
+  let includeBlock = false;
+
+  data.forEach(item => {
+    if (item && Object.prototype.hasOwnProperty.call(item, "movId")) {
+      includeBlock = item.movId === "evt1" || item.movId === "evt2";
+    }
+    if (includeBlock) playableData.push(item);
+  });
+
+  return playableData;
+}
+
 /*************************************************
  * 新動画ファイル名の連番取得
  *************************************************/
@@ -619,9 +635,9 @@ async function init() {
     tgtEvtData = embeddedPlaybackParams.eventData;
   }
 
-  currentData = await loadEvent();
+  currentData = getPlayableEventData(await loadEvent());
 
-  if (!currentData) {
+  if (!currentData || currentData.length === 0) {
     alert("データなし");
     return;
   }
@@ -1357,7 +1373,9 @@ function moveFromEventEndDialog(targetEvent) {
     if (targetEvent.resetToEventTop) {
       location.href =
         './event.html?chrId=' + encodeURIComponent(chrId) +
-        '&screen=mode&autoFlg=' + encodeURIComponent(autoFlg);
+        '&screen=mode&autoFlg=' + encodeURIComponent(autoFlg) +
+        '&befEvtId=' + encodeURIComponent(evtId) +
+        '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn));
       return;
     }
 

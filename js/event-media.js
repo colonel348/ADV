@@ -9,17 +9,25 @@
     return data.map(item => ({ ...item }));
   }
 
-  function loadMessageScript(evt) {
+  function loadMessageScript(src) {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = getMsgDataPath(evt);
+      // 読込失敗時に直前のイベントデータを誤って再利用しない。
+      delete global.msgData;
+      script.src = src;
       script.async = true;
       script.onload = () => {
-        const data = cloneMessageData(global.msgData);
+        const sourceData = global.msgData;
+        delete global.msgData;
         script.remove();
-        resolve(data);
+        if (!Array.isArray(sourceData)) {
+          reject(new Error("Message data was not defined: " + script.src));
+          return;
+        }
+        resolve(cloneMessageData(sourceData));
       };
       script.onerror = () => {
+        delete global.msgData;
         script.remove();
         reject(new Error("Failed to load event message data: " + script.src));
       };
@@ -27,24 +35,31 @@
     });
   }
 
-  function loadEventMessageData(evt) {
-    if (!evt?.evtId) return Promise.resolve(null);
-    if (messageCache.has(evt.evtId)) return messageCache.get(evt.evtId);
+  function loadMessageDataFromPath(src) {
+    if (!src) return Promise.resolve(null);
+    if (messageCache.has(src)) return messageCache.get(src);
 
     // msgDat.jsはwindow.msgDataへ代入する形式なので、複数イベントの同時読込を直列化する。
     const request = loadQueue
       .catch(() => {})
-      .then(() => loadMessageScript(evt));
+      .then(() => loadMessageScript(src));
     loadQueue = request;
-    messageCache.set(evt.evtId, request);
-    request.catch(() => messageCache.delete(evt.evtId));
+    messageCache.set(src, request);
+    request.catch(() => messageCache.delete(src));
     return request;
+  }
+
+  function loadEventMessageData(evt) {
+    if (!evt?.evtId) return Promise.resolve(null);
+    return loadMessageDataFromPath(getMsgDataPath(evt));
   }
 
   function getFirstMovBlockMedia(evt, data) {
     if (!Array.isArray(data)) return [];
 
-    const movIndex = data.findIndex(item => item && Object.prototype.hasOwnProperty.call(item, "movId"));
+    const movIndex = data.findIndex(item =>
+      item && (item.movId === "evt1" || item.movId === "evt2")
+    );
     if (movIndex < 0) return [];
 
     const movId = data[movIndex].movId;
@@ -71,6 +86,7 @@
 
   global.EventMedia = {
     loadMessageData: loadEventMessageData,
+    loadMessageDataFromPath,
     getFirstMovBlockMedia
   };
 })(window);

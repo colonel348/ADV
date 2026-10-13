@@ -26,8 +26,13 @@ let eventPlaybackPreloadVideos = [];
 let eventPlaybackPreloadTimer = null;
 let eventCardAnimationTimer = null;
 let eventCardCenterTransforms = [];
+let modeHomeTypingTimer = null;
+let modeHomeShowTimer = null;
+let modeHomeLoadSequence = 0;
 const PREVIEW_PLACE_DISPLAY_TIME = 1500;
 const PREVIEW_PLACE_FADE_TIME = 350;
+const SELECTION_ACTION_SWITCH_BEFORE = 0.16;
+const SELECTION_VIDEO_FADE_TIME = 300;
 const chrList = ["FF", "AK", "SA"];
 let chrIdx = 1;
 let filteredEvtData = [];
@@ -136,15 +141,6 @@ function readSelectionParams() {
     screen = "event";
   } else if (previousEvent) {
     previousEventLevel = Number(previousEvent.evtId.charAt(4)) || 0;
-    const hasNextEvent = evtData.some(evt =>
-      evt.evtId.substring(0, 2) === chrId &&
-      Number(evt.evtId.charAt(4)) > previousEventLevel
-    );
-    if (!hasNextEvent) {
-      // 完了済みURLを更新・再訪してもselectへ戻さず、eventのトップを表示する。
-      previousEventLevel = 0;
-      befEvtId = "";
-    }
     screen = isEventSelectionHost ? "mode" : "character";
   } else if (requestedScreen === "mode") {
     // event画面の更新・履歴復元・再訪時は、前回イベントによる絞り込みをせず②へ戻す。
@@ -159,15 +155,23 @@ function readSelectionParams() {
 }
 
 function getCharacterLoopPath() {
-  const loopFileByMode = {
-    R: "11.evt-L.mp4",
-    S: "12.evt-L.mp4",
-    C: "13.evt-L.mp4"
+  return getCharacterVideoSequence().loop;
+}
+
+function getCharacterVideoSequence() {
+  const fileNoByMode = {
+    S: "1",
+    R: "2",
+    C: "3"
   };
   // ①を経由して②へ進む場合は、前イベントのモードを引き継がない。
   const previousMode = screen === "character" ? "" : befEvtId.charAt(3);
-  const loopFile = loopFileByMode[previousMode] || "01.evt-L.mp4";
-  return getChrDir(chrId) + "/00.選択/" + loopFile;
+  const fileNo = fileNoByMode[previousMode] || "0";
+  const basePath = getChrDir(chrId) + "/00.選択/";
+  return {
+    intro: basePath + fileNo + "1.evt-A.mp4",
+    loop: basePath + fileNo + "2.evt-L.mp4"
+  };
 }
 
 function getEventLoopPath(evt) {
@@ -350,10 +354,10 @@ function setScreen(nextScreen, delayed = false) {
   }
 
   if (isEventToMode) {
-    // ③では選択後も共通動画を維持するため、②へ戻る際の動画切替は不要。
+    // 同じ選択セッション内ではAとホームメッセージを一度だけ表示する。
+    // ②→①では再初期化せず、切替済みのL動画をそのまま維持する。
     const restoreCommonVideo = false;
     viewport.classList.add("screen-transitioning", "event-to-mode");
-    if (restoreCommonVideo) bgFade.classList.add("show");
 
     screenTransitionTimer = setTimeout(() => {
       screen = "mode";
@@ -363,7 +367,6 @@ function setScreen(nextScreen, delayed = false) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             viewport.classList.add("mode-return-visible");
-            if (restoreCommonVideo) bgFade.classList.remove("show");
 
             screenTransitionTimer = setTimeout(() => {
               viewport.classList.remove(
@@ -377,7 +380,7 @@ function setScreen(nextScreen, delayed = false) {
           });
         });
       }, restoreCommonVideo);
-    }, restoreCommonVideo ? 500 : 400);
+    }, 400);
     return;
   }
 
@@ -465,6 +468,111 @@ function getModeLabel(mode) {
   return modeLabels[mode] || "";
 }
 
+function getHomeMessageText(data) {
+  if (!Array.isArray(data)) return "";
+  const homeIndex = data.findIndex(item => item?.movId === "home");
+  if (homeIndex < 0) return "";
+
+  for (let index = homeIndex + 1; index < data.length; index++) {
+    const item = data[index];
+    if (item && Object.prototype.hasOwnProperty.call(item, "movId")) break;
+    if (item?.msgId === "A" && Object.prototype.hasOwnProperty.call(item, "msgTxt")) {
+      return String(item.msgTxt || "");
+    }
+  }
+  return "";
+}
+
+function stopModeHomeTyping() {
+  clearTimeout(modeHomeTypingTimer);
+  modeHomeTypingTimer = null;
+}
+
+function typeModeHomeMessage(message) {
+  const textElement = document.getElementById("modeHomeMessageText");
+  if (!textElement) return;
+
+  stopModeHomeTyping();
+  textElement.innerHTML = "";
+  const characters = Array.from(String(message || ""));
+  let index = 0;
+
+  const typeNext = () => {
+    if (screen !== "mode" || index >= characters.length) return;
+    const character = characters[index++];
+
+    if (character === "　") {
+      textElement.appendChild(document.createElement("br"));
+    } else {
+      textElement.appendChild(document.createTextNode(character));
+    }
+
+    const wait = character === "、" ? 40 : (character === "　" ? 60 : 10);
+    modeHomeTypingTimer = setTimeout(typeNext, wait);
+  };
+
+  typeNext();
+}
+
+function hideModeHomeMessage() {
+  modeHomeLoadSequence++;
+  clearTimeout(modeHomeShowTimer);
+  modeHomeShowTimer = null;
+  stopModeHomeTyping();
+  document.getElementById("modeHomeMessage")?.classList.remove("show");
+}
+
+async function showModeHomeMessage() {
+  const panel = document.getElementById("modeHomeMessage");
+  const textElement = document.getElementById("modeHomeMessageText");
+  if (!panel || !textElement || !window.EventMedia?.loadMessageDataFromPath) return;
+
+  const sequence = ++modeHomeLoadSequence;
+  clearTimeout(modeHomeShowTimer);
+  modeHomeShowTimer = null;
+  stopModeHomeTyping();
+  textElement.textContent = "";
+  panel.classList.remove("show");
+
+  let message = "";
+  let messageLoaded = false;
+  let typingStarted = false;
+
+  const startTypingWhenReady = () => {
+    if (
+      typingStarted ||
+      !messageLoaded ||
+      !panel.classList.contains("show") ||
+      screen !== "mode" ||
+      sequence !== modeHomeLoadSequence
+    ) {
+      return;
+    }
+    typingStarted = true;
+    typeModeHomeMessage(message);
+  };
+
+  modeHomeShowTimer = setTimeout(() => {
+    if (screen === "mode" && sequence === modeHomeLoadSequence) {
+      panel.classList.add("show");
+      startTypingWhenReady();
+    }
+  }, 300);
+
+  const messagePath = getSelectionMsgDataPath(chrId);
+
+  try {
+    const data = await EventMedia.loadMessageDataFromPath(messagePath);
+    message = getHomeMessageText(data);
+  } catch (error) {
+    message = "";
+  }
+
+  if (screen !== "mode" || sequence !== modeHomeLoadSequence) return;
+  messageLoaded = true;
+  startTypingWhenReady();
+}
+
 function showModeSelection(onReady = null, restartCommonVideo = true) {
   evtIdx = -1;
   evtId = "";
@@ -472,6 +580,7 @@ function showModeSelection(onReady = null, restartCommonVideo = true) {
   document.getElementById("viewport").classList.remove("event-unselected");
   decideBtn.classList.add("disabled");
   updateEventLevelStatus();
+  hideModeHomeMessage();
 
   document.querySelectorAll(".modeChoice").forEach(button => {
     const mode = button.dataset.mode;
@@ -490,7 +599,7 @@ function showModeSelection(onReady = null, restartCommonVideo = true) {
   bgImg.src = getChrSelPath(chrId);
   bgImg.style.opacity = 0;
   if (restartCommonVideo) {
-    playSelectionLoop(getCharacterLoopPath(), onReady);
+    playSelectionIntroLoop(getCharacterVideoSequence(), onReady);
   } else if (onReady) {
     onReady();
   }
@@ -500,9 +609,9 @@ function selectMode(mode) {
   const button = document.querySelector(`.modeChoice[data-mode="${mode}"]`);
   if (!button || button.disabled) return;
   document.getElementById("selectControlArea").classList.remove("show");
-  lvKbn = "";
   selectedMode = mode;
   initialEvtId = "";
+  hideModeHomeMessage();
   setScreen("event", true);
 }
 
@@ -792,6 +901,115 @@ function prepareSelectionVideo(video, src) {
   video.src = src;
   video.preload = "auto";
   video.load();
+}
+
+function playSelectionIntroLoop(paths, onReady = null) {
+  const sequence = ++selectVideoSequence;
+  selectLoopWatching = false;
+  const introVideo = activeSelectVideo;
+  const loopVideo = standbySelectVideo;
+
+  [introVideo, loopVideo].forEach(video => {
+    video.pause();
+    video.classList.remove("show", "front");
+    video.style.display = "none";
+  });
+
+  prepareSelectionVideo(introVideo, paths.intro);
+  prepareSelectionVideo(loopVideo, paths.loop);
+  introVideo.currentTime = 0;
+  loopVideo.currentTime = 0;
+  introVideo.style.display = "block";
+  introVideo.classList.add("front");
+
+  let readyNotified = false;
+  let loopStarted = false;
+  const notifyReady = () => {
+    if (readyNotified) return;
+    readyNotified = true;
+    if (onReady) onReady();
+  };
+
+  const notifyReadyAfterFirstFrame = () => {
+    if (typeof introVideo.requestVideoFrameCallback === "function") {
+      introVideo.requestVideoFrameCallback(() => {
+        if (sequence === selectVideoSequence) notifyReady();
+      });
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (sequence === selectVideoSequence) notifyReady();
+      }));
+    }
+  };
+
+  const startLoop = () => {
+    if (loopStarted || sequence !== selectVideoSequence) return;
+    loopStarted = true;
+    loopVideo.currentTime = 0;
+    loopVideo.style.display = "block";
+    introVideo.classList.remove("front");
+    loopVideo.classList.add("front");
+
+    const revealLoop = () => {
+      if (sequence !== selectVideoSequence) return;
+      loopVideo.classList.add("show");
+      activeSelectVideo = loopVideo;
+      standbySelectVideo = introVideo;
+      notifyReady();
+
+      // LをAの上へフェード表示し、切替が完了してからAを片付ける。
+      setTimeout(() => {
+        if (sequence !== selectVideoSequence) return;
+        hideModeHomeMessage();
+        introVideo.classList.remove("show", "front");
+        introVideo.pause();
+        introVideo.style.display = "none";
+        prepareSelectionVideo(standbySelectVideo, paths.loop);
+        standbySelectVideo.currentTime = 0;
+        watchSelectionLoop(paths.loop, sequence);
+      }, SELECTION_VIDEO_FADE_TIME);
+    };
+
+    loopVideo.play().then(() => {
+      // play()解決直後ではなく、L動画の最初のフレームが描画可能になってからAを隠す。
+      if (typeof loopVideo.requestVideoFrameCallback === "function") {
+        loopVideo.requestVideoFrameCallback(revealLoop);
+      } else {
+        requestAnimationFrame(() => requestAnimationFrame(revealLoop));
+      }
+    }).catch(() => {
+      loopStarted = false;
+      setTimeout(startLoop, 200);
+    });
+  };
+
+  const startIntro = () => {
+    if (sequence !== selectVideoSequence) return;
+    introVideo.play().then(() => {
+      if (sequence !== selectVideoSequence) return;
+      introVideo.classList.add("show");
+      showModeHomeMessage();
+      notifyReadyAfterFirstFrame();
+
+      const watchIntroEnd = () => {
+        if (sequence !== selectVideoSequence || loopStarted) return;
+        if (
+          introVideo.duration &&
+          introVideo.duration - introVideo.currentTime <= SELECTION_ACTION_SWITCH_BEFORE
+        ) {
+          startLoop();
+          return;
+        }
+        requestAnimationFrame(watchIntroEnd);
+      };
+      requestAnimationFrame(watchIntroEnd);
+    }).catch(() => setTimeout(startIntro, 200));
+  };
+
+  introVideo.addEventListener("ended", startLoop, { once: true });
+  introVideo.addEventListener("error", startLoop, { once: true });
+  if (introVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) startIntro();
+  else introVideo.addEventListener("canplay", startIntro, { once: true });
 }
 
 function playSelectionLoop(src, onReady = null) {
