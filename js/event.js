@@ -50,9 +50,7 @@ let aPlaybackRetryCleanup = null;
 
 let autoTimer = null;
 
-let isEventEndDialogOpen = false;
-let eventEndDialogTimer = null;
-let nextEventAtCompletion = null;
+let isReturningToSelection = false;
 
 let hasConfiguredWhiteFadePlayed = false;
 
@@ -107,9 +105,6 @@ const FIRST_LOOP_BLACK_FADE_TIME = 1500;
 // 最後のA動画は終了前から黒フェードを開始する
 const FINAL_ACTION_FADE_BEFORE = 2;
 const FINAL_VIDEO_FADE_TIME = 1500;
-// イベント終了時、黒フェード完了後にダイアログ表示まで黒画面を保持する時間
-const EVENT_END_DIALOG_WAIT = 1000;
-
 const AFTER_TITLE_NEXT_EVT_TIME = 200;
 const AFTER_TITLE_BLACK_FADE_TIME = 200;
 // 次段落への時間
@@ -425,8 +420,6 @@ function startEventPlayback() {
   standbyLoopVideo = videoL2;
   
   fade = document.getElementById("fade");
-
-  bindEventEndDialog();
 
   init();
   renderCommittedEventLevel(lvKbn);
@@ -1292,135 +1285,25 @@ function getContinuousAIndex(index) {
 }
 
 /*************************************************
- * イベント終了ダイアログ
- *************************************************/
-function getNextEventAtCompletion() {
-
-  const currentLevel = Number(evtId.charAt(4));
-
-  if (!Number.isInteger(currentLevel) || currentLevel < 1) {
-    return null;
-  }
-
-  const hasNextEvent = evtData.some(evt =>
-    evt.evtId.substring(0, 2) === chrId &&
-    Number(evt.evtId.charAt(4)) > currentLevel
-  );
-
-  return hasNextEvent ? { selectAfterEvent: true } : null;
-
-}
-
-function showEventEndDialog(delay = 0) {
-
-  if (isEventEndDialogOpen) return;
-
-  isEventEndDialogOpen = true;
-  isNextReady = false;
-  clearTimeout(autoTimer);
-  clearATextTimer();
-
-  const dialog = document.getElementById("eventEndDialog");
-  const message = document.getElementById("eventEndDialogMessage");
-  const nextButton = document.getElementById("eventEndNextBtn");
-  const controlArea = document.getElementById("controlArea");
-
-  nextEventAtCompletion = getNextEventAtCompletion();
-  renderCommittedEventLevel(lvKbn);
-
-  message.textContent = nextEventAtCompletion
-    ? "次のイベントに進みますか？"
-    : "タイトルに戻りますか？";
-
-  nextButton.textContent = nextEventAtCompletion ? "進む" : "戻る";
-  controlArea.classList.remove("show");
-  document.getElementById("msgArea").style.opacity = 0;
-
-  // 動画を黒フェードで完全に隠してからダイアログを表示する。
-  setFade(true, "B");
-
-  clearTimeout(eventEndDialogTimer);
-  eventEndDialogTimer = setTimeout(() => {
-
-    if (currentVideo) {
-      currentVideo.pause();
-    }
-
-    dialog.classList.remove("is-leaving");
-    dialog.classList.add("show");
-    dialog.setAttribute("aria-hidden", "false");
-    document.body.classList.add("event-dialog-open");
-
-  }, Math.max(
-    delay,
-    BLACK_FADE_TIME + EVENT_END_DIALOG_WAIT
-  ));
-
-}
-
-function moveFromEventEndDialog(targetEvent) {
-
-  const dialog = document.getElementById("eventEndDialog");
-  dialog.classList.add("is-leaving");
-
-  setTimeout(() => {
-
-    if (!targetEvent) {
-      location.href = './select.html?chrId=' + encodeURIComponent(chrId);
-      return;
-    }
-
-    if (targetEvent.resetToEventTop) {
-      location.href =
-        './event.html?chrId=' + encodeURIComponent(chrId) +
-        '&screen=mode&autoFlg=' + encodeURIComponent(autoFlg) +
-        '&befEvtId=' + encodeURIComponent(evtId) +
-        '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn));
-      return;
-    }
-
-    if (targetEvent.selectAfterEvent) {
-      moveToEventSelection({ befEvtId: evtId });
-      return;
-    }
-
-    moveToEventSelection({ evtId: targetEvent.evtId, befEvtId: evtId });
-
-  }, 800);
-
-}
-
-function bindEventEndDialog() {
-
-  const cancelButton = document.getElementById("eventEndCancelBtn");
-  const nextButton = document.getElementById("eventEndNextBtn");
-
-  cancelButton.addEventListener("click", event => {
-    event.stopPropagation();
-    if (!nextEventAtCompletion) {
-      moveFromEventEndDialog({ resetToEventTop: true });
-      return;
-    }
-    moveFromEventEndDialog({
-      evtId
-    });
-  });
-
-  nextButton.addEventListener("click", event => {
-    event.stopPropagation();
-    moveFromEventEndDialog(nextEventAtCompletion);
-  });
-
-}
-
-/*************************************************
  * select遷移
  *************************************************/
 function moveSelect(
   transitionTime = BLACK_FADE_TIME
 ) {
 
-  showEventEndDialog(transitionTime);
+  if (isReturningToSelection) return;
+  isReturningToSelection = true;
+  isNextReady = false;
+  clearTimeout(autoTimer);
+  clearATextTimer();
+  document.getElementById("controlArea").classList.remove("show");
+  document.getElementById("msgArea").style.opacity = 0;
+  setFade(true, "B");
+
+  setTimeout(() => {
+    if (currentVideo) currentVideo.pause();
+    moveToEventSelection({ befEvtId: evtId });
+  }, Math.max(transitionTime, BLACK_FADE_TIME));
 
 }
 
@@ -2646,9 +2529,7 @@ function startFinalVideoBlackFade(targetVideo) {
 
   }, FINAL_VIDEO_FADE_TIME);
 
-  moveSelect(
-    FINAL_VIDEO_FADE_TIME + EVENT_END_DIALOG_WAIT
-  );
+  moveSelect(FINAL_VIDEO_FADE_TIME);
 
 }
 
