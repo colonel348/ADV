@@ -590,13 +590,6 @@ body.event-start-leaving #previewTapPrompt {
 }
 
 #sidebar {
-  --sidebar-panel-bg: linear-gradient(
-    90deg,
-    rgba(28, 28, 36, .30) 0%,
-    rgba(28, 28, 36, .18) 45%,
-    rgba(28, 28, 36, .07) 72%,
-    transparent 100%
-  );
   position: absolute;
   left: 0;
   top: 0;
@@ -623,20 +616,10 @@ body.event-start-leaving #previewTapPrompt {
   transition: none;
 }
 
-#viewport.initial-event-ready #sidebar::before {
-  opacity: 1;
-  transition: none;
-}
-
 /* 黒画面の裏で、③の左ぼかしだけを完成状態にしておく */
 #viewport.event-prepared #sidebar {
   opacity: 1;
   transform: translateX(0);
-  transition: none;
-}
-
-#viewport.event-prepared #sidebar::before {
-  opacity: 1;
   transition: none;
 }
 
@@ -663,28 +646,7 @@ body.event-start-leaving #previewTapPrompt {
 }
 
 #sidebar::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 200px;
-  background:
-    radial-gradient(circle, rgba(255,255,255,.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px,
-    linear-gradient(90deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.18) 30%, rgba(255,255,255,.10) 62%, transparent 100%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
-  mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.96) 34%, rgba(0,0,0,.65) 68%, transparent 100%);
-  opacity: 0;
-  contain: paint;
-  will-change: opacity;
-  transform: translateZ(0);
-  transition: none;
-}
-
-#viewport[data-screen="event"] #sidebar::before {
-  opacity: 1;
+  content: none;
 }
 
 #cardList {
@@ -980,8 +942,12 @@ body.event-start-leaving #previewTapPrompt {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   opacity: 0;
   transition: opacity .3s ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  contain: paint;
 }
 
 .selectMovie.front { z-index: 2; }
@@ -1243,7 +1209,7 @@ body.event-start-leaving #previewTapPrompt {
 
 #viewport[data-screen="event"] .card:not(.active) .cardInner {
   transform: scale(1);
-  filter: brightness(.62);
+  filter: none;
 }
 
 #viewport[data-screen="event"] .card.active .cardInner {
@@ -1260,16 +1226,16 @@ body.event-start-leaving #previewTapPrompt {
 #viewport[data-screen="event"] .card {
   width: 350px;
   height: 68px;
-  margin: 18px 8px;
+  margin: 35px;
 }
 
 #viewport[data-screen="event"] .card.active {
-  margin: 18px 8px;
+  margin: 35px;
 }
 
 /* 1件だけの場合は選択前後で中心座標を変えず、その場で拡大する。 */
 #viewport[data-screen="event"] #cardList.single-card .card.active {
-  margin: 18px 8px;
+  margin: 35px;
 }
 
 .cardModeBadge {
@@ -1543,7 +1509,7 @@ body.event-start-leaving #previewTapPrompt {
   opacity: 0 !important;
 }
 
-/* backdrop-filterは透明な親の内側だと遅れて合成されるため、親は常時表示しておく。 */
+/* モード画面でも親要素の位置を固定し、カード表示時の横ずれを防ぐ。 */
 #viewport[data-screen="mode"] #sidebar {
   opacity: 1;
   visibility: visible;
@@ -1551,20 +1517,7 @@ body.event-start-leaving #previewTapPrompt {
   pointer-events: none;
 }
 
-#viewport[data-screen="mode"] #sidebar::before {
-  opacity: 0;
-  background: var(--sidebar-panel-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  will-change: opacity;
-  transform: translateZ(0);
-}
-
 #viewport[data-screen="mode"] #cardList {
-  opacity: 0;
-}
-
-#viewport[data-screen="mode"] #sidebar::after {
   opacity: 0;
 }
 
@@ -1581,33 +1534,10 @@ body.event-start-leaving #previewTapPrompt {
   transition: opacity .4s ease !important;
 }
 
-#viewport.event-revealing[data-screen="event"] #sidebar::before {
-  opacity: 0;
-  background: var(--sidebar-panel-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: opacity .4s ease !important;
-  will-change: opacity;
-  transform: translateZ(0);
-}
-
-#viewport.event-revealing[data-screen="event"] #sidebar::after {
-  opacity: 0;
-  transition: opacity .4s ease !important;
-}
-
 #viewport.event-revealing.event-reveal-visible[data-screen="event"] #cardList,
 #viewport.event-revealing.event-reveal-visible[data-screen="event"] #decisionArea,
 #viewport.event-revealing.event-reveal-visible[data-screen="event"] #backBtn {
   opacity: 1 !important;
-}
-
-#viewport.event-revealing.event-reveal-visible[data-screen="event"] #sidebar::before {
-  opacity: 1;
-}
-
-#viewport.event-revealing.event-reveal-visible[data-screen="event"] #sidebar::after {
-  opacity: 1;
 }
 
 #viewport.event-revealing.event-reveal-visible[data-screen="event"] #sidebar {
@@ -1624,16 +1554,8 @@ body.event-start-leaving #previewTapPrompt {
 /* old②→②：カードと左マスクを消してから、モードだけをフェード表示する。 */
 #viewport.event-to-mode[data-screen="event"] #cardList,
 #viewport.screen-transitioning.event-to-mode[data-screen="event"] #decisionArea,
-#viewport.event-to-mode[data-screen="event"] #sidebar::after,
 #viewport.screen-transitioning.event-to-mode[data-screen="event"] #backBtn {
   opacity: 0 !important;
-  transition: opacity .4s ease !important;
-}
-
-#viewport.event-to-mode[data-screen="event"] #sidebar::before {
-  opacity: 0;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   transition: opacity .4s ease !important;
 }
 
@@ -1645,48 +1567,6 @@ body.event-start-leaving #previewTapPrompt {
 #viewport.mode-return-preparing.mode-return-visible[data-screen="mode"] #modeStage {
   opacity: 1;
   transition: opacity .45s ease;
-}
-
-/* 動画上のリアルタイムぼかしを避け、軽量な半透明レイヤーで奥行きを作る。 */
-#sidebar::before {
-  width: 100vw;
-  background: rgba(22, 34, 68, .2);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  -webkit-mask-image: none;
-  mask-image: none;
-  pointer-events: none;
-}
-
-#viewport[data-screen="mode"] #sidebar::before,
-#viewport.event-revealing[data-screen="event"] #sidebar::before,
-#viewport.event-to-mode[data-screen="event"] #sidebar::before {
-  width: 100vw;
-  background: rgba(22, 34, 68, .2);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-#sidebar::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 0;
-  width: 100vw;
-  background:
-    radial-gradient(circle, rgba(255,255,255,.14) 0 1px, transparent 1.2px) 0 0 / 8px 8px;
-  -webkit-mask-image: none;
-  mask-image: none;
-  opacity: 0;
-  pointer-events: none;
-}
-
-#viewport[data-screen="event"] #sidebar::after {
-  opacity: 1;
 }
 
 /* ②では左上の戻るボタンを使わず、右スワイプメニューから①へ戻る。 */
@@ -1818,45 +1698,14 @@ body.event-start-leaving #previewTapPrompt {
   color: #fff;
   transform-origin: center center;
   isolation: isolate;
+  contain: layout style;
   transition:
+    gap .28s ease,
     filter .28s ease,
     background-color .28s ease,
     border-radius .28s ease,
     box-shadow .28s ease,
     color .28s ease;
-}
-
-#viewport[data-screen="event"] .card::before,
-#viewport[data-screen="event"] .card::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  width: 330px;
-  z-index: 0;
-  height: 2px;
-  background: rgba(255,255,255,.24);
-  pointer-events: none;
-  transform: translateX(-50%);
-  transition: opacity .25s ease;
-}
-
-#viewport[data-screen="event"] .card::before {
-  display: none;
-  top: -9px;
-}
-
-#viewport[data-screen="event"] .card:first-child::before {
-  display: block;
-}
-
-#viewport[data-screen="event"] .card::after {
-  bottom: -9px;
-}
-
-#viewport[data-screen="event"] .card.active::before,
-#viewport[data-screen="event"] .card.active::after,
-#viewport[data-screen="event"] .card:has(+ .card.active)::after {
-  opacity: 0;
 }
 
 #viewport[data-screen="event"] .card:not(.active) .cardInner {
@@ -1887,18 +1736,55 @@ body.event-start-leaving #previewTapPrompt {
   left: 0;
   width: 350px;
   z-index: -1;
+  box-sizing: border-box;
+  border: 0;
   border-radius: 8px;
-  background: rgba(210, 210, 220, .9);
-  box-shadow: 0 4px 12px rgba(0,0,0,.2);
-  opacity: 0;
-  transform: scaleY(1.12);
-  transform-origin: left center;
-  transition: opacity .28s ease, transform .28s ease;
+  background-color: rgba(22, 34, 68, .6);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  box-shadow: none;
+  opacity: 1;
+  transform: scale(.97143, 1.08824);
+  transform-origin: center;
+  transition:
+    transform .28s ease,
+    background-color .28s ease;
+}
+
+#viewport[data-screen="event"] .cardInner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 350px;
+  z-index: -1;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 8px;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.18) 0 .7px, transparent .9px),
+    radial-gradient(circle, rgba(255,255,255,.18) 0 .7px, transparent .9px);
+  background-position: 0 0, 3px 3px;
+  background-size: 6px 6px;
+  opacity: 1;
+  pointer-events: none;
+  transform: scale(.97143, 1.08824);
+  transform-origin: center;
+  transition: opacity .2s ease, transform .28s ease;
+}
+
+#cardList.cards-animating .cardInner::before {
+  will-change: transform;
 }
 
 #viewport[data-screen="event"] .card.active .cardInner::before {
   opacity: 1;
-  transform: scaleY(1.4);
+  background-color: rgba(210, 210, 220, .9);
+  transform: scale(1, 1.4);
+}
+
+#viewport[data-screen="event"] .card.active .cardInner::after {
+  opacity: 0;
+  transform: scale(1, 1.4);
 }
 
 .eventLevelArea {
@@ -1929,7 +1815,6 @@ body.event-start-leaving #previewTapPrompt {
   padding-bottom: 1px;
   transform: scale(.905);
   transition: transform .28s ease;
-  will-change: transform;
 }
 
 .card.active .eventLevelNumber {
@@ -2004,7 +1889,7 @@ body.event-start-leaving #previewTapPrompt {
 }
 
 .card:not(.active) .eventTitle {
-  transform: translateY(1px);
+  transform: translateY(0);
 }
 
 .eventPlace {
