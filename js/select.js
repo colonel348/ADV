@@ -38,8 +38,9 @@ const PREVIEW_PLACE_DISPLAY_TIME = 1500;
 const PREVIEW_PLACE_FADE_TIME = 350;
 const SELECTION_ACTION_SWITCH_BEFORE = 0.16;
 const SELECTION_VIDEO_FADE_TIME = 300;
-const SELECTION_LOOP_SWITCH_BEFORE = 0.06;
-const SELECTION_LOOP_FADE_TIME = 40;
+// iOSでも次の先頭フレームを準備できるよう、終端より少し早くクロスフェードを始める。
+const SELECTION_LOOP_SWITCH_BEFORE = 0.25;
+const SELECTION_LOOP_FADE_TIME = 500;
 const chrList = ["FF", "AK", "SA"];
 let chrIdx = 1;
 let filteredEvtData = [];
@@ -219,11 +220,15 @@ function playRankResultAnimation(onComplete) {
     commitGauge.style.transform = `scaleX(${targetScale})`;
 
     setTimeout(() => {
-      status.querySelectorAll(".eventLevelSegments span").forEach((segment, index) => {
+      const segments = status.querySelectorAll(".eventLevelSegments span");
+      // 確定オーバーレイの下を先に完成色へ固定し、外した後の再着色を見せない。
+      segments.forEach((segment, index) => {
+        segment.style.transition = "none";
         const mode = finalValue.charAt(index);
         if (mode) segment.dataset.mode = mode;
         else delete segment.dataset.mode;
       });
+      status.offsetWidth;
       if (pendingGauge) {
         // 点滅解除時に通常opacityへ戻る1フレームを描画させない。
         pendingGauge.style.visibility = "hidden";
@@ -236,6 +241,9 @@ function playRankResultAnimation(onComplete) {
       }
       commitGauge.style.opacity = "0";
       commitGauge.style.transition = "";
+      requestAnimationFrame(() => {
+        segments.forEach(segment => { segment.style.transition = ""; });
+      });
       value.classList.remove("value-changing");
       value.textContent = finalValue.length;
       status.setAttribute("aria-label", `ランク${finalValue.length}`);

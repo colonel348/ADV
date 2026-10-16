@@ -107,9 +107,9 @@ const ACTION_SWITCH_BEFORE = 0.16;
 const ACTION_ONLY_FADE_BEFORE = 0.55;
 // A→Wと初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
 const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.60;
-// L動画終端と先頭の重なりを1フレーム程度に抑える。
-const LOOP_SWITCH_BEFORE = 0.06;
-const LOOP_FADE_TIME = 40;
+// iOSでも次の先頭フレームを準備できるよう、終端より少し早くクロスフェードを始める。
+const LOOP_SWITCH_BEFORE = 0.25;
+const LOOP_FADE_TIME = 500;
 // fade時間
 const BLACK_FADE_TIME = 750;
 // 初回L動画を黒画面から表示する際のフェード時間
