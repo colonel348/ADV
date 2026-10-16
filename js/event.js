@@ -58,19 +58,31 @@ function normalizeEventLvKbn(value) {
   return String(value || "").toUpperCase().replace(/[^RSC]/g, "").slice(0, 4);
 }
 
-function renderCommittedEventLevel(value) {
+function renderCommittedEventLevel(value, animate = false) {
   const status = document.getElementById("eventLevelStatus");
   if (!status) return;
   const normalized = normalizeEventLvKbn(value);
   const valueElement = document.getElementById("eventLevelStatusValue");
+  const pendingGauge = status.querySelector(".eventLevelPendingGauge");
+  valueElement.classList.remove("value-changing");
   valueElement.textContent = normalized.length;
-  status.setAttribute("aria-label", `レベル${normalized.length}`);
+  if (animate) {
+    valueElement.offsetWidth;
+    valueElement.classList.add("value-changing");
+  }
+  status.setAttribute("aria-label", `ランク${normalized.length}`);
   status.querySelectorAll(".eventLevelSegments span").forEach((segment, index) => {
     const mode = normalized.charAt(index);
     if (mode) segment.dataset.mode = mode;
     else delete segment.dataset.mode;
     segment.classList.remove("pending");
   });
+  if (pendingGauge) {
+    pendingGauge.classList.remove("is-blinking");
+    pendingGauge.style.opacity = "0";
+    pendingGauge.style.transform = "scaleX(0)";
+    delete pendingGauge.dataset.mode;
+  }
 }
 
 function moveToEventSelection(options = {}) {
@@ -82,6 +94,10 @@ function moveToEventSelection(options = {}) {
     "&LvKbn=" + encodeURIComponent(normalizeEventLvKbn(lvKbn));
   if (selectionEvtId) href += "&evtId=" + encodeURIComponent(selectionEvtId);
   if (previousEvtId) href += "&befEvtId=" + encodeURIComponent(previousEvtId);
+  if (options.rankResultFrom !== undefined) {
+    href += "&rankResult=1&rankUpFrom=" +
+      encodeURIComponent(normalizeEventLvKbn(options.rankResultFrom));
+  }
   location.href = href;
 }
 
@@ -400,6 +416,8 @@ function warmupLoopVideo(video) {
 
 let eventPlaybackStarted = false;
 let embeddedPlaybackParams = null;
+let committedLvKbnBeforePlayback = "";
+let hasRankResultContext = false;
 
 function startEventPlayback() {
   if (eventPlaybackStarted) return;
@@ -418,7 +436,7 @@ function startEventPlayback() {
   fade = document.getElementById("fade");
 
   init();
-  renderCommittedEventLevel(lvKbn);
+  if (!embeddedPlaybackParams) renderCommittedEventLevel(lvKbn);
 
   // --------------------
   // click
@@ -585,7 +603,12 @@ function startEventPlayback() {
 
 }
 
-window.startEmbeddedEventPlayback = function (selectedEvtId, selectedAutoFlg = "0", selectedLvKbn = "") {
+window.startEmbeddedEventPlayback = function (
+  selectedEvtId,
+  selectedAutoFlg = "0",
+  selectedLvKbn = "",
+  committedLvKbn = ""
+) {
   const selectedEvent = evtData.find(evt => evt.evtId === selectedEvtId);
   if (!selectedEvent) return false;
 
@@ -594,15 +617,21 @@ window.startEmbeddedEventPlayback = function (selectedEvtId, selectedAutoFlg = "
     evtId: selectedEvtId,
     autoFlg: selectedAutoFlg,
     lvKbn: normalizeEventLvKbn(selectedLvKbn),
+    committedLvKbn: normalizeEventLvKbn(committedLvKbn),
     eventData: selectedEvent
   };
+  hasRankResultContext = true;
   startEventPlayback();
   return true;
 };
 
 window.addEventListener("load", () => {
   const params = new URLSearchParams(location.search);
-  if ((params.get("debugMovId") || "").trim()) startEventPlayback();
+  if ((params.get("debugMovId") || "").trim()) {
+    document.body.classList.add("event-rank-hidden");
+    document.body.classList.remove("event-rank-initializing");
+    startEventPlayback();
+  }
 });
 
 /*************************************************
@@ -613,12 +642,21 @@ async function init() {
 
   setParam();
 
+  if (!embeddedPlaybackParams) {
+    const playbackParams = new URLSearchParams(location.search);
+    if (playbackParams.has("rankUpFrom")) {
+      committedLvKbnBeforePlayback = normalizeEventLvKbn(playbackParams.get("rankUpFrom"));
+      hasRankResultContext = true;
+    }
+  }
+
   // ③から④へ進む際はURLを書き換えず、選択中の値を直接本編へ引き継ぐ。
   if (embeddedPlaybackParams) {
     chrId = embeddedPlaybackParams.chrId;
     evtId = embeddedPlaybackParams.evtId;
     autoFlg = embeddedPlaybackParams.autoFlg;
     lvKbn = embeddedPlaybackParams.lvKbn;
+    committedLvKbnBeforePlayback = embeddedPlaybackParams.committedLvKbn;
     debugMovId = null;
     modeKbn = evtId.substring(3, 4);
     tgtEvtData = embeddedPlaybackParams.eventData;
@@ -1283,6 +1321,18 @@ function getContinuousAIndex(index) {
 /*************************************************
  * select遷移
  *************************************************/
+function showCompletedRankThenReturn() {
+  if (!hasRankResultContext) {
+    moveToEventSelection({ befEvtId: evtId });
+    return;
+  }
+  // 黒画面の間に①へ移動し、新しい画面上でランク確定演出を行う。
+  moveToEventSelection({
+    befEvtId: evtId,
+    rankResultFrom: committedLvKbnBeforePlayback
+  });
+}
+
 function moveSelect(
   transitionTime = BLACK_FADE_TIME
 ) {
@@ -1298,7 +1348,7 @@ function moveSelect(
 
   setTimeout(() => {
     if (currentVideo) currentVideo.pause();
-    moveToEventSelection({ befEvtId: evtId });
+    showCompletedRankThenReturn();
   }, Math.max(transitionTime, BLACK_FADE_TIME));
 
 }
@@ -1316,6 +1366,7 @@ function moveNextControl() {
   const evt2Index = findMovIndex("evt2");
 
   if (currentMovId === "evt1" && evt2Index >= 0) {
+    document.body.classList.add("event-rank-hidden");
     setFade(true);
     document.getElementById("msgArea").style.opacity = 0;
     document.getElementById("controlArea").classList.remove("show");
@@ -1326,6 +1377,7 @@ function moveNextControl() {
         '&evtId=' + encodeURIComponent(evtId) +
         '&autoFlg=' + encodeURIComponent(autoFlg) +
         '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn)) +
+        '&rankUpFrom=' + encodeURIComponent(normalizeEventLvKbn(committedLvKbnBeforePlayback)) +
         '&debugMovId=evt2';
     }, BLACK_FADE_TIME);
     return;

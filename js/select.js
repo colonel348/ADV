@@ -26,6 +26,10 @@ let eventPlaybackPreloadVideos = [];
 let eventPlaybackPreloadTimer = null;
 let eventCardAnimationTimer = null;
 let eventCardCenterTransforms = [];
+let eventLevelGaugeAnimationTimer = null;
+let eventLevelStatusInitialized = false;
+let rankResultPending = false;
+let rankResultFrom = "";
 let modeHomeTypingTimer = null;
 let modeHomeShowTimer = null;
 let modeHomeAutoHideTimer = null;
@@ -92,30 +96,152 @@ function updateEventLevelStatus(evt = null, blinkPending = false) {
   const preview = getPreviewLvKbn(evt);
   const value = document.getElementById("eventLevelStatusValue");
   const segments = status.querySelectorAll(".eventLevelSegments span");
-  const nextValue = String(preview.length);
+  const pendingGauge = status.querySelector(".eventLevelPendingGauge");
+  const nextValue = String(current.length);
   if (value.textContent !== nextValue) {
     value.classList.remove("value-changing");
-    value.offsetWidth;
     value.textContent = nextValue;
-    value.classList.add("value-changing");
+    if (eventLevelStatusInitialized) {
+      value.offsetWidth;
+      value.classList.add("value-changing");
+    }
   }
-  status.setAttribute("aria-label", `レベル${preview.length}`);
+  eventLevelStatusInitialized = true;
+  status.setAttribute("aria-label", `ランク${current.length}`);
   segments.forEach((segment, index) => {
-    const mode = preview.charAt(index);
+    const mode = current.charAt(index);
     if (mode) segment.dataset.mode = mode;
     else delete segment.dataset.mode;
-    segment.classList.remove("pending");
   });
 
-  if (blinkPending && preview.length > current.length) {
-    // 追加済み区画も含めて同一フレームで再開し、点滅の位相を揃える。
-    status.offsetWidth;
-    segments.forEach((segment, index) => {
-      if (index >= current.length && index < preview.length) {
-        segment.classList.add("pending");
-      }
-    });
+  if (!pendingGauge) return;
+
+  clearTimeout(eventLevelGaugeAnimationTimer);
+
+  const remainingCount = Math.max(0, 4 - current.length);
+  const pendingCount = Math.max(0, preview.length - current.length);
+  const targetScale = remainingCount ? pendingCount / remainingCount : 0;
+  pendingGauge.style.left = `${current.length * 25}%`;
+  pendingGauge.style.width = `${remainingCount * 25}%`;
+
+  const pendingMode = preview.charAt(current.length);
+  if (pendingCount === 0) {
+    // ②→①では色と点滅を残したまま右端から縮め、縮み切ってから隠す。
+    pendingGauge.style.transform = "scaleX(0)";
+    eventLevelGaugeAnimationTimer = setTimeout(() => {
+      if (pendingGauge.style.transform !== "scaleX(0)") return;
+      pendingGauge.classList.remove("is-blinking");
+      pendingGauge.style.opacity = "0";
+      delete pendingGauge.dataset.mode;
+    }, 680);
+    return;
   }
+
+  pendingGauge.dataset.mode = pendingMode;
+  pendingGauge.style.visibility = "visible";
+  pendingGauge.style.animation = "";
+  pendingGauge.style.opacity = "1";
+  pendingGauge.classList.toggle("is-blinking", blinkPending);
+  requestAnimationFrame(() => {
+    pendingGauge.style.transform = `scaleX(${targetScale})`;
+  });
+}
+
+function prepareRankResultAnimation() {
+  const status = document.getElementById("eventLevelStatus");
+  if (!status) return;
+
+  const from = normalizeLvKbn(rankResultFrom);
+  const finalValue = normalizeLvKbn(lvKbn);
+  const pendingGauge = status.querySelector(".eventLevelPendingGauge");
+  const commitGauge = status.querySelector(".eventLevelCommitGauge");
+  const value = document.getElementById("eventLevelStatusValue");
+  const remainingCount = Math.max(0, 4 - from.length);
+  const addedCount = Math.max(0, finalValue.length - from.length);
+  const targetScale = remainingCount ? addedCount / remainingCount : 0;
+  const mode = finalValue.charAt(from.length);
+
+  status.querySelectorAll(".eventLevelSegments span").forEach((segment, index) => {
+    const segmentMode = from.charAt(index);
+    if (segmentMode) segment.dataset.mode = segmentMode;
+    else delete segment.dataset.mode;
+  });
+  value.textContent = from.length;
+  value.classList.remove("value-changing");
+  status.setAttribute("aria-label", `ランク${from.length}`);
+
+  [pendingGauge, commitGauge].forEach(gauge => {
+    if (!gauge) return;
+    gauge.style.left = `${from.length * 25}%`;
+    gauge.style.width = `${remainingCount * 25}%`;
+    if (mode) gauge.dataset.mode = mode;
+  });
+  if (pendingGauge) {
+    pendingGauge.style.visibility = "visible";
+    pendingGauge.style.animation = "";
+    pendingGauge.style.transition = "none";
+    pendingGauge.style.transform = `scaleX(${targetScale})`;
+    pendingGauge.style.opacity = addedCount ? "1" : "0";
+    pendingGauge.classList.toggle("is-blinking", addedCount > 0);
+  }
+  if (commitGauge) {
+    commitGauge.style.transition = "none";
+    commitGauge.style.transform = "scaleX(0)";
+    commitGauge.style.opacity = "0";
+  }
+}
+
+function playRankResultAnimation(onComplete) {
+  const status = document.getElementById("eventLevelStatus");
+  if (!status) return onComplete();
+
+  const from = normalizeLvKbn(rankResultFrom);
+  const finalValue = normalizeLvKbn(lvKbn);
+  const addedCount = Math.max(0, finalValue.length - from.length);
+  const remainingCount = Math.max(0, 4 - from.length);
+  const targetScale = remainingCount ? addedCount / remainingCount : 0;
+  const pendingGauge = status.querySelector(".eventLevelPendingGauge");
+  const commitGauge = status.querySelector(".eventLevelCommitGauge");
+  const value = document.getElementById("eventLevelStatusValue");
+
+  if (!addedCount || !commitGauge) {
+    onComplete();
+    return;
+  }
+
+  setTimeout(() => {
+    // 予定ゲージは点滅を続け、その上を確定ゲージが左から右へ覆う。
+    commitGauge.style.transition = "none";
+    commitGauge.style.opacity = "1";
+    commitGauge.style.transform = "scaleX(0)";
+    commitGauge.offsetWidth;
+    commitGauge.style.transition = "transform .65s cubic-bezier(.22, .7, .25, 1)";
+    commitGauge.style.transform = `scaleX(${targetScale})`;
+
+    setTimeout(() => {
+      status.querySelectorAll(".eventLevelSegments span").forEach((segment, index) => {
+        const mode = finalValue.charAt(index);
+        if (mode) segment.dataset.mode = mode;
+        else delete segment.dataset.mode;
+      });
+      if (pendingGauge) {
+        // 点滅解除時に通常opacityへ戻る1フレームを描画させない。
+        pendingGauge.style.visibility = "hidden";
+        pendingGauge.style.animation = "none";
+        pendingGauge.classList.remove("is-blinking");
+        pendingGauge.style.opacity = "0";
+        pendingGauge.style.transform = "scaleX(0)";
+        pendingGauge.style.transition = "";
+        delete pendingGauge.dataset.mode;
+      }
+      commitGauge.style.opacity = "0";
+      commitGauge.style.transition = "";
+      value.classList.remove("value-changing");
+      value.textContent = finalValue.length;
+      status.setAttribute("aria-label", `ランク${finalValue.length}`);
+      setTimeout(onComplete, 350);
+    }, 650);
+  }, 500);
 }
 
 function readSelectionParams() {
@@ -134,6 +260,14 @@ function readSelectionParams() {
 
   autoFlg = params.get("autoFlg") || "0";
   lvKbn = normalizeLvKbn(params.get("LvKbn"));
+  rankResultPending = params.get("rankResult") === "1";
+  rankResultFrom = normalizeLvKbn(params.get("rankUpFrom"));
+  if (rankResultPending) {
+    const cleanUrl = new URL(location.href);
+    cleanUrl.searchParams.delete("rankResult");
+    cleanUrl.searchParams.delete("rankUpFrom");
+    history.replaceState(null, "", cleanUrl.href);
+  }
   chrId = chrList.includes(requestedChrId) ? requestedChrId : "AK";
   if (requestedEvent) chrId = requestedEvent.evtId.substring(0, 2);
   else if (previousEvent) chrId = previousEvent.evtId.substring(0, 2);
@@ -588,7 +722,7 @@ function showModeSelection(onReady = null, restartCommonVideo = true) {
   tgtEvtData = null;
   document.getElementById("viewport").classList.remove("event-unselected");
   decideBtn.classList.add("disabled");
-  updateEventLevelStatus();
+  if (!rankResultPending) updateEventLevelStatus();
   hideModeHomeMessage();
 
   document.querySelectorAll(".modeChoice").forEach(button => {
@@ -1257,11 +1391,17 @@ function goToEvent() {
   isDeciding = true;
   document.body.classList.add("event-start-leaving");
   decideBtn.classList.add("pressed", "disabled");
+  setTimeout(() => document.body.classList.add("event-rank-hidden"), 1000);
   setTimeout(() => fade.classList.add("show"), 120);
   setTimeout(() => {
     stopSelectionVideos();
     eventPlaybackPreloadVideos.forEach(video => video.pause());
-    window.startEmbeddedEventPlayback(tgtEvtData.evtId, autoFlg, getPreviewLvKbn(tgtEvtData));
+    window.startEmbeddedEventPlayback(
+      tgtEvtData.evtId,
+      autoFlg,
+      getPreviewLvKbn(tgtEvtData),
+      normalizeLvKbn(lvKbn)
+    );
   }, 780);
 }
 
@@ -1420,7 +1560,32 @@ window.addEventListener("load", () => {
   readSelectionParams();
   bindInteractions();
   setScreen(screen);
-  preloadImages().then(() => { document.getElementById("viewport").style.opacity = 1; });
+  if (rankResultPending) prepareRankResultAnimation();
+  const preloadPromise = preloadImages();
+  const viewport = document.getElementById("viewport");
+  if (rankResultPending) {
+    // ランク演出は画像読込を待たず、ページ遷移直後の黒画面上で開始する。
+    document.body.classList.add("event-rank-result");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.body.classList.remove("event-rank-initializing");
+        playRankResultAnimation(() => {
+          rankResultPending = false;
+          preloadPromise.then(() => {
+            viewport.style.opacity = 1;
+            document.body.classList.remove("event-rank-result");
+          });
+        });
+      });
+    });
+  } else {
+    preloadPromise.then(() => {
+      viewport.style.opacity = 1;
+      requestAnimationFrame(() => {
+        document.body.classList.remove("event-rank-initializing");
+      });
+    });
+  }
 });
 
 })();

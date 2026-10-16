@@ -5,7 +5,7 @@
 
 
   { evtId: "AK-S1", evtNm: "どの状況でも歌い切る特訓をする", fadeEvt: "1", plcNm: "WEEKEND GARAGE"},
-  
+
   { evtId: "AK-S3", evtNm: "過酷な登山を全裸で挑ませる", fadeEvt: "1", plcNm: "登山道入口"},
 
   { evtId: "AK-C2", evtNm: "ヌードデッサン", fadeEvt: "2", plcNm: "美術教室"},

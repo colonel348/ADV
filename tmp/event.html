@@ -9,12 +9,14 @@
     <script src="../js/common.js"></script>
     <title>event</title>
   </head>
-<body data-selection-host="event">
-  <div id="eventLevelStatus" class="eventLevelStatus" aria-label="レベル0">
+<body data-selection-host="event" class="event-rank-initializing">
+  <div id="eventLevelStatus" class="eventLevelStatus" aria-label="ランク0">
     <div class="eventLevelSegments" aria-hidden="true">
       <span></span><span></span><span></span><span></span>
+      <div class="eventLevelPendingGauge"></div>
+      <div class="eventLevelCommitGauge"></div>
     </div>
-    <span class="eventLevelStatusLabel">レベル</span>
+    <span class="eventLevelStatusLabel">ランク</span>
     <span id="eventLevelStatusValue" class="eventLevelStatusValue">0</span>
   </div>
   <div id="viewport">

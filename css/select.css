@@ -1347,7 +1347,7 @@ body.event-start-leaving #previewTapPrompt {
 #modeHomeMessage {
   position: relative;
   flex: 0 0 72px;
-  width: min(70vw, 700px);
+  width: min(80vw, calc(24em + 40px));
   height: 72px;
   padding: 8px 20px;
   box-sizing: border-box;

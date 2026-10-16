@@ -55,6 +55,8 @@ body[data-selection-host="event"].event-playback > #titleArea {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  will-change: opacity;
+  backface-visibility: hidden;
   transition: opacity .65s ease, transform .65s ease, visibility 0s linear 0s;
 }
 
@@ -75,17 +77,55 @@ body[data-selection-host="event"].event-playback > #titleArea {
 .eventLevelSegments span[data-mode="S"] { background: #e7a329; }
 .eventLevelSegments span[data-mode="C"] { background: #9278d5; }
 
-.eventLevelSegments span.pending {
-  animation: eventLevelPending 1.5s ease-in-out infinite;
+.eventLevelPendingGauge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform, opacity;
+  transition: transform .65s cubic-bezier(.22, .7, .25, 1), opacity .2s ease;
 }
+
+.eventLevelPendingGauge[data-mode="R"] { background: #e97aa7; }
+.eventLevelPendingGauge[data-mode="S"] { background: #e7a329; }
+.eventLevelPendingGauge[data-mode="C"] { background: #9278d5; }
+
+.eventLevelPendingGauge.is-blinking {
+  animation: eventLevelPendingBlink 1.5s ease-in-out infinite;
+}
+
+.eventLevelCommitGauge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform, opacity;
+  transition: transform .65s cubic-bezier(.22, .7, .25, 1), opacity .2s ease;
+}
+
+.eventLevelCommitGauge[data-mode="R"] { background: #e97aa7; }
+.eventLevelCommitGauge[data-mode="S"] { background: #e7a329; }
+.eventLevelCommitGauge[data-mode="C"] { background: #9278d5; }
 
 .eventLevelStatusLabel,
 .eventLevelStatusValue {
   position: absolute;
   top: calc(50% - 1px);
-  z-index: 1;
+  z-index: 2;
   transform: translate(-50%, -50%);
-  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+  text-shadow: none;
 }
 
 .eventLevelStatusLabel { left: 42%; font-size: 14px; }
@@ -95,7 +135,7 @@ body[data-selection-host="event"].event-playback > #titleArea {
   animation: eventLevelValueChange .45s ease;
 }
 
-@keyframes eventLevelPending {
+@keyframes eventLevelPendingBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: .28; }
 }
@@ -106,18 +146,17 @@ body[data-selection-host="event"].event-playback > #titleArea {
   100% { opacity: 1; transform: translate(-50%, -50%); }
 }
 
-body.event-playback .eventLevelStatus {
+body.event-rank-initializing .eventLevelStatus,
+body.event-rank-hidden .eventLevelStatus {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-7px);
   transition: opacity .65s ease, transform .65s ease, visibility 0s linear .65s;
 }
 
-body.event-start-leaving .eventLevelStatus {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-7px);
-  transition: opacity .65s ease, transform .65s ease, visibility 0s linear .65s;
+/* ④終了後は位置を動かさず、黒画面上へ不透明度だけで滑らかに表示する。 */
+body.event-rank-result.event-rank-initializing .eventLevelStatus {
+  transform: translateY(0);
 }
 
 #app {
