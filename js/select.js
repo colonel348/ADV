@@ -921,6 +921,17 @@ function prepareSelectionVideo(video, src) {
   video.load();
 }
 
+function showSelectionVideoImmediately(video) {
+  // Chromeではopacity遷移の終了時にvideoレイヤーが再合成され、
+  // object-fitの丸め位置が数px変わることがある。初回表示は外側の
+  // 黒フェードで隠れるため、動画自身は遷移させずに表示する。
+  video.style.transitionDuration = "0ms";
+  video.classList.add("show");
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    video.style.transitionDuration = "";
+  }));
+}
+
 function playSelectionIntroLoop(paths, onReady = null) {
   const sequence = ++selectVideoSequence;
   selectLoopWatching = false;
@@ -1005,7 +1016,7 @@ function playSelectionIntroLoop(paths, onReady = null) {
     if (sequence !== selectVideoSequence) return;
     introVideo.play().then(() => {
       if (sequence !== selectVideoSequence) return;
-      introVideo.classList.add("show");
+      showSelectionVideoImmediately(introVideo);
       showModeHomeMessage();
       clearTimeout(modeHomeAutoHideTimer);
       modeHomeAutoHideTimer = setTimeout(() => {
@@ -1084,7 +1095,7 @@ function playSelectionLoop(src, onReady = null) {
     first.play().then(() => {
       playPending = false;
       if (sequence !== selectVideoSequence) return;
-      first.classList.add("show");
+      showSelectionVideoImmediately(first);
       notifyReadyAfterFirstFrame();
       watchSelectionLoop(src, sequence);
     }).catch(() => {
@@ -1126,6 +1137,7 @@ function switchSelectionLoop(src, sequence) {
   const current = activeSelectVideo;
   const next = standbySelectVideo;
   let revealed = false;
+  let retryCount = 0;
   next.currentTime = 0;
   next.style.display = "block";
   next.style.transitionDuration = `${SELECTION_LOOP_FADE_TIME}ms`;
@@ -1150,14 +1162,26 @@ function switchSelectionLoop(src, sequence) {
     }, SELECTION_LOOP_FADE_TIME);
   };
 
-  next.play().then(() => {
-    if (sequence !== selectVideoSequence) return;
-    if (typeof next.requestVideoFrameCallback === "function") {
-      next.requestVideoFrameCallback(revealNextFrame);
-    } else {
-      requestAnimationFrame(() => requestAnimationFrame(revealNextFrame));
-    }
-  }).catch(() => {});
+  const attemptPlay = () => {
+    if (revealed || sequence !== selectVideoSequence) return;
+    next.play().then(() => {
+      if (sequence !== selectVideoSequence) {
+        next.pause();
+        return;
+      }
+      if (typeof next.requestVideoFrameCallback === "function") {
+        next.requestVideoFrameCallback(revealNextFrame);
+      } else {
+        requestAnimationFrame(() => requestAnimationFrame(revealNextFrame));
+      }
+    }).catch(() => {
+      if (sequence !== selectVideoSequence || retryCount >= 10) return;
+      retryCount++;
+      setTimeout(attemptPlay, 100);
+    });
+  };
+
+  attemptPlay();
 }
 
 function stopSelectionVideos() {

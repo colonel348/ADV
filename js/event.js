@@ -91,13 +91,9 @@ const ACTION_SWITCH_BEFORE = 0.16;
 const ACTION_ONLY_FADE_BEFORE = 0.55;
 // A→Wと初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
 const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.60;
-// L動画終了何秒前に次を開始するか
-const LOOP_SWITCH_BEFORE = 0.25;
-// 次L動画play後
-// fade開始まで待つms
-const LOOP_FADE_WAIT = 230;
-// fade時間
-const LOOP_FADE_TIME = 500;
+// L動画終端と先頭の重なりを1フレーム程度に抑える。
+const LOOP_SWITCH_BEFORE = 0.06;
+const LOOP_FADE_TIME = 40;
 // fade時間
 const BLACK_FADE_TIME = 750;
 // 初回L動画を黒画面から表示する際のフェード時間
@@ -2228,6 +2224,8 @@ function startLoopDoubleBuffer(srcL, firstEffect = false) {
 
   videoL1.pause();
   videoL2.pause();
+  videoL1.style.transitionDuration = "";
+  videoL2.style.transitionDuration = "";
 
   videoL1.style.display = "none";
   videoL2.style.display = "none";
@@ -2339,86 +2337,56 @@ function switchLoopVideo(srcL, loopSequence) {
 
   const current = activeLoopVideo;
   const next = standbyLoopVideo;
+  let revealed = false;
+  let retryCount = 0;
 
   next.pause();
   next.currentTime = 0;
-
   next.style.display = "block";
-
-  // 次動画を前面へ
+  next.style.transitionDuration = `${LOOP_FADE_TIME}ms`;
   next.classList.add("front");
-
-  // 現在動画を背面へ
   current.classList.remove("front");
 
-  // --------------------
-  // ① 先にplay
-  // --------------------
+  const revealNextFrame = () => {
+    if (revealed || loopSequence !== loopPlaybackSequence) return;
+    revealed = true;
+    next.classList.add("show");
+    activeLoopVideo = next;
+    currentVideo = next;
+    standbyLoopVideo = current;
 
-  next.play()
-    .then(() => {
+    setTimeout(() => {
+      if (loopSequence !== loopPlaybackSequence) return;
+      current.classList.remove("show", "front");
+      current.pause();
+      current.currentTime = 0;
+      current.style.display = "none";
+      next.style.transitionDuration = "";
+      loopWatchActive = false;
+      watchLoopSeamless(srcL, loopSequence);
+    }, LOOP_FADE_TIME);
+  };
 
+  const attemptPlay = () => {
+    if (revealed || loopSequence !== loopPlaybackSequence) return;
+    next.play().then(() => {
       if (loopSequence !== loopPlaybackSequence) {
         next.pause();
         return;
       }
+      if (typeof next.requestVideoFrameCallback === "function") {
+        next.requestVideoFrameCallback(revealNextFrame);
+      } else {
+        requestAnimationFrame(() => requestAnimationFrame(revealNextFrame));
+      }
+    }).catch(() => {
+      if (loopSequence !== loopPlaybackSequence || retryCount >= 10) return;
+      retryCount++;
+      setTimeout(attemptPlay, 100);
+    });
+  };
 
-      // --------------------
-      // ② Safari decode待機
-      // --------------------
-
-      // 次を前面
-      next.classList.add("front");
-
-      setTimeout(() => {
-
-        if (loopSequence !== loopPlaybackSequence) {
-          next.pause();
-          return;
-        }
-
-        loopWatchActive = false;
-
-        // 次表示
-        next.classList.add("show");
-
-        setTimeout(() => {
-
-          current.play()
-          .then(() => {
-
-            requestAnimationFrame(() => {
-
-              // 現在非表示
-              current.classList.remove("show");
-
-              current.pause();
-
-              current.currentTime = 0;
-
-              current.style.display = "none";
-
-              // 現在を背面へ
-              current.classList.remove("front");
-
-            });
-
-          })
-          .catch(() => {});
-
-        }, LOOP_FADE_TIME);
-
-        // swap
-        activeLoopVideo = next;
-        currentVideo = activeLoopVideo;
-        standbyLoopVideo = current;
-
-        watchLoopSeamless(srcL, loopSequence);
-
-      }, LOOP_FADE_WAIT);
-
-    })
-    .catch(() => {});
+  attemptPlay();
 }
 
 /*************************************************
