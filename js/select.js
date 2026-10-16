@@ -1057,6 +1057,7 @@ function showPlaceAndEventVideo(evt) {
 function prepareSelectionVideo(video, src) {
   if (video.dataset.src === src) return;
   video.pause();
+  delete video.dataset.loopWarmed;
   video.dataset.src = src;
   video.src = src;
   video.preload = "auto";
@@ -1275,6 +1276,36 @@ function watchSelectionLoop(src, sequence) {
   watch();
 }
 
+function warmupSelectionLoopVideo(video, sequence) {
+  const warmup = () => {
+    if (sequence !== selectVideoSequence || video.dataset.loopWarmed === "1") return;
+    video.dataset.loopWarmed = "1";
+    const previousDisplay = video.style.display;
+    video.style.display = "block";
+
+    video.play().then(() => {
+      const pauseAtFirstFrame = () => {
+        if (sequence !== selectVideoSequence || video.classList.contains("show")) return;
+        video.pause();
+        video.currentTime = 0;
+        video.style.display = previousDisplay;
+      };
+      if (typeof video.requestVideoFrameCallback === "function") {
+        video.requestVideoFrameCallback(pauseAtFirstFrame);
+      } else {
+        requestAnimationFrame(() => requestAnimationFrame(pauseAtFirstFrame));
+      }
+    }).catch(() => {
+      delete video.dataset.loopWarmed;
+      video.style.display = previousDisplay;
+    });
+  };
+
+  if (video.seeking) video.addEventListener("seeked", warmup, { once: true });
+  else if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) warmup();
+  else video.addEventListener("loadeddata", warmup, { once: true });
+}
+
 function switchSelectionLoop(src, sequence) {
   const current = activeSelectVideo;
   const next = standbySelectVideo;
@@ -1296,6 +1327,8 @@ function switchSelectionLoop(src, sequence) {
       current.pause();
       current.currentTime = 0;
       current.style.display = "none";
+      delete current.dataset.loopWarmed;
+      warmupSelectionLoopVideo(current, sequence);
       activeSelectVideo = next;
       standbySelectVideo = current;
       next.style.transitionDuration = "";

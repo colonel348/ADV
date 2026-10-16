@@ -384,6 +384,7 @@ function warmupLoopVideo(video) {
     if (video.dataset.loopWarmed === "1") return;
 
     video.dataset.loopWarmed = "1";
+    const previousDisplay = video.style.display;
     video.style.display = "block";
 
     video.play()
@@ -393,6 +394,7 @@ function warmupLoopVideo(video) {
           if (!video.classList.contains("show")) {
             video.pause();
             video.currentTime = 0;
+            video.style.display = previousDisplay;
           }
         };
 
@@ -407,7 +409,9 @@ function warmupLoopVideo(video) {
       });
   };
 
-  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+  if (video.seeking) {
+    video.addEventListener("seeked", warmup, { once: true });
+  } else if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
     warmup();
   } else {
     video.addEventListener("loadeddata", warmup, { once: true });
@@ -2413,6 +2417,8 @@ function switchLoopVideo(srcL, loopSequence) {
       current.pause();
       current.currentTime = 0;
       current.style.display = "none";
+      delete current.dataset.loopWarmed;
+      warmupLoopVideo(current);
       next.style.transitionDuration = "";
       loopWatchActive = false;
       watchLoopSeamless(srcL, loopSequence);
