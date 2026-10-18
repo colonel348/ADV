@@ -61,10 +61,28 @@
       </div>
     </div>
     <div id="selectionTitleArea"><div id="selectionTitleText"></div></div>
-    <div id="previewTapPrompt">TAP TO START</div>
+    <button id="previewTapPrompt" type="button" aria-label="イベントを開始">
+      <span class="previewPlayButton">
+        <svg class="previewPlayTriangle" viewBox="0 0 64 64" aria-hidden="true">
+          <path class="previewPlayTriangleGlowPath" d="M20 12.5C17.4 10.9 14 12.8 14 15.9V48.1C14 51.2 17.4 53.1 20 51.5L49.1 34.9C51.8 33.4 51.8 29.6 49.1 28.1L20 12.5Z"></path>
+          <path class="previewPlayTriangleMain" d="M20 12.5C17.4 10.9 14 12.8 14 15.9V48.1C14 51.2 17.4 53.1 20 51.5L49.1 34.9C51.8 33.4 51.8 29.6 49.1 28.1L20 12.5Z"></path>
+        </svg>
+      </span>
+      <span class="previewStartRing previewStartRing-1"></span>
+      <span class="previewStartRing previewStartRing-2"></span>
+      <span class="previewStartRing previewStartRing-3"></span>
+    </button>
     <div id="decisionArea"><div id="decideBtn" class="decideBtn">決定</div></div>
     <div id="preloadImageStage"></div>
     <div id="selectionFade"></div>
+  </div>
+  <div id="previewStartFlash" aria-hidden="true">
+    <span class="previewScreenWash"></span>
+    <span class="previewScreenEdge"></span>
+    <span class="previewGlassShards">
+      <i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i>
+    </span>
   </div>
   <div id="app">
     <!-- 動画 -->

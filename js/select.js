@@ -1457,10 +1457,19 @@ function goToEvent() {
   }
 
   isDeciding = true;
-  document.body.classList.add("event-start-leaving");
+  const viewport = document.getElementById("viewport");
+  viewport.classList.add("preview-starting");
+  document.body.classList.add("preview-starting");
   decideBtn.classList.add("pressed", "disabled");
-  setTimeout(() => document.body.classList.add("event-rank-hidden"), 1000);
-  setTimeout(() => fade.classList.add("show"), 120);
+  // ボタン発光、青い拡散光、白、黒の順に独立したレイヤーでつなぐ。
+  setTimeout(() => {
+    document.body.classList.add("event-start-leaving");
+    document.body.classList.add("event-rank-hidden");
+    fade.classList.add("show");
+  }, 2300);
+  setTimeout(() => {
+    document.body.classList.add("preview-black-transition");
+  }, 2500);
   setTimeout(() => {
     stopSelectionVideos();
     eventPlaybackPreloadVideos.forEach(video => video.pause());
@@ -1470,7 +1479,8 @@ function goToEvent() {
       getPreviewLvKbn(tgtEvtData),
       normalizeLvKbn(lvKbn)
     );
-  }, 780);
+    document.body.classList.remove("preview-starting", "preview-black-transition");
+  }, 3450);
 }
 
 function handleDecision() {
@@ -1484,10 +1494,6 @@ function handleDecision() {
 function bindInteractions() {
   const viewport = document.getElementById("viewport");
   const selectControlArea = document.getElementById("selectControlArea");
-  viewport.addEventListener("click", event => {
-    if (screen !== "preview" || event.target.closest("#backBtn")) return;
-    goToEvent();
-  });
   viewport.addEventListener("touchstart", event => {
     if (event.target.closest("button") || (screen !== "event" && event.target.closest(".card"))) return;
     isDragging = true;
@@ -1531,6 +1537,10 @@ function bindInteractions() {
   document.getElementById("backBtn").addEventListener("click", event => {
     event.stopPropagation();
     goBackSelection();
+  });
+  document.getElementById("previewTapPrompt").addEventListener("click", event => {
+    event.stopPropagation();
+    if (screen === "preview") goToEvent();
   });
   document.getElementById("selectTitleBtn").addEventListener("click", event => {
     event.stopPropagation();
