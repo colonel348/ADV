@@ -107,7 +107,8 @@ const ACTION_SWITCH_BEFORE = 0.16;
 const ACTION_ONLY_FADE_BEFORE = 0.55;
 // A→Wと初回A→Lの白フェードは、A停止前に白で覆い切れるよう早めに開始する
 const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.60;
-// iOSでも次の先頭フレームを準備できるよう、終端より少し早くクロスフェードを始める。
+// iOS向けに再生準備と表示開始を分離する。先にデコードを始め、表示は0.25秒前に揃える。
+const LOOP_PREPARE_BEFORE = 0.5;
 const LOOP_SWITCH_BEFORE = 0.25;
 const LOOP_FADE_TIME = 500;
 // fade時間
@@ -465,8 +466,6 @@ function startEventPlayback() {
     document.getElementById("titleBtn");
   const skipBtn =
     document.getElementById("skipBtn");
-  const nextBtn =
-    document.getElementById("nextBtn");
 
   titleBtn.addEventListener(
     "click",
@@ -484,16 +483,6 @@ function startEventPlayback() {
 
       e.stopPropagation();
       moveSkip();
-
-    }
-  );
-
-  nextBtn.addEventListener(
-    "click",
-    e => {
-
-      e.stopPropagation();
-      moveNextControl();
 
     }
   );
@@ -1354,40 +1343,6 @@ function moveSelect(
     if (currentVideo) currentVideo.pause();
     showCompletedRankThenReturn();
   }, Math.max(transitionTime, BLACK_FADE_TIME));
-
-}
-
-/*************************************************
- * 右メニュー「次に進む」
- * evt1中はevt2の先頭へ進み、evt2中はスキップと同じ扱いで終了する。
- *************************************************/
-function moveNextControl() {
-
-  const movIndex = getCurrentMovItemIndex(currentIndex);
-  const currentMovId = movIndex >= 0
-    ? String(currentData[movIndex].movId || "")
-    : "";
-  const evt2Index = findMovIndex("evt2");
-
-  if (currentMovId === "evt1" && evt2Index >= 0) {
-    document.body.classList.add("event-rank-hidden");
-    setFade(true);
-    document.getElementById("msgArea").style.opacity = 0;
-    document.getElementById("controlArea").classList.remove("show");
-
-    setTimeout(() => {
-      location.href =
-        './event.html?chrId=' + encodeURIComponent(chrId) +
-        '&evtId=' + encodeURIComponent(evtId) +
-        '&autoFlg=' + encodeURIComponent(autoFlg) +
-        '&LvKbn=' + encodeURIComponent(normalizeEventLvKbn(lvKbn)) +
-        '&rankUpFrom=' + encodeURIComponent(normalizeEventLvKbn(committedLvKbnBeforePlayback)) +
-        '&debugMovId=evt2';
-    }, BLACK_FADE_TIME);
-    return;
-  }
-
-  moveSkip();
 
 }
 
@@ -2370,7 +2325,7 @@ function watchLoopSeamless(srcL, loopSequence) {
       activeLoopVideo.currentTime;
 
     // 終了直前
-    if (remain <= LOOP_SWITCH_BEFORE) {
+    if (remain <= LOOP_PREPARE_BEFORE) {
 
       switchLoopVideo(srcL, loopSequence);
 
@@ -2394,6 +2349,7 @@ function switchLoopVideo(srcL, loopSequence) {
   const current = activeLoopVideo;
   const next = standbyLoopVideo;
   let revealed = false;
+  let restartRequested = false;
   let retryCount = 0;
 
   next.pause();
@@ -2403,7 +2359,7 @@ function switchLoopVideo(srcL, loopSequence) {
   next.classList.add("front");
   current.classList.remove("front");
 
-  const revealNextFrame = () => {
+  const showNext = () => {
     if (revealed || loopSequence !== loopPlaybackSequence) return;
     revealed = true;
     next.classList.add("show");
@@ -2423,6 +2379,31 @@ function switchLoopVideo(srcL, loopSequence) {
       loopWatchActive = false;
       watchLoopSeamless(srcL, loopSequence);
     }, LOOP_FADE_TIME);
+  };
+
+  const restartAtLoopHead = () => {
+    if (restartRequested || revealed || loopSequence !== loopPlaybackSequence) return;
+    restartRequested = true;
+    next.currentTime = 0;
+    const waitForRestartedFrame = () => {
+      if (typeof next.requestVideoFrameCallback === "function") {
+        next.requestVideoFrameCallback(showNext);
+      } else {
+        requestAnimationFrame(() => requestAnimationFrame(showNext));
+      }
+    };
+    if (next.seeking) next.addEventListener("seeked", waitForRestartedFrame, { once: true });
+    else waitForRestartedFrame();
+  };
+
+  const revealNextFrame = () => {
+    if (revealed || loopSequence !== loopPlaybackSequence) return;
+    const remain = current.duration - current.currentTime;
+    if (remain > LOOP_SWITCH_BEFORE) {
+      requestAnimationFrame(revealNextFrame);
+      return;
+    }
+    restartAtLoopHead();
   };
 
   const attemptPlay = () => {

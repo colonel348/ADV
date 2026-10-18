@@ -38,7 +38,8 @@ const PREVIEW_PLACE_DISPLAY_TIME = 1500;
 const PREVIEW_PLACE_FADE_TIME = 350;
 const SELECTION_ACTION_SWITCH_BEFORE = 0.16;
 const SELECTION_VIDEO_FADE_TIME = 300;
-// iOSでも次の先頭フレームを準備できるよう、終端より少し早くクロスフェードを始める。
+// iOS向けに再生準備と表示開始を分離する。先にデコードを始め、表示は0.25秒前に揃える。
+const SELECTION_LOOP_PREPARE_BEFORE = 0.5;
 const SELECTION_LOOP_SWITCH_BEFORE = 0.25;
 const SELECTION_LOOP_FADE_TIME = 500;
 const chrList = ["FF", "AK", "SA"];
@@ -445,7 +446,7 @@ function changeCharacter(step) {
   preloadCharacterLoopVideo();
 }
 
-function setScreen(nextScreen, delayed = false) {
+function setScreen(nextScreen, delayed = false, initialReady = null) {
   const viewport = document.getElementById("viewport");
   clearTimeout(screenTransitionTimer);
   const isModeToEvent = delayed && screen === "mode" && nextScreen === "event";
@@ -550,7 +551,7 @@ function setScreen(nextScreen, delayed = false) {
       "event-to-character",
       "event-cards-static"
     );
-    return apply();
+    return apply(initialReady);
   }
   viewport.classList.add("screen-transitioning");
   fade.classList.add("show");
@@ -587,7 +588,7 @@ function confirmCharacter() {
     setTimeout(() => {
       location.href = "./event.html?chrId=" + encodeURIComponent(chrId) +
         "&screen=mode&autoFlg=" + encodeURIComponent(autoFlg);
-    }, 500);
+    }, 650);
     return;
   }
   befEvtId = "";
@@ -1266,7 +1267,7 @@ function watchSelectionLoop(src, sequence) {
     if (!activeSelectVideo.duration) return requestAnimationFrame(watch);
     if (
       activeSelectVideo.duration - activeSelectVideo.currentTime <=
-      SELECTION_LOOP_SWITCH_BEFORE
+      SELECTION_LOOP_PREPARE_BEFORE
     ) {
       switchSelectionLoop(src, sequence);
       return;
@@ -1310,6 +1311,7 @@ function switchSelectionLoop(src, sequence) {
   const current = activeSelectVideo;
   const next = standbySelectVideo;
   let revealed = false;
+  let restartRequested = false;
   let retryCount = 0;
   next.currentTime = 0;
   next.style.display = "block";
@@ -1317,7 +1319,7 @@ function switchSelectionLoop(src, sequence) {
   current.classList.remove("front");
   next.classList.add("front");
 
-  const revealNextFrame = () => {
+  const showNext = () => {
     if (revealed || sequence !== selectVideoSequence) return;
     revealed = true;
     next.classList.add("show");
@@ -1335,6 +1337,31 @@ function switchSelectionLoop(src, sequence) {
       selectLoopWatching = false;
       watchSelectionLoop(src, sequence);
     }, SELECTION_LOOP_FADE_TIME);
+  };
+
+  const restartAtLoopHead = () => {
+    if (restartRequested || revealed || sequence !== selectVideoSequence) return;
+    restartRequested = true;
+    next.currentTime = 0;
+    const waitForRestartedFrame = () => {
+      if (typeof next.requestVideoFrameCallback === "function") {
+        next.requestVideoFrameCallback(showNext);
+      } else {
+        requestAnimationFrame(() => requestAnimationFrame(showNext));
+      }
+    };
+    if (next.seeking) next.addEventListener("seeked", waitForRestartedFrame, { once: true });
+    else waitForRestartedFrame();
+  };
+
+  const revealNextFrame = () => {
+    if (revealed || sequence !== selectVideoSequence) return;
+    const remain = current.duration - current.currentTime;
+    if (remain > SELECTION_LOOP_SWITCH_BEFORE) {
+      requestAnimationFrame(revealNextFrame);
+      return;
+    }
+    restartAtLoopHead();
   };
 
   const attemptPlay = () => {
@@ -1600,9 +1627,20 @@ window.addEventListener("load", () => {
   selectPreloadVideo = document.getElementById("selectPreloadVideo");
   readSelectionParams();
   bindInteractions();
-  setScreen(screen);
+  let initialVideoReadyResolve;
+  const initialVideoReady = new Promise(resolve => {
+    initialVideoReadyResolve = resolve;
+  });
+  let initialVideoReadyDone = false;
+  const notifyInitialVideoReady = () => {
+    if (initialVideoReadyDone) return;
+    initialVideoReadyDone = true;
+    initialVideoReadyResolve();
+  };
+  setScreen(screen, false, notifyInitialVideoReady);
   if (rankResultPending) prepareRankResultAnimation();
   const preloadPromise = preloadImages();
+  const initialDisplayReady = Promise.all([preloadPromise, initialVideoReady]);
   const viewport = document.getElementById("viewport");
   if (rankResultPending) {
     // ランク演出は画像読込を待たず、ページ遷移直後の黒画面上で開始する。
@@ -1612,7 +1650,7 @@ window.addEventListener("load", () => {
         document.body.classList.remove("event-rank-initializing");
         playRankResultAnimation(() => {
           rankResultPending = false;
-          preloadPromise.then(() => {
+          initialDisplayReady.then(() => {
             viewport.style.opacity = 1;
             document.body.classList.remove("event-rank-result");
           });
@@ -1620,7 +1658,7 @@ window.addEventListener("load", () => {
       });
     });
   } else {
-    preloadPromise.then(() => {
+    initialDisplayReady.then(() => {
       viewport.style.opacity = 1;
       requestAnimationFrame(() => {
         document.body.classList.remove("event-rank-initializing");
