@@ -113,6 +113,8 @@ const LOOP_SWITCH_BEFORE = 0.25;
 const LOOP_FADE_TIME = 500;
 // fade時間
 const BLACK_FADE_TIME = 750;
+// A動画終了後、Nメッセージを表示するまでの待機時間
+const ACTION_TO_N_WAIT_TIME = 1550;
 // 初回L動画を黒画面から表示する際のフェード時間
 const FIRST_LOOP_BLACK_FADE_TIME = 1500;
 // 最後のA動画は終了前から黒フェードを開始する
@@ -2829,7 +2831,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
               showCurrent();
 
-            }, BLACK_FADE_TIME);
+            }, nextItem.msgId === "N" ? ACTION_TO_N_WAIT_TIME : BLACK_FADE_TIME);
 
             return;
 
@@ -2855,7 +2857,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
               showCurrent();
 
-            }, BLACK_FADE_TIME);
+            }, nextItem.msgId === "N" ? ACTION_TO_N_WAIT_TIME : BLACK_FADE_TIME);
 
             return;
 
@@ -2970,7 +2972,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
               showCurrent();
 
-            }, BLACK_FADE_TIME);
+            }, nextItem.msgId === "N" ? ACTION_TO_N_WAIT_TIME : BLACK_FADE_TIME);
 
             return;
 
@@ -2996,7 +2998,7 @@ function playSeamlessMovie(srcA, srcL, movId) {
 
               showCurrent();
 
-            }, BLACK_FADE_TIME);
+            }, nextItem.msgId === "N" ? ACTION_TO_N_WAIT_TIME : BLACK_FADE_TIME);
 
             return;
 
