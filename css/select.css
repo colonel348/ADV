@@ -1159,7 +1159,7 @@ body.event-start-leaving #previewEventName {
 #previewTapPrompt {
   position: absolute;
   left: 50%;
-  top: 85%;
+  top: 75%;
   z-index: 28;
   width: 98px;
   height: 98px;
@@ -1176,7 +1176,7 @@ body.event-start-leaving #previewEventName {
 #previewEventName {
   position: absolute;
   left: 0;
-  top: 62%;
+  top: 50%;
   z-index: 27;
   width: 100%;
   min-height: 60px;
@@ -1195,6 +1195,7 @@ body.event-start-leaving #previewEventName {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transform: translateY(-50%);
   transition: opacity .4s ease, visibility 0s linear .4s;
 }
 
@@ -1896,7 +1897,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 #modeHomeMessage {
   position: relative;
   flex: 0 0 72px;
-  width: min(80vw, calc(24em + 40px));
+  width: min(80vw, calc(24.5em + 40px));
   height: 72px;
   padding: 8px 20px;
   box-sizing: border-box;
