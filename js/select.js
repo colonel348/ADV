@@ -995,7 +995,7 @@ function enterEventPreview() {
   if (!tgtEvtData) return;
   const viewport = document.getElementById("viewport");
   const previewEvtId = tgtEvtData.evtId;
-  viewport.classList.remove("preview-controls-visible");
+  viewport.classList.remove("preview-controls-visible", "preview-button-visible");
   clearTimeout(selectionChangeTimer);
   decideBtn.classList.add("pressed");
   setTimeout(() => decideBtn.classList.remove("pressed"), 500);
@@ -1033,8 +1033,13 @@ function enterEventPreview() {
         return;
       }
 
-      viewport.classList.add("preview-controls-visible");
+      viewport.classList.add("preview-button-visible");
       fade.classList.remove("show");
+      setTimeout(() => {
+        if (screen === "preview" && tgtEvtData?.evtId === previewEvtId) {
+          viewport.classList.add("preview-controls-visible");
+        }
+      }, 150);
       setTimeout(() => {
         if (screen !== "preview" || tgtEvtData?.evtId !== previewEvtId) return;
         viewport.classList.remove("screen-transitioning");
@@ -1061,7 +1066,7 @@ function enterEventPreview() {
 
 function returnToEventSelection() {
   const viewport = document.getElementById("viewport");
-  viewport.classList.remove("preview-controls-visible");
+  viewport.classList.remove("preview-controls-visible", "preview-button-visible");
   viewport.classList.add("screen-transitioning");
   fade.classList.add("show");
 

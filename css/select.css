@@ -1182,7 +1182,7 @@ body.event-start-leaving #previewEventName {
   width: 100%;
   max-width: none;
   min-height: 44px;
-  padding: 4px 12px 5px;
+  padding: 4px 20px 5px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1190,7 +1190,7 @@ body.event-start-leaving #previewEventName {
   overflow: hidden;
   background: rgba(48, 49, 82, .75);
   color: #fff;
-  font-size: clamp(20px, 5.8vw, 30px);
+  font-size: clamp(20px, 5vw, 30px);
   font-style: normal;
   font-weight: 900;
   line-height: 1.5;
@@ -1226,7 +1226,7 @@ body.event-start-leaving #previewEventName {
   transition-delay: 0s;
 }
 
-#viewport[data-screen="preview"].preview-controls-visible #previewTapPrompt {
+#viewport[data-screen="preview"].preview-button-visible #previewTapPrompt {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -1535,7 +1535,7 @@ body.preview-starting .previewScreenEdge {
 }
 
 body.preview-starting #previewStartFlash::before {
-  animation: previewScreenWhiteOut .75s 1.05s ease-in-out forwards;
+  animation: previewScreenWhiteOut .75s 1.35s ease-in-out forwards;
 }
 
 body.preview-starting.preview-black-transition #previewStartFlash::after {
