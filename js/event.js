@@ -741,12 +741,8 @@ async function init() {
   // 通常開始
   else {
 
-    // 場所名はselect画面で表示済みのため、event画面では直接開始する。
-    setTimeout(() => {
-
-      showCurrent();
-
-    }, 500);
+    // 場所名はselect画面で表示済みのため、追加待機を挟まず直接開始する。
+    showCurrent();
 
   }
 

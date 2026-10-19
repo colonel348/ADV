@@ -1,7 +1,7 @@
 (function () {
 
 let cardList, bgImg, bgFade, fade, decideBtn;
-let levelSelector, levelValue, selectionTitleArea, selectionTitleText;
+let levelSelector, levelValue, selectionTitleArea, selectionTitleText, previewEventName;
 let selectVideo1, selectVideo2, selectPreloadVideo, activeSelectVideo, standbySelectVideo;
 let screen = "character";
 let selectedLevel = 1;
@@ -991,6 +991,7 @@ function enterEventPreview() {
   selectionChangeTimer = setTimeout(() => {
     screen = "preview";
     viewport.dataset.screen = screen;
+    previewEventName.textContent = tgtEvtData.evtNm || "";
     selectionTitleText.textContent = tgtEvtData.plcNm || "";
     selectionTitleText.classList.remove("slide-in");
     selectionTitleText.offsetHeight;
@@ -1041,6 +1042,7 @@ function returnToEventSelection() {
   selectionChangeTimer = setTimeout(() => {
     screen = "event";
     viewport.dataset.screen = screen;
+    previewEventName.textContent = "";
     selectionTitleArea.classList.remove("show");
     playSelectionLoop(getCharacterLoopPath(), () => {
       fade.classList.remove("show");
@@ -1634,6 +1636,7 @@ window.addEventListener("load", () => {
   levelValue = document.getElementById("levelValue");
   selectionTitleArea = document.getElementById("selectionTitleArea");
   selectionTitleText = document.getElementById("selectionTitleText");
+  previewEventName = document.getElementById("previewEventName");
   selectPreloadVideo = document.getElementById("selectPreloadVideo");
   readSelectionParams();
   bindInteractions();
