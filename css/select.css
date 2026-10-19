@@ -1128,6 +1128,13 @@ body.event-start-leaving #previewEventName {
   pointer-events: none !important;
 }
 
+/* ランク文字をゲージ背景の上下中央へ揃える。 */
+.eventLevelStatus .eventLevelStatusLabel,
+.eventLevelStatus .eventLevelStatusValue {
+  top: 50%;
+  line-height: 1;
+}
+
 /* ②→③の黒フェード中も操作ボタンは常に最前面へ残す。 */
 #viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #backBtn,
 #viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #decisionArea,
@@ -1159,7 +1166,7 @@ body.event-start-leaving #previewEventName {
 #previewTapPrompt {
   position: absolute;
   left: 50%;
-  top: 68%;
+  top: 70%;
   z-index: 28;
   width: 98px;
   height: 98px;
@@ -1177,7 +1184,7 @@ body.event-start-leaving #previewEventName {
 #previewEventName {
   position: absolute;
   left: 0;
-  top: 88%;
+  top: 90%;
   z-index: 27;
   width: 100%;
   max-width: none;
@@ -1207,6 +1214,7 @@ body.event-start-leaving #previewEventName {
 .previewEventNameInitial {
   flex: 0 0 auto;
   color: var(--preview-event-accent, #fff);
+  transform: translateY(1px);
 }
 
 #previewEventName[data-mode="R"] { --preview-event-accent: #dc7ca2; }
@@ -1218,6 +1226,7 @@ body.event-start-leaving #previewEventName {
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
+  transform: translateY(1px);
 }
 
 #viewport[data-screen="preview"].preview-controls-visible #previewEventName {
