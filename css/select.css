@@ -1159,7 +1159,7 @@ body.event-start-leaving #previewEventName {
 #previewTapPrompt {
   position: absolute;
   left: 50%;
-  top: 75%;
+  top: 68%;
   z-index: 28;
   width: 98px;
   height: 98px;
@@ -1171,27 +1171,32 @@ body.event-start-leaving #previewEventName {
   appearance: none;
   background: transparent;
   transform: translate(-50%, -50%);
+  transition: opacity .45s ease, visibility 0s linear .45s;
 }
 
 #previewEventName {
   position: absolute;
   left: 0;
-  top: 50%;
+  top: 88%;
   z-index: 27;
   width: 100%;
-  min-height: 60px;
-  padding: 10px 14px;
+  max-width: none;
+  min-height: 44px;
+  padding: 4px 12px 5px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   box-sizing: border-box;
-  background: rgba(22, 34, 68, .4);
-  color: rgba(255, 255, 255, .96);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: .05em;
-  text-align: center;
+  overflow: hidden;
+  background: rgba(48, 49, 82, .75);
+  color: #fff;
+  font-size: clamp(20px, 5.8vw, 30px);
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.5;
+  letter-spacing: -.025em;
+  text-align: left;
+  white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -1199,17 +1204,34 @@ body.event-start-leaving #previewEventName {
   transition: opacity .4s ease, visibility 0s linear .4s;
 }
 
-#viewport[data-screen="preview"] #previewEventName {
+.previewEventNameInitial {
+  flex: 0 0 auto;
+  color: var(--preview-event-accent, #fff);
+}
+
+#previewEventName[data-mode="R"] { --preview-event-accent: #dc7ca2; }
+#previewEventName[data-mode="S"] { --preview-event-accent: #dc8745; }
+#previewEventName[data-mode="C"] { --preview-event-accent: #8d7ed0; }
+
+.previewEventNameRest {
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#viewport[data-screen="preview"].preview-controls-visible #previewEventName {
   opacity: 1;
   visibility: visible;
   transition-delay: 0s;
 }
 
-#viewport[data-screen="preview"] #previewTapPrompt {
+#viewport[data-screen="preview"].preview-controls-visible #previewTapPrompt {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   cursor: pointer;
+  transition-delay: 0s;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1233,11 +1255,7 @@ body.event-start-leaving #previewEventName {
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   background: rgba(65, 94, 121, .78);
-  box-shadow:
-    0 3px 9px rgba(0, 0, 0, .34),
-    0 0 15px rgba(218, 250, 255, 0),
-    0 0 16px rgba(112, 224, 225, .34),
-    inset 0 0 14px rgba(166, 232, 240, .16);
+  box-shadow: none;
 }
 
 .previewPlayButton::before {
@@ -1897,7 +1915,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 #modeHomeMessage {
   position: relative;
   flex: 0 0 72px;
-  width: min(80vw, calc(24.5em + 40px));
+  width: min(84vw, calc(var(--mode-home-line-width, 24.5em) + 40px));
   height: 72px;
   padding: 8px 20px;
   box-sizing: border-box;
@@ -1961,6 +1979,9 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   height: 2.7em;
   max-height: 2.7em;
   overflow: hidden;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 #modePanel {

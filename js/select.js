@@ -660,6 +660,15 @@ function typeModeHomeMessage(message) {
   typeNext();
 }
 
+function setModeHomeMessageWidth(panel, message) {
+  const lineLengths = String(message || "")
+    .split("　")
+    .map(line => Array.from(line).length);
+  const longestLine = Math.min(24, Math.max(6, ...lineLengths));
+  const widthWithSpacing = longestLine + Math.max(0, longestLine - 1) * 0.02;
+  panel.style.setProperty("--mode-home-line-width", `${widthWithSpacing.toFixed(2)}em`);
+}
+
 function hideModeHomeMessage() {
   modeHomeLoadSequence++;
   clearTimeout(modeHomeShowTimer);
@@ -680,30 +689,34 @@ async function showModeHomeMessage() {
   modeHomeShowTimer = null;
   stopModeHomeTyping();
   textElement.textContent = "";
+  panel.style.removeProperty("--mode-home-line-width");
   panel.classList.remove("show");
 
   let message = "";
   let messageLoaded = false;
+  let showDelayElapsed = false;
   let typingStarted = false;
 
-  const startTypingWhenReady = () => {
+  const revealAndStartTypingWhenReady = () => {
     if (
       typingStarted ||
       !messageLoaded ||
-      !panel.classList.contains("show") ||
+      !showDelayElapsed ||
       screen !== "mode" ||
       sequence !== modeHomeLoadSequence
     ) {
       return;
     }
+    setModeHomeMessageWidth(panel, message);
+    panel.classList.add("show");
     typingStarted = true;
     typeModeHomeMessage(message);
   };
 
   modeHomeShowTimer = setTimeout(() => {
     if (screen === "mode" && sequence === modeHomeLoadSequence) {
-      panel.classList.add("show");
-      startTypingWhenReady();
+      showDelayElapsed = true;
+      revealAndStartTypingWhenReady();
     }
   }, 300);
 
@@ -722,7 +735,7 @@ async function showModeHomeMessage() {
 
   if (screen !== "mode" || sequence !== modeHomeLoadSequence) return;
   messageLoaded = true;
-  startTypingWhenReady();
+  revealAndStartTypingWhenReady();
 }
 
 function showModeSelection(onReady = null, restartCommonVideo = true) {
@@ -982,6 +995,7 @@ function enterEventPreview() {
   if (!tgtEvtData) return;
   const viewport = document.getElementById("viewport");
   const previewEvtId = tgtEvtData.evtId;
+  viewport.classList.remove("preview-controls-visible");
   clearTimeout(selectionChangeTimer);
   decideBtn.classList.add("pressed");
   setTimeout(() => decideBtn.classList.remove("pressed"), 500);
@@ -991,7 +1005,15 @@ function enterEventPreview() {
   selectionChangeTimer = setTimeout(() => {
     screen = "preview";
     viewport.dataset.screen = screen;
-    previewEventName.textContent = tgtEvtData.evtNm || "";
+    const previewName = String(tgtEvtData.evtNm || "");
+    const previewInitial = document.createElement("span");
+    const previewRest = document.createElement("span");
+    previewInitial.className = "previewEventNameInitial";
+    previewRest.className = "previewEventNameRest";
+    previewInitial.textContent = previewName.charAt(0);
+    previewRest.textContent = previewName.slice(1);
+    previewEventName.dataset.mode = tgtEvtData.evtId.charAt(3);
+    previewEventName.replaceChildren(previewInitial, previewRest);
     selectionTitleText.textContent = tgtEvtData.plcNm || "";
     selectionTitleText.classList.remove("slide-in");
     selectionTitleText.offsetHeight;
@@ -1011,8 +1033,12 @@ function enterEventPreview() {
         return;
       }
 
+      viewport.classList.add("preview-controls-visible");
       fade.classList.remove("show");
-      setTimeout(() => viewport.classList.remove("screen-transitioning"), 500);
+      setTimeout(() => {
+        if (screen !== "preview" || tgtEvtData?.evtId !== previewEvtId) return;
+        viewport.classList.remove("screen-transitioning");
+      }, 500);
     };
 
     playSelectionLoop(getEventLoopPath(tgtEvtData), () => {
@@ -1035,6 +1061,7 @@ function enterEventPreview() {
 
 function returnToEventSelection() {
   const viewport = document.getElementById("viewport");
+  viewport.classList.remove("preview-controls-visible");
   viewport.classList.add("screen-transitioning");
   fade.classList.add("show");
 
@@ -1042,7 +1069,8 @@ function returnToEventSelection() {
   selectionChangeTimer = setTimeout(() => {
     screen = "event";
     viewport.dataset.screen = screen;
-    previewEventName.textContent = "";
+    previewEventName.replaceChildren();
+    delete previewEventName.dataset.mode;
     selectionTitleArea.classList.remove("show");
     playSelectionLoop(getCharacterLoopPath(), () => {
       fade.classList.remove("show");
