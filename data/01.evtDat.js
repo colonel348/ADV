@@ -8,9 +8,9 @@
 
   { evtId: "AK-S3", evtNm: "過酷な登山を全裸で挑ませる", fadeEvt: "1", plcNm: "登山道入口"},
 
-  { evtId: "AK-C2", evtNm: "ヌードデッサン", fadeEvt: "2", plcNm: "美術教室"},
+  { evtId: "AK-C2", evtNm: "全裸モデルとして大勢に描かせる", fadeEvt: "2", plcNm: "美術教室"},
 
-  { evtId: "AK-C3", evtNm: "大勢の欲望と熱を受け止めさせる", fadeEvt: "1", plcNm: "ライブハウス"},
+  { evtId: "AK-C3", evtNm: "男達の欲望と熱を受け止めさせる", fadeEvt: "1", plcNm: "ライブハウス"},
 
 
 
