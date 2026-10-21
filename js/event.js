@@ -135,7 +135,7 @@ const NEXT_TITLE_TIME = 1200;
 // 次のメッセージ遅らせ
 const NEXT_MSG_DELAY_TIME = 100;
 // A動画開始後、最初のAメッセージを追加で待つ時間
-const FIRST_A_MSG_DELAY_TIME = 300;
+const FIRST_A_MSG_DELAY_TIME = 100;
 
 const FIRST_LOOP_WHITE_WAIT = 1500;
 

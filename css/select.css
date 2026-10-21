@@ -928,6 +928,12 @@ body.event-start-leaving #previewEventName {
     bottom: 48px;
     min-width: 250px;
   }
+  #viewport #previewEventName {
+    --preview-event-right: 10px;
+    right: 10px;
+    bottom: 48px;
+    min-width: 250px;
+  }
 }
 
 /* =================================================
@@ -1135,6 +1141,14 @@ body.event-start-leaving #previewEventName {
   line-height: 1;
 }
 
+/* ③→④の暗転切り替え時は、途中の透明度を描画せず完全非表示に固定する。 */
+body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-7px);
+  transition: none;
+}
+
 /* ②→③の黒フェード中も操作ボタンは常に最前面へ残す。 */
 #viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #backBtn,
 #viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #decisionArea,
@@ -1182,57 +1196,113 @@ body.event-start-leaving #previewEventName {
 }
 
 #previewEventName {
+  --preview-event-right: 10px;
   position: absolute;
-  left: 0;
-  top: 90%;
+  right: var(--preview-event-right);
+  bottom: 54px;
   z-index: 27;
-  width: 100%;
-  max-width: none;
-  min-height: 44px;
-  padding: 4px 20px 5px;
+  min-width: 300px;
+  padding: 0;
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  box-sizing: border-box;
-  overflow: hidden;
-  background: rgba(48, 49, 82, .75);
+  align-items: flex-end;
+  justify-content: flex-end;
+  overflow: visible;
+  background: transparent;
+  isolation: isolate;
   color: #fff;
-  font-size: clamp(20px, 5vw, 30px);
+  font-size: 6vw;
   font-style: normal;
   font-weight: 900;
-  line-height: 1.5;
-  letter-spacing: -.025em;
-  text-align: left;
+  line-height: 1.2;
+  letter-spacing: .025em;
+  text-align: right;
+  text-shadow: none;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(-50%);
   transition: opacity .4s ease, visibility 0s linear .4s;
 }
 
-.previewEventNameInitial {
-  flex: 0 0 auto;
-  color: var(--preview-event-accent, #fff);
-  transform: translateY(1px);
+#previewEventName::before {
+  content: "";
+  position: absolute;
+  right: calc(-1 * var(--preview-event-right));
+  bottom: -.1em;
+  z-index: 0;
+  width: 96vw;
+  height: .4em;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--preview-event-band, rgba(95, 108, 145, .9)) 17%,
+    var(--preview-event-band, rgba(95, 108, 145, .9)) 100%
+  );
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: right center;
+  pointer-events: none;
 }
 
-#previewEventName[data-mode="R"] { --preview-event-accent: #dc7ca2; }
-#previewEventName[data-mode="S"] { --preview-event-accent: #dc8745; }
-#previewEventName[data-mode="C"] { --preview-event-accent: #8d7ed0; }
+#previewEventName::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  height: 180px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, .75),
+    rgba(0, 0, 0, .3),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.previewEventNameInitial {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  color: #fff;
+}
+
+#previewEventName[data-mode="R"] { --preview-event-band: rgba(220, 124, 162, .9); }
+#previewEventName[data-mode="S"] { --preview-event-band: rgba(220, 135, 69, .9); }
+#previewEventName[data-mode="C"] { --preview-event-band: rgba(141, 126, 208, .9); }
 
 .previewEventNameRest {
-  min-width: 0;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transform: translateY(1px);
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  color: #fff;
+  text-align: right;
 }
 
 #viewport[data-screen="preview"].preview-controls-visible #previewEventName {
   opacity: 1;
   visibility: visible;
   transition-delay: 0s;
+}
+
+#viewport[data-screen="preview"].preview-controls-visible #previewEventName::before {
+  animation: previewEventBandReveal .5s cubic-bezier(.18, .78, .2, 1) both;
+}
+
+#viewport[data-screen="preview"].preview-controls-visible .previewEventNameInitial,
+#viewport[data-screen="preview"].preview-controls-visible .previewEventNameRest {
+  animation: previewEventTextReveal .36s ease-out .4s both;
+}
+
+@keyframes previewEventBandReveal {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes previewEventTextReveal {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 #viewport[data-screen="preview"].preview-button-visible #previewTapPrompt {
@@ -1508,7 +1578,7 @@ body.event-start-leaving #previewEventName {
   inset: -3px;
   z-index: 2;
   opacity: 0;
-  background: #fff;
+  background: #000;
   pointer-events: none;
 }
 
@@ -1544,7 +1614,7 @@ body.preview-starting .previewScreenEdge {
 }
 
 body.preview-starting #previewStartFlash::before {
-  animation: previewScreenWhiteOut .75s 1.35s ease-in-out forwards;
+  animation: previewScreenBlackOut .75s 1.15s ease-in-out forwards;
 }
 
 body.preview-starting.preview-black-transition #previewStartFlash::after {
@@ -1751,7 +1821,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   100% { opacity: .34; }
 }
 
-@keyframes previewScreenWhiteOut {
+@keyframes previewScreenBlackOut {
   0% { opacity: 0; }
   100% { opacity: 1; }
 }

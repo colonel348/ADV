@@ -34,6 +34,7 @@ let modeHomeTypingTimer = null;
 let modeHomeShowTimer = null;
 let modeHomeAutoHideTimer = null;
 let modeHomeLoadSequence = 0;
+let deferredSelectionIntroStart = null;
 const PREVIEW_PLACE_DISPLAY_TIME = 1500;
 const PREVIEW_PLACE_FADE_TIME = 350;
 const SELECTION_ACTION_SWITCH_BEFORE = 0.16;
@@ -207,6 +208,7 @@ function playRankResultAnimation(onComplete) {
   const value = document.getElementById("eventLevelStatusValue");
 
   if (!addedCount || !commitGauge) {
+    startDeferredSelectionIntroPlayback();
     onComplete();
     return;
   }
@@ -248,6 +250,8 @@ function playRankResultAnimation(onComplete) {
       value.classList.remove("value-changing");
       value.textContent = finalValue.length;
       status.setAttribute("aria-label", `ランク${finalValue.length}`);
+      // ①を見せる直前からA動画を開始し、ランク演出中の裏再生を防ぐ。
+      startDeferredSelectionIntroPlayback();
       setTimeout(onComplete, 350);
     }, 650);
   }, 500);
@@ -764,7 +768,7 @@ function showModeSelection(onReady = null, restartCommonVideo = true) {
   bgImg.src = getChrSelPath(chrId);
   bgImg.style.opacity = 0;
   if (restartCommonVideo) {
-    playSelectionIntroLoop(getCharacterVideoSequence(), onReady);
+    playSelectionIntroLoop(getCharacterVideoSequence(), onReady, rankResultPending);
   } else if (onReady) {
     onReady();
   }
@@ -1111,8 +1115,15 @@ function showSelectionVideoImmediately(video) {
   }));
 }
 
-function playSelectionIntroLoop(paths, onReady = null) {
+function startDeferredSelectionIntroPlayback() {
+  const start = deferredSelectionIntroStart;
+  deferredSelectionIntroStart = null;
+  if (start) start();
+}
+
+function playSelectionIntroLoop(paths, onReady = null, deferPlayback = false) {
   const sequence = ++selectVideoSequence;
+  if (!deferPlayback) deferredSelectionIntroStart = null;
   selectLoopWatching = false;
   const introVideo = activeSelectVideo;
   const loopVideo = standbySelectVideo;
@@ -1200,7 +1211,7 @@ function playSelectionIntroLoop(paths, onReady = null) {
       clearTimeout(modeHomeAutoHideTimer);
       modeHomeAutoHideTimer = setTimeout(() => {
         if (sequence === selectVideoSequence) hideModeHomeMessage();
-      }, 4500);
+      }, 5000);
       notifyReadyAfterFirstFrame();
 
       const watchIntroEnd = () => {
@@ -1220,8 +1231,15 @@ function playSelectionIntroLoop(paths, onReady = null) {
 
   introVideo.addEventListener("ended", startLoop, { once: true });
   introVideo.addEventListener("error", startLoop, { once: true });
-  if (introVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) startIntro();
-  else introVideo.addEventListener("canplay", startIntro, { once: true });
+
+  const requestIntroStart = () => {
+    if (sequence !== selectVideoSequence) return;
+    if (introVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) startIntro();
+    else introVideo.addEventListener("canplay", startIntro, { once: true });
+  };
+
+  if (deferPlayback) deferredSelectionIntroStart = requestIntroStart;
+  else requestIntroStart();
 }
 
 function playSelectionLoop(src, onReady = null) {
@@ -1423,6 +1441,7 @@ function switchSelectionLoop(src, sequence) {
 
 function stopSelectionVideos() {
   selectLoopWatching = false;
+  deferredSelectionIntroStart = null;
   selectVideoSequence++;
   [selectVideo1, selectVideo2].forEach(video => {
     video.pause();
@@ -1496,16 +1515,17 @@ function goToEvent() {
   viewport.classList.add("preview-starting");
   document.body.classList.add("preview-starting");
   decideBtn.classList.add("pressed", "disabled");
-  // ボタン発光、青い拡散光、白、黒の順に独立したレイヤーでつなぐ。
+  // ボタン発光と青い拡散光の後、黒フェードで本編へつなぐ。
   setTimeout(() => {
     document.body.classList.add("event-start-leaving");
     document.body.classList.add("event-rank-hidden");
     fade.classList.add("show");
-  }, 2300);
+  }, 1900);
   setTimeout(() => {
     document.body.classList.add("preview-black-transition");
-  }, 2500);
+  }, 2000);
   setTimeout(() => {
+    document.body.classList.add("event-rank-cutover");
     stopSelectionVideos();
     eventPlaybackPreloadVideos.forEach(video => video.pause());
     window.startEmbeddedEventPlayback(
@@ -1515,7 +1535,7 @@ function goToEvent() {
       normalizeLvKbn(lvKbn)
     );
     document.body.classList.remove("preview-starting", "preview-black-transition");
-  }, 3450);
+  }, 2200);
 }
 
 function handleDecision() {
