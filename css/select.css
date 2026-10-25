@@ -2385,6 +2385,11 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   margin-left: 0;
 }
 
+/* 一覧の基準幅を旧サイドバー幅(150px)ではなく、中央の表示フレーム全体にする。 */
+#viewport[data-screen="event"] #sidebar {
+  width: 100%;
+}
+
 #viewport[data-screen="event"] .card,
 #viewport[data-screen="event"] .card.active,
 #viewport[data-screen="event"] #cardList.single-card .card.active {
