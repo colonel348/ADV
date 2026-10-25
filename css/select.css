@@ -1007,6 +1007,14 @@ body[data-selection-host="event"] #eventLevelStatus.eventLevelStatus {
   right: calc(var(--media-frame-gutter) + max(28px, env(safe-area-inset-right)));
 }
 
+/* 統合後も旧selectのキャラクター選択画面ではランクを表示しない。 */
+body[data-selection-host="event"].character-selection-screen #eventLevelStatus.eventLevelStatus {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: none;
+}
+
 /* ①では事前準備中の動画要素を描画せず、キャラクター画像だけを見せる。 */
 #viewport[data-screen="character"] .selectMovie {
   opacity: 0 !important;
@@ -1027,6 +1035,12 @@ body[data-selection-host="event"] #eventLevelStatus.eventLevelStatus {
 #viewport[data-screen="event"] #bgImg,
 #viewport[data-screen="preview"] #bgImg {
   opacity: 0 !important;
+}
+
+/* event.cssの共通非表示より優先し、統合後の旧select画面では静止画を表示する。 */
+body[data-selection-host="event"] #viewport[data-screen="character"] #bgImg {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 #viewport[data-screen="event"] #backBtn {
   opacity: 1;

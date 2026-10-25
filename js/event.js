@@ -89,7 +89,7 @@ function moveToEventSelection(options = {}) {
   const selectionEvtId = String(options.evtId || "");
   const previousEvtId = String(options.befEvtId || "");
 
-  let href = "./event.html?chrId=" + encodeURIComponent(chrId) +
+  let href = "./select.html?chrId=" + encodeURIComponent(chrId) +
     "&screen=mode&autoFlg=" + encodeURIComponent(autoFlg) +
     "&LvKbn=" + encodeURIComponent(normalizeEventLvKbn(lvKbn));
   if (selectionEvtId) href += "&evtId=" + encodeURIComponent(selectionEvtId);

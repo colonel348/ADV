@@ -260,9 +260,9 @@ function playRankResultAnimation(onComplete) {
 function readSelectionParams() {
   const params = new URLSearchParams(location.search);
   const isEventSelectionHost = document.body.dataset.selectionHost === "event";
-  const requestedScreen = isEventSelectionHost
-    ? ((params.get("screen") || "mode").trim())
-    : (params.get("screen") || "").trim();
+  // 統合後も、画面指定のないselect.htmlは旧selectと同じキャラクター選択から始める。
+  // イベント終了後など①へ直接戻す箇所だけ、明示的にscreen=modeを付与する。
+  const requestedScreen = (params.get("screen") || "character").trim();
   const requestedEvtId = (params.get("evtId") || "").trim();
   befEvtId = (params.get("befEvtId") || "").trim();
   const requestedChrId = (params.get("chrId") || "AK").trim();
@@ -537,6 +537,7 @@ function setScreen(nextScreen, delayed = false, initialReady = null) {
   const apply = (onReady = null) => {
     screen = nextScreen;
     viewport.dataset.screen = screen;
+    document.body.classList.toggle("character-selection-screen", screen === "character");
     if (screen === "character") {
       showCharacter();
       preloadCharacterLoopVideo();
@@ -590,7 +591,7 @@ function confirmCharacter() {
     isDeciding = true;
     fade.classList.add("show");
     setTimeout(() => {
-      location.href = "./event.html?chrId=" + encodeURIComponent(chrId) +
+      location.href = "./select.html?chrId=" + encodeURIComponent(chrId) +
         "&screen=mode&autoFlg=" + encodeURIComponent(autoFlg);
     }, 650);
     return;
@@ -1667,7 +1668,7 @@ function initializeCharacterSelection() {
 }
 
 window.addEventListener("load", () => {
-  // 同じevent.htmlで本編を開始する場合、背後の選択動画を起動して帯域を競合させない。
+  // 同じselect.htmlで本編を開始する場合、背後の選択動画を起動して帯域を競合させない。
   if (hasPendingEventPlaybackEntry()) return;
 
   bgImg = document.getElementById("bgImg");
