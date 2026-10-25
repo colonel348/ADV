@@ -1,5 +1,11 @@
 @charset "utf-8";
 
+:root {
+  /* すべての素材と同じ 1152:2040。iOS Safariでも解釈できるよう比率をdvhへ換算する。 */
+  --media-frame-width: min(100vw, 56.47058824dvh);
+  --media-frame-gutter: calc((100vw - var(--media-frame-width)) / 2);
+}
+
 html,
 body {
   margin: 0;
@@ -21,8 +27,9 @@ button { font: inherit; }
 
 #viewport {
   position: relative;
-  width: 100%;
+  width: var(--media-frame-width);
   height: 100dvh;
+  margin: 0 auto;
   overflow: hidden;
   opacity: 0;
   transition: opacity .8s ease;
@@ -42,11 +49,11 @@ button { font: inherit; }
 
 #bgImg {
   position: absolute;
-  left: 0px;
+  left: 50%;
   top: 50%;
   width: auto;
   height: 100dvh;
-  transform: translate(0, -50%);
+  transform: translate(-50%, -50%);
   transition: opacity .4s ease, transform .4s ease, filter .4s ease;
 }
 
@@ -887,7 +894,7 @@ body.event-start-leaving #previewEventName {
 }
 
 #selectionFade {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 30;
   opacity: 0;
@@ -968,15 +975,36 @@ body.event-start-leaving #previewEventName {
 body[data-selection-host="event"].event-playback #videoArea #video,
 body[data-selection-host="event"].event-playback #videoContainer .movie {
   position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ④の動画・メッセージ・操作領域も素材と同じ縦長フレーム内に収める。 */
+body[data-selection-host="event"].event-playback #app {
+  width: var(--media-frame-width);
+  height: 100dvh;
+  margin: 0 auto;
+}
+
+body[data-selection-host="event"].event-playback > #titleArea {
   left: 50%;
   top: 0;
   right: auto;
   bottom: auto;
-  width: auto;
-  max-width: none;
+  width: var(--media-frame-width);
   height: 100dvh;
-  object-fit: contain;
-  transform: translate3d(-50%, 0, 0);
+  transform: translateX(-50%);
+}
+
+/* body直下のランク表示も、中央の表示フレーム右端を基準にする。 */
+body[data-selection-host="event"] #eventLevelStatus.eventLevelStatus {
+  right: calc(var(--media-frame-gutter) + max(28px, env(safe-area-inset-right)));
 }
 
 /* ①では事前準備中の動画要素を描画せず、キャラクター画像だけを見せる。 */
@@ -1217,10 +1245,12 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
 #previewEventName {
   --preview-event-right: 10px;
   position: absolute;
+  left: 0;
   right: var(--preview-event-right);
   bottom: 54px;
   z-index: 27;
-  min-width: 300px;
+  width: auto;
+  min-width: 0;
   padding: 0;
   display: flex;
   align-items: flex-end;
@@ -1229,7 +1259,7 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
   background: transparent;
   isolation: isolate;
   color: #fff;
-  font-size: 6vw;
+  font-size: min(6vw, 3.38823529dvh);
   font-style: normal;
   font-weight: 900;
   line-height: 1.2;
@@ -1249,7 +1279,7 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
   right: calc(-1 * var(--preview-event-right));
   bottom: -.1em;
   z-index: 0;
-  width: 96vw;
+  width: 96%;
   height: .4em;
   background: linear-gradient(
     90deg,
@@ -1266,11 +1296,13 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
 #previewEventName::after {
   content: "";
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: 0;
   z-index: -1;
   height: 180px;
+  width: var(--media-frame-width);
+  transform: translateX(-50%);
   background: linear-gradient(
     to top,
     rgba(0, 0, 0, .75),
@@ -1487,13 +1519,19 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
 
 #previewStartFlash {
   position: fixed;
-  inset: 0;
+  left: 50%;
+  top: 0;
+  right: auto;
+  bottom: auto;
+  width: var(--media-frame-width);
+  height: 100dvh;
   z-index: 120;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   box-sizing: border-box;
   background: transparent;
+  transform: translateX(-50%);
 }
 
 .previewScreenWash,
@@ -2013,7 +2051,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 #modeHomeMessage {
   position: relative;
   flex: 0 0 72px;
-  width: min(84vw, calc(var(--mode-home-line-width, 24.5em) + 40px));
+  width: min(84vw, calc(100% - 32px), calc(var(--mode-home-line-width, 24.5em) + 40px));
   height: 72px;
   padding: 8px 20px;
   box-sizing: border-box;
@@ -2083,7 +2121,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 }
 
 #modePanel {
-  width: min(78vw, 780px);
+  width: min(78vw, calc(100% - 32px), 780px);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(12px, 2.2vw, 24px);
@@ -2305,7 +2343,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 }
 
 @media (orientation: portrait) {
-  #modePanel { width: min(92vw, 780px); }
+  #modePanel { width: min(92vw, calc(100% - 32px), 780px); }
   .modeChoice { height: auto; }
 }
 
@@ -2343,7 +2381,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
  * ③イベント一覧：レベルアイコン＋イベント名
  * ================================================= */
 #viewport[data-screen="event"] #cardList {
-  width: 100vw;
+  width: 100%;
   margin-left: 0;
 }
 

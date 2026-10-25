@@ -342,7 +342,7 @@ function swapBackground(src, direction = "left", animated = true) {
   if (!animated) {
     bgImg.src = src;
     bgImg.style.opacity = 1;
-    bgImg.style.transform = "translate(0, -50%)";
+    bgImg.style.transform = "translate(-50%, -50%)";
     return;
   }
 
@@ -350,13 +350,13 @@ function swapBackground(src, direction = "left", animated = true) {
   setTimeout(() => {
     const offset = direction === "right" ? "60px" : "-60px";
     bgImg.style.transition = "none";
-    bgImg.style.transform = `translate(${offset}, -50%)`;
+    bgImg.style.transform = `translate(calc(-50% + ${offset}), -50%)`;
     bgImg.src = src;
     bgImg.offsetHeight;
     bgImg.style.transition = "opacity .4s ease, transform .4s ease";
     requestAnimationFrame(() => {
       bgImg.style.opacity = 1;
-      bgImg.style.transform = "translate(0, -50%)";
+      bgImg.style.transform = "translate(-50%, -50%)";
     });
   }, 160);
 }
