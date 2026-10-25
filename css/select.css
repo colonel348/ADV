@@ -990,6 +990,25 @@ body[data-selection-host="event"].event-playback #app {
   width: var(--media-frame-width);
   height: 100dvh;
   margin: 0 auto;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* 初回L動画のズームを④の表示領域で確実に切り抜く。 */
+body[data-selection-host="event"].event-playback #videoArea,
+body[data-selection-host="event"].event-playback #videoContainer {
+  overflow: hidden;
+}
+
+/* 小数pxの丸めで右端に動画が残らないよう、被覆レイヤーだけ左右へ余分に広げる。 */
+body[data-selection-host="event"].event-playback #fade {
+  left: -2px;
+  right: -2px;
+}
+
+body[data-selection-host="event"].event-playback #msgArea {
+  left: -2px;
+  right: -2px;
 }
 
 body[data-selection-host="event"].event-playback > #titleArea {
