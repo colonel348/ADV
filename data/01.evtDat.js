@@ -1,6 +1,8 @@
 ﻿const evtData = [
 
-  { evtId: "FF-R3", evtNm: "解放の屋上デート", fadeEvt: "2", plcNm: "ホタルの秘密基地"},
+  { evtId: "FF-S3", evtNm: "サンデーのもとへ行き説得する", fadeEvt: "2", plcNm: "ホタルの秘密基地"},
+
+  { evtId: "FF-R3", evtNm: "二人で全裸になり開放感を味わう", fadeEvt: "2", plcNm: "ホタルの秘密基地"},
 
 
 
