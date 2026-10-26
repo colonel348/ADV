@@ -16,7 +16,7 @@ body[data-selection-host="event"]>#titleArea {
 }
 
 /* event側の①～③では動画だけを背景に使い、select用キャラクター画像の瞬間表示を防ぐ。 */
-body[data-selection-host="event"] #bgImg {
+body[data-selection-host="event"] #viewport:not([data-screen="character"]) #bgImg {
   opacity: 0 !important;
   visibility: hidden;
 }

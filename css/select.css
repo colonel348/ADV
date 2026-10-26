@@ -1056,11 +1056,6 @@ body[data-selection-host="event"].character-selection-screen #eventLevelStatus.e
   opacity: 0 !important;
 }
 
-/* event.cssの共通非表示より優先し、統合後の旧select画面では静止画を表示する。 */
-body[data-selection-host="event"] #viewport[data-screen="character"] #bgImg {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
 #viewport[data-screen="event"] #backBtn {
   opacity: 1;
   visibility: visible;

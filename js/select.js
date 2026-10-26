@@ -17,6 +17,7 @@ let suppressEventCardClick = false;
 let isDeciding = false;
 let screenTransitionTimer = null;
 let characterAnimationTimer = null;
+let characterVideoPreloadSequence = 0;
 let selectionChangeTimer = null;
 let levelSwitchTimer = null;
 let selectVideoSequence = 0;
@@ -447,7 +448,14 @@ function changeCharacter(step) {
   chrId = chrList[chrIdx];
   lvKbn = "";
   showCharacter(true, step < 0 ? "right" : "left");
-  preloadCharacterLoopVideo();
+
+  // iOS Safariではvideo.load()が画像フェード中の描画も止めることがある。
+  // 暗転→画像切替→再表示（約820ms）が完了してから動画を準備する。
+  const preloadSequence = ++characterVideoPreloadSequence;
+  setTimeout(() => {
+    if (preloadSequence !== characterVideoPreloadSequence || screen !== "character") return;
+    preloadCharacterLoopVideo();
+  }, 900);
 }
 
 function setScreen(nextScreen, delayed = false, initialReady = null) {

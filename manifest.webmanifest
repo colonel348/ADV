@@ -1,0 +1,10 @@
+{
+  "name": "ADV",
+  "short_name": "ADV",
+  "start_url": "./tmp/select.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary"
+}
