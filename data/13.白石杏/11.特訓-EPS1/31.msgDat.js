@@ -1,21 +1,22 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "え…っ！？ 下着まで脱げって……　本気で言ってるの……？" },
-    { msgId: "L", msgTxt: "こはねに置いていかれたくないのは本当だけど…　流石にこれ以上は……恥ずかしいって……" },
+    { msgId: "N", msgTxt: "" },
+    { msgId: "A", msgTxt: "" },
+    { msgId: "L", msgTxt: "" },
 
   { movId: "evt1" },
-    { msgId: "A", msgTxt: "…そう、だよね……っ　（彰人の言う通り……、ここで怯んでたらダメだ…！）" },
-    { msgId: "A", msgTxt: "んっ……はぁ……ふぅ……っ" },
-    { msgId: "L", msgTxt: "……ごめん、逃げだしそうになってた　もう迷わないから……私を鍛え直して……！" },
+    { msgId: "A", msgTxt: "" },
+    { msgId: "A", msgTxt: "" },
+    { msgId: "L", msgTxt: "" },
 
  { movId: "evt2" },
-    { msgId: "N", msgTxt: "はぁ…っ はぁ……っ まだ…っ！　手なんて…緩めないでよ…っ！" },
-    { msgId: "A", msgTxt: "（こんなところで…へばってられない……！）　はァっ……、……んっ……！" },
-    { msgId: "L", msgTxt: "……んあッ……ハァ…、彰人……ッ　手加減しないで……もっと……本気で来てよ……ッ！" },
+    { msgId: "N", msgTxt: "" },
+    { msgId: "A", msgTxt: "" },
+    { msgId: "A", msgTxt: "" },
+    { msgId: "L", msgTxt: "" },
 
-  { movId: "evt2" },
-    { msgId: "A", msgTxt: "……ハァ……っ　あれ……っ、もう……終わり……？" },
-    { msgId: "A", msgTxt: "……んっ……、私……まだ……いけるよ……っ！" }
+  { movId: "home" },
+    { msgId: "A", msgTxt: ""}
 
 ];
