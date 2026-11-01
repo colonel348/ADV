@@ -2666,3 +2666,43 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* 素材比率（1152:2040）より縦長で、横方向に余裕がない表示領域向けの文字補正。 */
+@media (max-aspect-ratio: 48 / 85) {
+  #modeHomeMessage {
+    padding-right: 14px;
+    padding-left: 14px;
+    font-size: clamp(12px, 3.3vw, 14px);
+  }
+
+  .modeChoiceText {
+    font-size: clamp(17px, 4.8vw, 21px);
+  }
+
+  .modeChoiceEnglish {
+    font-size: clamp(9px, 2.6vw, 11px);
+  }
+
+  #selectionTitleText {
+    width: 78%;
+    font-size: clamp(17px, 4.7vw, 20px);
+  }
+
+  #previewEventName {
+    font-size: min(5.2vw, 20px);
+  }
+
+  body[data-selection-host="event"].event-playback #msgArea {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  body[data-selection-host="event"].event-playback #msgText {
+    margin-left: 2px;
+    font-size: 14px;
+  }
+
+  body[data-selection-host="event"].event-playback .msgArea-hs #msgText {
+    margin-left: 0;
+  }
+}
