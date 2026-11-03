@@ -10,13 +10,13 @@
 
   { evtId: "AK-S3", evtNm: "過酷な登山を全裸で挑ませる", fadeEvt: "1", plcNm: "登山道入口"},
 
-  { evtId: "AK-C2", evtNm: "全裸モデルとして大勢に描かせる", fadeEvt: "2", plcNm: "美術教室"},
+  { evtId: "AK-C2", evtNm: "ヌードデッサンのモデルに命じる", fadeEvt: "2", plcNm: "美術教室"},
 
   { evtId: "AK-C3", evtNm: "男達の欲望と熱を受け止めさせる", fadeEvt: "1", plcNm: "ライブハウス"},
 
 
 
-  { evtId: "SA-S1", evtNm: "並び立つ覚悟", fadeEvt: "2", plcNm: "ダンススタジオ"},
+  { evtId: "SA-S1", evtNm: "下半身のフォームを徹底指導する", fadeEvt: "2", plcNm: "ダンススタジオ"},
   
   { evtId: "SA-S4", evtNm: "こはねと真剣勝負", fadeEvt: "1", plcNm: "ビビッドストリート"},
   

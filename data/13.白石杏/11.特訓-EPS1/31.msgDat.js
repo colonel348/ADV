@@ -1,22 +1,23 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "下も脱げって……え、冗談でしょ……！？　可動域を見るためって、言われてもさ……っ" },
+    { msgId: "A", msgTxt: "（ここで逃げたら本気じゃないって思われる……）　っ……ふぅ……えっ……！？" },
+    { msgId: "L", msgTxt: "下着まで脱げって……！？……本気なの……？　本当に何も履かないでやれって言うの……？ " },
 
   { movId: "evt1" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "A", msgTxt: "（でも……こはねの隣に胸を張って立つためなら……　ここで怯むわけにはいかない……っ）" },
+    { msgId: "A", msgTxt: "（恥ずかしがってる場合じゃない……　これでフォームの軸が安定するなら……！）" },
+    { msgId: "L", msgTxt: "言われた通り……脱いだ……けど……っ　ここからどうすればいいわけ……？" },
 
  { movId: "evt2" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "（鏡に映る自分の姿を見るだけで……っ　こんなので本当に特訓なんてできるの……）" },
+    { msgId: "A", msgTxt: "言われた通りに立ったけど……　ここからいったい何を始める気……？" },
+    { msgId: "A", msgTxt: "（……足を持ち上げるって……っ！？　ちょっと、まさか……っ）" },
+    { msgId: "L", msgTxt: "（っ……！！股関節の動きを見ろって言われても……っ　こんな姿を直視されて冷静にいられるわけない……っ）" },
 
   { movId: "home" },
-    { msgId: "A", msgTxt: ""}
+    { msgId: "A", msgTxt: "この前の練習……最初は驚いたけど　本当に動き良くなった気がする……今日も頑張るよ"}
 
 ];
+
