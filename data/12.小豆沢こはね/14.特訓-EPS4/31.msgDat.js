@@ -6,6 +6,6 @@
     { msgId: "L", msgTxt: "" },
 
   { movId: "evt1" },
-    { msgId: "A", msgTxt: "" }
+    { msgId: "A", msgTxt: "" } 
 
 ];
