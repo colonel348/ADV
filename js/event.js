@@ -124,6 +124,8 @@ const AFTER_TITLE_NEXT_EVT_TIME = 200;
 const AFTER_TITLE_BLACK_FADE_TIME = 200;
 // 次段落への時間
 const NEXT_EVT_TIME = 500;
+// Keep the black screen visible for at least this long when moving from L to the next movie.
+const LOOP_TO_NEXT_MOVIE_BLACK_WAIT_TIME = 1000;
 // 次メッセージへの時間
 const NEXT_TEXT_TIME = 4000;
 // メッセージのみの自動送り時間
@@ -1689,10 +1691,15 @@ function showCurrent() {
     // フェード
     setFade(true);
 
+    const isLoopToNextMovie =
+      currentData[currentIndex - 1]?.msgId === "L";
+
     const evtWaitTime =
       isAfterTitle
         ? AFTER_TITLE_NEXT_EVT_TIME
-        : NEXT_EVT_TIME;
+        : isLoopToNextMovie
+          ? LOOP_TO_NEXT_MOVIE_BLACK_WAIT_TIME
+          : NEXT_EVT_TIME;
 
     const fadeWaitTime =
       isAfterTitle
