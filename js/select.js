@@ -4,7 +4,11 @@ let viewportHeightSyncTimers = [];
 
 function syncAppViewportHeight() {
   const visualHeight = window.visualViewport?.height;
-  const height = visualHeight > 0 ? visualHeight : window.innerHeight;
+  const height = Math.max(
+    Number(visualHeight) || 0,
+    Number(window.innerHeight) || 0,
+    Number(document.documentElement.clientHeight) || 0
+  );
   if (!(height > 0)) return;
   document.documentElement.style.setProperty("--app-height", `${Math.ceil(height)}px`);
   document.documentElement.style.setProperty(
@@ -24,6 +28,14 @@ syncAppViewportHeight();
 window.addEventListener("resize", scheduleAppViewportHeightSync, { passive: true });
 window.addEventListener("orientationchange", scheduleAppViewportHeightSync, { passive: true });
 window.addEventListener("pageshow", scheduleAppViewportHeightSync, { passive: true });
+window.addEventListener("focus", scheduleAppViewportHeightSync, { passive: true });
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) scheduleAppViewportHeightSync();
+});
+window.screen.orientation?.addEventListener(
+  "change",
+  scheduleAppViewportHeightSync
+);
 window.visualViewport?.addEventListener(
   "resize",
   scheduleAppViewportHeightSync,

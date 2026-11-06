@@ -2716,6 +2716,30 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 
 /* 横長時も文字を画面幅ではなく、縦長素材の実表示幅に合わせて縮小する。 */
 @media (orientation: landscape) {
+  #characterHint {
+    padding: min(4px, .6dvh) min(55px, 8.3dvh);
+    font-size: min(20px, 3dvh);
+  }
+
+  #characterName {
+    right: min(48px, 7.2dvh);
+    bottom: min(48px, 5.3dvh);
+    min-width: min(250px, 37.6dvh);
+    font-size: min(46px, 6.94dvh);
+  }
+
+  #characterName::before {
+    right: max(-185px, -27.8dvh);
+    bottom: max(-280px, -34.5dvh);
+    width: min(650px, 97.9dvh);
+    height: min(300px, 36.9dvh);
+  }
+
+  #characterNameText::before {
+    -webkit-text-stroke-width: min(3px, .45dvh);
+    text-stroke-width: min(3px, .45dvh);
+  }
+
   #modeHomeMessage {
     flex-basis: min(72px, 10.2dvh);
     height: min(72px, 10.2dvh);
