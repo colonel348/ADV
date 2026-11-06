@@ -1,5 +1,35 @@
 (function () {
 
+let viewportHeightSyncTimers = [];
+
+function syncAppViewportHeight() {
+  const visualHeight = window.visualViewport?.height;
+  const height = visualHeight > 0 ? visualHeight : window.innerHeight;
+  if (!(height > 0)) return;
+  document.documentElement.style.setProperty("--app-height", `${Math.ceil(height)}px`);
+  document.documentElement.style.setProperty(
+    "--app-frame-width",
+    `${height * 1152 / 2040}px`
+  );
+}
+
+function scheduleAppViewportHeightSync() {
+  viewportHeightSyncTimers.forEach(clearTimeout);
+  viewportHeightSyncTimers = [0, 100, 350, 800].map(delay =>
+    setTimeout(syncAppViewportHeight, delay)
+  );
+}
+
+syncAppViewportHeight();
+window.addEventListener("resize", scheduleAppViewportHeightSync, { passive: true });
+window.addEventListener("orientationchange", scheduleAppViewportHeightSync, { passive: true });
+window.addEventListener("pageshow", scheduleAppViewportHeightSync, { passive: true });
+window.visualViewport?.addEventListener(
+  "resize",
+  scheduleAppViewportHeightSync,
+  { passive: true }
+);
+
 let cardList, bgImg, bgFade, fade, decideBtn;
 let levelSelector, levelValue, selectionTitleArea, selectionTitleText, previewEventName;
 let selectVideo1, selectVideo2, selectPreloadVideo, activeSelectVideo, standbySelectVideo;

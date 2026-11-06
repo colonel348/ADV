@@ -2,8 +2,15 @@
 
 :root {
   /* すべての素材と同じ 1152:2040。iOS Safariでも解釈できるよう比率をdvhへ換算する。 */
-  --media-frame-width: min(100vw, 56.47058824dvh);
+  --app-height: 100dvh;
+  --app-frame-width: 56.47058824dvh;
+  --media-frame-width: min(100vw, var(--app-frame-width));
   --media-frame-gutter: calc((100vw - var(--media-frame-width)) / 2);
+}
+
+html:root,
+html:root body {
+  height: var(--app-height);
 }
 
 html,
@@ -28,7 +35,7 @@ button { font: inherit; }
 #viewport {
   position: relative;
   width: var(--media-frame-width);
-  height: 100dvh;
+  height: var(--app-height);
   margin: 0 auto;
   overflow: hidden;
   opacity: 0;
@@ -52,7 +59,7 @@ button { font: inherit; }
   left: 50%;
   top: 50%;
   width: auto;
-  height: 100dvh;
+  height: var(--app-height);
   transform: translate(-50%, -50%);
   transition: opacity .4s ease, transform .4s ease, filter .4s ease;
 }
@@ -958,7 +965,7 @@ body.event-start-leaving #previewEventName {
   display: none;
   width: auto;
   max-width: none;
-  height: 100dvh;
+  height: var(--app-height);
   object-fit: contain;
   object-position: center center;
   opacity: 0;
@@ -988,7 +995,7 @@ body[data-selection-host="event"].event-playback #videoContainer .movie {
 /* ④の動画・メッセージ・操作領域も素材と同じ縦長フレーム内に収める。 */
 body[data-selection-host="event"].event-playback #app {
   width: var(--media-frame-width);
-  height: 100dvh;
+  height: var(--app-height);
   margin: 0 auto;
   overflow: hidden;
   isolation: isolate;
@@ -1017,7 +1024,7 @@ body[data-selection-host="event"].event-playback > #titleArea {
   right: auto;
   bottom: auto;
   width: var(--media-frame-width);
-  height: 100dvh;
+  height: var(--app-height);
   transform: translateX(-50%);
 }
 
@@ -1552,7 +1559,7 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
   right: auto;
   bottom: auto;
   width: var(--media-frame-width);
-  height: 100dvh;
+  height: var(--app-height);
   z-index: 120;
   opacity: 0;
   visibility: hidden;
@@ -2700,6 +2707,46 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   body[data-selection-host="event"].event-playback #msgText {
     margin-left: 2px;
     font-size: 14px;
+  }
+
+  body[data-selection-host="event"].event-playback .msgArea-hs #msgText {
+    margin-left: 0;
+  }
+}
+
+/* 横長時も文字を画面幅ではなく、縦長素材の実表示幅に合わせて縮小する。 */
+@media (orientation: landscape) {
+  #modeHomeMessage {
+    padding-right: min(14px, 1.8dvh);
+    padding-left: min(14px, 1.8dvh);
+    font-size: min(14px, 1.86dvh);
+  }
+
+  .modeChoiceText {
+    font-size: min(21px, 2.71dvh);
+  }
+
+  .modeChoiceEnglish {
+    font-size: min(11px, 1.47dvh);
+  }
+
+  #selectionTitleText {
+    width: 78%;
+    font-size: min(20px, 2.65dvh);
+  }
+
+  #previewEventName {
+    font-size: min(20px, 2.94dvh);
+  }
+
+  body[data-selection-host="event"].event-playback #msgArea {
+    padding-right: min(12px, 1.7dvh);
+    padding-left: min(12px, 1.7dvh);
+  }
+
+  body[data-selection-host="event"].event-playback #msgText {
+    margin-left: min(2px, .3dvh);
+    font-size: min(14px, 1.98dvh);
   }
 
   body[data-selection-host="event"].event-playback .msgArea-hs #msgText {
