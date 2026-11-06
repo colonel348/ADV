@@ -658,10 +658,14 @@ function updateFilteredEvents() {
   filteredEvtData = evtData
     .filter(evt =>
       evt.evtId.substring(0, 2) === chrId &&
-      evt.evtId.charAt(3) === selectedMode &&
-      Number(evt.evtId.charAt(4)) > previousEventLevel
+      evt.evtId.charAt(3) === selectedMode
     )
     .sort((a, b) => Number(a.evtId.charAt(4)) - Number(b.evtId.charAt(4)));
+}
+
+function isEventLocked(evt) {
+  if (!evt) return true;
+  return Number(evt.evtId.charAt(4)) <= previousEventLevel;
 }
 
 function getModeLabel(mode) {
@@ -859,7 +863,9 @@ function createCards() {
   cardList.innerHTML = "";
   cardList.classList.toggle("single-card", filteredEvtData.length === 1);
   viewport.classList.add("event-unselected");
+  viewport.classList.remove("event-locked-selection");
   decideBtn.classList.add("disabled");
+  decideBtn.classList.remove("event-locked");
 
   if (!filteredEvtData.length) {
     const empty = document.createElement("div");
@@ -877,6 +883,9 @@ function createCards() {
     const level = Number(data.evtId.charAt(4)) || 1;
     card.dataset.mode = mode;
     card.dataset.level = level;
+    const locked = isEventLocked(data);
+    card.classList.toggle("event-locked", locked);
+    card.setAttribute("aria-disabled", String(locked));
 
     const inner = document.createElement("div");
     inner.className = "cardInner";
@@ -902,7 +911,13 @@ function createCards() {
     place.textContent = String(data.plcNm || "");
     textArea.append(title, place);
 
-    inner.append(levelArea, textArea);
+    const lockIcon = document.createElement("img");
+    lockIcon.className = "eventLockIcon";
+    lockIcon.src = "../img/lock-icon-hd.png";
+    lockIcon.alt = "";
+    lockIcon.setAttribute("aria-hidden", "true");
+
+    inner.append(levelArea, textArea, lockIcon);
     card.appendChild(inner);
     card.addEventListener("click", event => {
       event.stopPropagation();
@@ -912,7 +927,8 @@ function createCards() {
     cardList.appendChild(card);
   });
   cacheEventCardPositions();
-  selectEvent(0, true);
+  const firstAvailableIndex = filteredEvtData.findIndex(evt => !isEventLocked(evt));
+  if (firstAvailableIndex >= 0) selectEvent(firstAvailableIndex, true);
   initialEvtId = "";
 }
 
@@ -929,9 +945,13 @@ function selectEvent(index, instant = false) {
   evtIdx = index;
   tgtEvtData = filteredEvtData[index];
   evtId = tgtEvtData.evtId;
+  const locked = isEventLocked(tgtEvtData);
   updateEventLevelStatus(tgtEvtData, true);
   document.getElementById("viewport").classList.remove("event-unselected");
+  document.getElementById("viewport").classList.toggle("event-locked-selection", locked);
+  decideBtn.classList.toggle("event-locked", locked);
   decideBtn.classList.remove("disabled");
+  decideBtn.setAttribute("aria-disabled", String(locked));
 
   const cards = document.querySelectorAll(".card");
   clearTimeout(eventCardAnimationTimer);
@@ -953,6 +973,24 @@ function selectEvent(index, instant = false) {
   }
 
   clearTimeout(eventPlaybackPreloadTimer);
+  if (locked) {
+    eventPlaybackPreloadSequence++;
+    if (instant) {
+      cardList.offsetHeight;
+      requestAnimationFrame(() => {
+        cardList.style.transition = "";
+        cards.forEach(card => {
+          card.style.transition = "";
+          card.querySelector(".cardInner").style.transition = "";
+        });
+      });
+    } else {
+      eventCardAnimationTimer = setTimeout(() => {
+        cardList.classList.remove("cards-animating");
+      }, 380);
+    }
+    return;
+  }
   // カード移動（350ms）と動画の読込・デコードを競合させない。
   const preloadDelay = instant ? 650 : 520;
   const selectedEvent = tgtEvtData;
@@ -1047,19 +1085,20 @@ function preloadSelectedEventPlayback(evt) {
 }
 
 function enterEventPreview() {
-  if (!tgtEvtData) return;
+  if (!tgtEvtData || isEventLocked(tgtEvtData)) return;
   const viewport = document.getElementById("viewport");
   const previewEvtId = tgtEvtData.evtId;
   viewport.classList.remove("preview-controls-visible", "preview-button-visible");
   clearTimeout(selectionChangeTimer);
   decideBtn.classList.add("pressed");
   setTimeout(() => decideBtn.classList.remove("pressed"), 500);
-  viewport.classList.add("screen-transitioning");
+  viewport.classList.add("screen-transitioning", "decision-leaving");
   fade.classList.add("show");
 
   selectionChangeTimer = setTimeout(() => {
     screen = "preview";
     viewport.dataset.screen = screen;
+    viewport.classList.remove("decision-leaving");
     const previewName = String(tgtEvtData.evtNm || "");
     const previewInitial = document.createElement("span");
     const previewRest = document.createElement("span");
@@ -1122,7 +1161,8 @@ function enterEventPreview() {
 function returnToEventSelection() {
   const viewport = document.getElementById("viewport");
   viewport.classList.remove("preview-controls-visible", "preview-button-visible");
-  viewport.classList.add("screen-transitioning");
+  viewport.classList.remove("decision-return-visible");
+  viewport.classList.add("screen-transitioning", "returning-from-preview");
   fade.classList.add("show");
 
   clearTimeout(selectionChangeTimer);
@@ -1134,7 +1174,16 @@ function returnToEventSelection() {
     selectionTitleArea.classList.remove("show");
     playSelectionLoop(getCharacterLoopPath(), () => {
       fade.classList.remove("show");
-      setTimeout(() => viewport.classList.remove("screen-transitioning"), 500);
+      setTimeout(() => {
+        if (screen === "event") viewport.classList.add("decision-return-visible");
+      }, 100);
+      setTimeout(() => {
+        viewport.classList.remove(
+          "screen-transitioning",
+          "returning-from-preview",
+          "decision-return-visible"
+        );
+      }, 600);
     });
   }, 500);
 }
@@ -1553,7 +1602,7 @@ function updateDecideButton() {
 }
 
 function goToEvent() {
-  if (isDeciding || !tgtEvtData) return;
+  if (isDeciding || !tgtEvtData || isEventLocked(tgtEvtData)) return;
   if (
     document.body.dataset.selectionHost !== "event" ||
     typeof window.startEmbeddedEventPlayback !== "function"
@@ -1590,6 +1639,10 @@ function goToEvent() {
 }
 
 function handleDecision() {
+  if (
+    decideBtn.classList.contains("disabled") ||
+    decideBtn.classList.contains("event-locked")
+  ) return;
   if (screen === "event") {
     enterEventPreview();
   } else if (screen === "preview") {

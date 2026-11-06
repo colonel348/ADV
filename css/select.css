@@ -810,11 +810,13 @@ body.event-start-leaving #previewEventName {
 
 #decisionArea {
   position: absolute;
-  right: 20px;
+  left: 50%;
+  right: auto;
   bottom: 40px;
   z-index: 20;
   opacity: 0;
   pointer-events: none;
+  transform: translateX(-50%);
   transition: opacity .3s ease;
 }
 
@@ -837,16 +839,29 @@ body.event-start-leaving #previewEventName {
 }
 
 #decideBtn {
-  padding: 12px 80px;
-  border: 0;
+  width: 152px;
+  height: 48px;
+  padding: 0;
+  border: 4px solid #70e4d5;
   border-radius: 999px;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
+  line-height: 40px;
+  text-align: center;
+  box-sizing: border-box;
+  color: #70e4d5;
+  background: rgba(39, 49, 79, .42);
+  box-shadow: none;
+  filter: none;
   cursor: pointer;
   opacity: 1;
   visibility: visible;
   transition:
     opacity .3s ease,
+    color .3s ease,
+    background-color .3s ease,
+    border-color .3s ease,
+    box-shadow .3s ease,
     visibility 0s linear 0s;
 }
 
@@ -874,18 +889,17 @@ body.event-start-leaving #previewEventName {
 }
 
 .decideBtn-ps {
-  color: #333;
-  background: linear-gradient(#7fe7d9, #69d8ca);
-  filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+  color: #70e4d5;
+  background: rgba(39, 49, 79, .42);
+  filter: none;
   box-shadow: none;
 }
 
 .decideBtn-hs {
-  color: #333;
-  background: #f4f4f4;
-  box-shadow:
-    0 8px 18px rgba(0,0,0,.32),
-    0 2px 6px rgba(0,0,0,.18);
+  color: #70e4d5;
+  background: rgba(39, 49, 79, .42);
+  filter: none;
+  box-shadow: none;
 }
 #decideBtn.disabled { pointer-events: none; filter: brightness(.8); }
 
@@ -1233,7 +1247,6 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
 
 /* ②→③の黒フェード中も操作ボタンは常に最前面へ残す。 */
 #viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #backBtn,
-#viewport.screen-transitioning:not(.character-to-event)[data-screen="event"] #decisionArea,
 #viewport.screen-transitioning[data-screen="preview"] #backBtn {
   z-index: 32;
   opacity: 1 !important;
@@ -2803,4 +2816,106 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   body[data-selection-host="event"].event-playback .msgArea-hs #msgText {
     margin-left: 0;
   }
+}
+
+/* 選択不可のモードとイベントは隠さず、暗転した鍵付き項目として表示する。 */
+.modeLockIcon,
+.eventLockIcon {
+  display: none;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.modeChoice.mode-empty {
+  filter: none;
+  opacity: 1;
+  cursor: default;
+}
+
+.modeChoice.mode-empty > :not(.modeLockIcon) {
+  filter: brightness(.42) saturate(.55);
+  opacity: 1;
+}
+
+.modeChoice.mode-empty .modeLockIcon {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  z-index: 12;
+  display: block;
+  width: 34%;
+  height: 34%;
+  object-fit: contain;
+  opacity: 1;
+  filter: none;
+  transform: translate(-50%, -50%);
+}
+
+#viewport[data-screen="event"] .card.event-locked .eventLevelArea {
+  filter: brightness(.42) saturate(.9);
+  opacity: .72;
+}
+
+#viewport[data-screen="event"] .card.event-locked .eventTextArea {
+  filter: brightness(.48);
+  opacity: .58;
+}
+
+#viewport[data-screen="event"] .card.active.event-locked .cardInner::before {
+  background-color: rgba(92, 92, 102, .9);
+}
+
+#viewport[data-screen="event"] .card.event-locked .eventLockIcon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 8;
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  opacity: 1;
+  filter: none;
+  transform: translate(-50%, -50%);
+}
+
+#decideBtn {
+  transition:
+    opacity .3s ease,
+    color .3s ease,
+    background-color .3s ease,
+    border-color .3s ease,
+    box-shadow .3s ease,
+    visibility 0s linear 0s;
+}
+
+#viewport[data-screen="event"] #decideBtn.event-locked {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+  color: #367f82;
+  background: rgba(35, 44, 75, .96);
+  border-color: #438f8f;
+  box-shadow: none;
+  filter: none;
+}
+
+/* 決定ボタンは画面暗転とは別に、押下直後から早めに退場させる。 */
+#viewport.decision-leaving #decisionArea {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity .4s cubic-bezier(.4, 0, .2, 1) !important;
+}
+
+/* ③→②では復帰直後に出さず、映像が見えてから穏やかに表示する。 */
+#viewport.returning-from-preview[data-screen="event"] #decisionArea {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity .36s cubic-bezier(.22, .61, .36, 1) !important;
+}
+
+#viewport.returning-from-preview.decision-return-visible[data-screen="event"] #decisionArea {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
