@@ -2717,9 +2717,24 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 /* 横長時も文字を画面幅ではなく、縦長素材の実表示幅に合わせて縮小する。 */
 @media (orientation: landscape) {
   #modeHomeMessage {
+    flex-basis: min(72px, 10.2dvh);
+    height: min(72px, 10.2dvh);
     padding-right: min(14px, 1.8dvh);
     padding-left: min(14px, 1.8dvh);
+    border-radius: min(18px, 2.55dvh);
     font-size: min(14px, 1.86dvh);
+  }
+
+  #modePanel {
+    gap: min(12px, 1.24dvh);
+  }
+
+  .modeChoice {
+    padding: min(10px, .8dvh);
+  }
+
+  .modeChoice::after {
+    font-size: min(28px, 2.82dvh);
   }
 
   .modeChoiceText {
@@ -2727,11 +2742,13 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   }
 
   .modeChoiceEnglish {
+    margin-top: min(7px, .68dvh);
     font-size: min(11px, 1.47dvh);
   }
 
   #selectionTitleText {
     width: 78%;
+    padding: min(12px, 1.7dvh);
     font-size: min(20px, 2.65dvh);
   }
 
@@ -2740,13 +2757,23 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   }
 
   body[data-selection-host="event"].event-playback #msgArea {
+    height: min(180px, 25.4dvh);
+    padding-top: min(24px, 3.4dvh);
     padding-right: min(12px, 1.7dvh);
+    padding-bottom: min(24px, 3.4dvh);
     padding-left: min(12px, 1.7dvh);
   }
 
   body[data-selection-host="event"].event-playback #msgText {
+    min-height: min(100px, 14.1dvh);
     margin-left: min(2px, .3dvh);
+    padding-top: min(6px, .85dvh);
     font-size: min(14px, 1.98dvh);
+  }
+
+  body[data-selection-host="event"].event-playback #chrName {
+    margin-bottom: min(8px, 1.13dvh);
+    font-size: min(18px, 2.54dvh);
   }
 
   body[data-selection-host="event"].event-playback .msgArea-hs #msgText {
