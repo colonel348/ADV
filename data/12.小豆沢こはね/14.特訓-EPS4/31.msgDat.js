@@ -1,21 +1,24 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "大河さんが教えてくれたから、私は……　この悔しさを握りしめて前に進みます" },
+    { msgId: "A", msgTxt: "（みんなのおかげで……私はここまで強くなれたんだ）　今の私のすべてを……見てください" },
+    { msgId: "L", msgTxt: "裸になっても……怖くありません！私達は前に進んで　そして大河さんを超えて……その先へ進みます！" },
 
   { movId: "evt1" },
-    { msgId: "A", msgTxt: "" },
+    { msgId: "A", msgTxt: "わかりました……試してください　（私達の想いは本物だって……絶対に伝えるんだ）" },
 
   { movId: "evt2" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "……はァっ……んくっ……平気、です……！　大河さんに届くまで……私は絶対に折れません……っ" },
+    { msgId: "L", msgTxt: "……んっ……手加減なんて、しないでください……！　私を潰すくらいの……本気で試してください……っ！" },
 
   { movId: "evt2" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "W", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" }
+    { msgId: "A", msgTxt: "……っ！？……んあっ、はぁっ、あぁ……っ！　（これは……耐えられ……ない……かも……）" },
+    { msgId: "W", msgTxt: "ひっ、アぁっ、い、や……っ！！　……んっ、ぁあァっーーーッ！！" },
+    { msgId: "A", msgTxt: "はぁっ……くぅ……っ、はぁっ……　……えっ……？……きゃっ" },
+    { msgId: "L", msgTxt: "……あの……まだ、頭がぼーっとして……　……認めて……くれるん、ですか……？" }
 
 ];
+
+
+
