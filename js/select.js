@@ -1,32 +1,41 @@
 (function () {
 
 let viewportHeightSyncTimers = [];
+let lastAppViewportHeight = 0;
 
 function syncAppViewportHeight() {
-  const visualHeight = window.visualViewport?.height;
+  const visualViewport = window.visualViewport;
+  const visualScale = Number(visualViewport?.scale) || 1;
+  // ピンチ倍率でレイアウト寸法を変えず、倍率1相当の表示領域へ戻して比較する。
+  const visualHeight = (Number(visualViewport?.height) || 0) * visualScale;
   const height = Math.max(
-    Number(visualHeight) || 0,
+    visualHeight,
     Number(window.innerHeight) || 0,
     Number(document.documentElement.clientHeight) || 0
   );
   if (!(height > 0)) return;
-  document.documentElement.style.setProperty("--app-height", `${Math.ceil(height)}px`);
+  const resolvedHeight = Math.ceil(height);
+  if (resolvedHeight === lastAppViewportHeight) return;
+  lastAppViewportHeight = resolvedHeight;
+  document.documentElement.style.setProperty("--app-height", `${resolvedHeight}px`);
   document.documentElement.style.setProperty(
     "--app-frame-width",
-    `${height * 1152 / 2040}px`
+    `${resolvedHeight * 1152 / 2040}px`
   );
 }
 
 function scheduleAppViewportHeightSync() {
   viewportHeightSyncTimers.forEach(clearTimeout);
-  viewportHeightSyncTimers = [0, 100, 350, 800].map(delay =>
+  // Fold端末は姿勢変更後に表示領域が複数段階で確定するため、初期数秒だけ追従する。
+  viewportHeightSyncTimers = [0, 60, 150, 300, 600, 1000, 1600, 2400, 3600, 5000].map(delay =>
     setTimeout(syncAppViewportHeight, delay)
   );
 }
 
-syncAppViewportHeight();
+scheduleAppViewportHeightSync();
 window.addEventListener("resize", scheduleAppViewportHeightSync, { passive: true });
 window.addEventListener("orientationchange", scheduleAppViewportHeightSync, { passive: true });
+window.addEventListener("load", scheduleAppViewportHeightSync, { passive: true });
 window.addEventListener("pageshow", scheduleAppViewportHeightSync, { passive: true });
 window.addEventListener("focus", scheduleAppViewportHeightSync, { passive: true });
 document.addEventListener("visibilitychange", () => {
