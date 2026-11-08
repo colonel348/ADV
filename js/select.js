@@ -94,7 +94,7 @@ const SELECTION_VIDEO_FADE_TIME = 300;
 // iOS向けに再生準備と表示開始を分離する。先にデコードを始め、表示は0.25秒前に揃える。
 const SELECTION_LOOP_PREPARE_BEFORE = 0.5;
 const SELECTION_LOOP_SWITCH_BEFORE = 0.25;
-const SELECTION_LOOP_FADE_TIME = 500;
+const SELECTION_LOOP_FADE_TIME = 250;
 const chrList = ["FF", "AK", "SA"];
 let chrIdx = 1;
 let filteredEvtData = [];

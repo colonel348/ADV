@@ -110,7 +110,7 @@ const FIRST_LOOP_FADE_SWITCH_BEFORE = 0.60;
 // iOS向けに再生準備と表示開始を分離する。先にデコードを始め、表示は0.25秒前に揃える。
 const LOOP_PREPARE_BEFORE = 0.5;
 const LOOP_SWITCH_BEFORE = 0.25;
-const LOOP_FADE_TIME = 500;
+const LOOP_FADE_TIME = 250;
 // fade時間
 const BLACK_FADE_TIME = 750;
 // A動画終了後、Nメッセージを表示するまでの待機時間
