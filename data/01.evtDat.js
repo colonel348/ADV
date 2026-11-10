@@ -10,7 +10,7 @@
 
   { evtId: "AK-S3", evtNm: "過酷な登山を全裸で挑ませる", fadeEvt: "1", plcNm: "登山道入口"},
 
-  { evtId: "AK-S4", evtNm: "大河と対峙", fadeEvt: "1", plcNm: "空港"},
+  { evtId: "AK-S4", evtNm: "大河の元へ向かい覚悟を見せる", fadeEvt: "1", plcNm: "空港"},
 
   { evtId: "AK-C2", evtNm: "ヌードデッサンのモデルに命じる", fadeEvt: "2", plcNm: "美術教室"},
 
@@ -24,6 +24,6 @@
   
   { evtId: "SA-R2", evtNm: "雨の日の秘密", fadeEvt: "1", plcNm: "バスルーム"},
 
-  { evtId: "SA-C2", evtNm: "同級生の前で辱めを受けさせる", fadeEvt: "1", plcNm: "神山高校 教室"}
+  { evtId: "SA-C3", evtNm: "同級生の前で辱めを受けさせる", fadeEvt: "1", plcNm: "神山高校 教室"}
 
 ];
