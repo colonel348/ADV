@@ -22,7 +22,7 @@
   
   { evtId: "SA-S4", evtNm: "こはねと真剣勝負", fadeEvt: "1", plcNm: "ビビッドストリート"},
   
-  { evtId: "SA-R2", evtNm: "雨の日の秘密", fadeEvt: "1", plcNm: "バスルーム"},
+  { evtId: "SA-R2", evtNm: "一緒に長風呂してリラックスする", fadeEvt: "1", plcNm: "バスルーム"},
 
   { evtId: "SA-C3", evtNm: "同級生の前で辱めを受けさせる", fadeEvt: "1", plcNm: "神山高校 教室"}
 
