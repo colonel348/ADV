@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ADV" />
     <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="preload" href="../fonts/m-plus-1p/MPLUS1p-Black-rank-subset.woff2" as="font" type="font/woff2" crossorigin />
     <script>
       if ("serviceWorker" in navigator) {
         let reloadingForServiceWorker = false;
@@ -39,6 +40,28 @@
     <span class="eventLevelStatusLabel">ランク</span>
     <span id="eventLevelStatusValue" class="eventLevelStatusValue">0</span>
   </div>
+  <button id="rankResultOverlay" type="button" aria-label="ランクアップ結果。タップして進む">
+    <span id="rankResultParticles" class="rankResultParticles" aria-hidden="true"></span>
+    <span class="rankResultPanel">
+      <span id="rankResultUpLabel" class="rankResultUpLabel"><span class="rankResultTitleText">ランクUP<span class="rankResultBang">!</span></span></span>
+      <span class="rankResultRanks">
+        <span id="rankResultFromBadge" class="rankResultBadge rankResultFromBadge">
+          <span class="rankResultBadgeLabel">ランク</span>
+          <strong id="rankResultFromValue">0</strong>
+        </span>
+        <span class="rankResultArrow" aria-hidden="true"></span>
+        <span id="rankResultToBadge" class="rankResultBadge rankResultToBadge">
+          <span class="rankResultBadgeLabel">ランク</span>
+          <strong id="rankResultValue">0</strong>
+        </span>
+      </span>
+      <span class="rankResultGauge" aria-hidden="true">
+        <span id="rankResultGaugeFill" class="rankResultGaugeFill"></span>
+        <span class="rankResultGaugeShine"></span>
+      </span>
+      <span id="rankResultTapPrompt" class="rankResultTapPrompt">タップして進む</span>
+    </span>
+  </button>
   <div id="viewport">
     <div id="bgWrap">
       <img id="bgImg" alt="">
@@ -66,9 +89,9 @@
         <div id="modeHomeMessageText"></div>
       </div>
       <div id="modePanel">
-        <button class="modeChoice" data-mode="R" data-story="REFREH" type="button">
+        <button class="modeChoice" data-mode="R" data-story="REFRESH" type="button">
           <span class="modeChoiceVisual"><img class="modeChoiceImage" src="../img/romance-mode.png" alt=""></span>
-          <span class="modeChoiceText"><span class="modeChoiceLabel">休息</span><span class="modeChoiceEnglish">REFREH</span></span>
+          <span class="modeChoiceText"><span class="modeChoiceLabel">休息</span><span class="modeChoiceEnglish">REFRESH</span></span>
           <img class="modeLockIcon" src="../img/lock-icon-hd.png" alt="" aria-hidden="true">
         </button>
         <button class="modeChoice" data-mode="S" data-story="SERIOUS" type="button">

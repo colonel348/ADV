@@ -202,111 +202,197 @@ function updateEventLevelStatus(evt = null, blinkPending = false) {
   });
 }
 
-function prepareRankResultAnimation() {
-  const status = document.getElementById("eventLevelStatus");
-  if (!status) return;
+const rankResultColors = {
+  1: "#36c7ef",
+  2: "#f0c43f",
+  3: "#ed5c67",
+  4: "#a66ce7"
+};
 
-  const from = normalizeLvKbn(rankResultFrom);
-  const finalValue = normalizeLvKbn(lvKbn);
-  const pendingGauge = status.querySelector(".eventLevelPendingGauge");
-  const commitGauge = status.querySelector(".eventLevelCommitGauge");
-  const value = document.getElementById("eventLevelStatusValue");
-  const remainingCount = Math.max(0, 4 - from.length);
-  const addedCount = Math.max(0, finalValue.length - from.length);
-  const targetScale = remainingCount ? addedCount / remainingCount : 0;
-  const mode = finalValue.charAt(from.length);
+const rankResultEmptyColor = "#59627a";
 
-  status.querySelectorAll(".eventLevelSegments span").forEach((segment, index) => {
-    const segmentMode = from.charAt(index);
-    if (segmentMode) segment.dataset.mode = segmentMode;
-    else delete segment.dataset.mode;
-  });
-  value.textContent = from.length;
-  value.classList.remove("value-changing");
-  status.setAttribute("aria-label", `ランク${from.length}`);
+const waitRankResult = duration => new Promise(resolve => setTimeout(resolve, duration));
 
-  [pendingGauge, commitGauge].forEach(gauge => {
-    if (!gauge) return;
-    gauge.style.left = `${from.length * 25}%`;
-    gauge.style.width = `${remainingCount * 25}%`;
-    if (mode) gauge.dataset.mode = mode;
-  });
-  if (pendingGauge) {
-    pendingGauge.style.visibility = "visible";
-    pendingGauge.style.animation = "";
-    pendingGauge.style.transition = "none";
-    pendingGauge.style.transform = `scaleX(${targetScale})`;
-    pendingGauge.style.opacity = addedCount ? "1" : "0";
-    pendingGauge.classList.toggle("is-blinking", addedCount > 0);
-  }
-  if (commitGauge) {
-    commitGauge.style.transition = "none";
-    commitGauge.style.transform = "scaleX(0)";
-    commitGauge.style.opacity = "0";
-  }
+function setRankResultGauge(rank, progress, duration = 0) {
+  const overlay = document.getElementById("rankResultOverlay");
+  const fill = document.getElementById("rankResultGaugeFill");
+  if (!overlay || !fill) return;
+  const resolvedRank = Math.min(4, Math.max(1, Number(rank) || 1));
+  overlay.style.setProperty("--rank-result-color", rankResultColors[resolvedRank]);
+  fill.style.opacity = "1";
+  fill.style.transition = duration
+    ? `transform ${duration}ms cubic-bezier(.2, .72, .24, 1)`
+    : "none";
+  fill.style.transform = `scaleX(${Math.min(1, Math.max(0, progress))})`;
 }
 
-function playRankResultAnimation(onComplete) {
-  const status = document.getElementById("eventLevelStatus");
-  if (!status) return onComplete();
+async function clearRankResultGauge(nextRank, duration = 190) {
+  const overlay = document.getElementById("rankResultOverlay");
+  const fill = document.getElementById("rankResultGaugeFill");
+  if (!overlay || !fill) return;
+  fill.style.transition = `opacity ${duration}ms ease`;
+  fill.style.opacity = "0";
+  await waitRankResult(duration);
+  const resolvedRank = Math.min(4, Math.max(1, Number(nextRank) || 1));
+  overlay.style.setProperty("--rank-result-color", rankResultColors[resolvedRank]);
+  fill.style.transition = "none";
+  fill.style.transform = "scaleX(0)";
+  fill.style.opacity = "1";
+  await waitRankResult(50);
+}
 
-  const from = normalizeLvKbn(rankResultFrom);
-  const finalValue = normalizeLvKbn(lvKbn);
-  const addedCount = Math.max(0, finalValue.length - from.length);
-  const remainingCount = Math.max(0, 4 - from.length);
-  const targetScale = remainingCount ? addedCount / remainingCount : 0;
-  const pendingGauge = status.querySelector(".eventLevelPendingGauge");
-  const commitGauge = status.querySelector(".eventLevelCommitGauge");
-  const value = document.getElementById("eventLevelStatusValue");
+function setRankResultBadge(badgeId, valueId, rank) {
+  const badge = document.getElementById(badgeId);
+  const value = document.getElementById(valueId);
+  if (!badge || !value) return;
+  const resolvedRank = Math.min(4, Math.max(0, Number(rank) || 0));
+  badge.style.setProperty(
+    "--rank-badge-color",
+    resolvedRank ? rankResultColors[resolvedRank] : rankResultEmptyColor
+  );
+  value.textContent = resolvedRank;
+}
 
-  if (!addedCount || !commitGauge) {
+function createRankResultParticles() {
+  const container = document.getElementById("rankResultParticles");
+  if (!container || container.childElementCount) return;
+  const particleData = [
+    ["diamond", "✦", 8, 17, 0, 26], ["diamond", "✦", 22, 28, 60, 18],
+    ["diamond", "✦", 35, 13, 110, 23], ["diamond", "✦", 49, 22, 30, 17],
+    ["diamond", "✦", 66, 14, 145, 27], ["diamond", "✦", 82, 25, 75, 20],
+    ["diamond", "✦", 94, 17, 190, 29], ["diamond", "✦", 11, 69, 125, 22],
+    ["diamond", "✦", 27, 82, 25, 28], ["diamond", "✦", 43, 72, 180, 19],
+    ["diamond", "✦", 59, 85, 95, 26], ["diamond", "✦", 75, 74, 45, 20],
+    ["diamond", "✦", 91, 80, 160, 28], ["diamond", "✦", 5, 48, 80, 18],
+    ["diamond", "✦", 79, 47, 200, 24], ["diamond", "✦", 61, 57, 120, 17],
+    ["note", "♪", 15, 58, 0, 34], ["note", "♫", 24, 36, 180, 30],
+    ["note", "♪", 39, 72, 340, 32], ["note", "♫", 55, 30, 90, 36],
+    ["note", "♪", 70, 68, 270, 29], ["note", "♫", 83, 38, 130, 35],
+    ["note", "♪", 93, 61, 420, 38], ["note", "♫", 31, 52, 500, 28]
+  ];
+  particleData.forEach(([type, text, left, top, delay, size], index) => {
+    const particle = document.createElement("span");
+    particle.textContent = text;
+    particle.className = type === "note" ? "rankResultNote" : "rankResultDiamond";
+    particle.style.setProperty("--particle-left", `${left}%`);
+    particle.style.setProperty("--particle-top", `${top}%`);
+    particle.style.setProperty("--particle-delay", `${delay}ms`);
+    particle.style.setProperty("--particle-size", `${size}px`);
+    particle.style.setProperty("--particle-cycle", `${2.45 + (index % 5) * .37}s`);
+    particle.style.setProperty("--twinkle-delay", `${.25 + delay / 1000 + (index % 4) * .14}s`);
+    if (type === "note") {
+      const direction = index % 2 ? 1 : -1;
+      const endY = -72 - (index % 6) * 10;
+      const quarterY = 26 + (endY - 26) * .25;
+      const midY = 26 + (endY - 26) * .5;
+      const threeQuarterY = 26 + (endY - 26) * .75;
+      particle.style.setProperty("--note-x-start", `${direction * 2}px`);
+      particle.style.setProperty("--note-x-quarter", `${-direction * 3}px`);
+      particle.style.setProperty("--note-x-mid", `${direction * 4}px`);
+      particle.style.setProperty("--note-x-three-quarter", `${-direction * 3}px`);
+      particle.style.setProperty("--note-x-end", `${direction * 2}px`);
+      particle.style.setProperty("--note-y-quarter", `${quarterY}px`);
+      particle.style.setProperty("--note-y-mid", `${midY}px`);
+      particle.style.setProperty("--note-y-three-quarter", `${threeQuarterY}px`);
+      particle.style.setProperty("--note-y-end", `${endY}px`);
+      particle.style.setProperty("--note-rotate-start", `${direction * -5}deg`);
+      particle.style.setProperty("--note-rotate-quarter", `${direction * 3}deg`);
+      particle.style.setProperty("--note-rotate-mid", `${direction * -3}deg`);
+      particle.style.setProperty("--note-rotate-three-quarter", `${direction * 3}deg`);
+      particle.style.setProperty("--note-rotate-end", `${direction * -2}deg`);
+    }
+    container.appendChild(particle);
+  });
+}
+
+function prepareRankResultAnimation() {
+  const overlay = document.getElementById("rankResultOverlay");
+  if (!overlay) return;
+  const fromRank = normalizeLvKbn(rankResultFrom).length;
+  setRankResultBadge("rankResultFromBadge", "rankResultFromValue", fromRank);
+  setRankResultBadge("rankResultToBadge", "rankResultValue", fromRank);
+  overlay.classList.remove(
+    "is-visible",
+    "is-rank-burst",
+    "is-rank-refreshing",
+    "has-ranked-up",
+    "is-complete",
+    "is-finishing",
+    "is-leaving"
+  );
+  setRankResultGauge(Math.min(4, fromRank + 1), fromRank / 4);
+  createRankResultParticles();
+}
+
+async function triggerRankResultBurst(rank) {
+  const overlay = document.getElementById("rankResultOverlay");
+  if (!overlay) return;
+  const isConsecutiveRankUp = overlay.classList.contains("has-ranked-up");
+  if (isConsecutiveRankUp) {
+    overlay.classList.add("is-rank-refreshing");
+    await waitRankResult(110);
+  }
+  setRankResultBadge("rankResultToBadge", "rankResultValue", rank);
+  overlay.classList.add("has-ranked-up");
+  if (isConsecutiveRankUp) {
+    overlay.classList.remove("is-rank-refreshing");
+  }
+  overlay.classList.remove("is-rank-burst");
+  overlay.offsetWidth;
+  overlay.classList.add("is-rank-burst");
+  await waitRankResult(1080);
+  overlay.classList.remove("is-rank-burst");
+}
+
+async function playRankResultAnimation(onComplete) {
+  const overlay = document.getElementById("rankResultOverlay");
+  const fromRank = normalizeLvKbn(rankResultFrom).length;
+  const finalRank = normalizeLvKbn(lvKbn).length;
+  const addedCount = Math.max(0, finalRank - fromRank);
+
+  if (!overlay || !addedCount) {
     startDeferredSelectionIntroPlayback();
     onComplete();
     return;
   }
 
-  setTimeout(() => {
-    // 予定ゲージは点滅を続け、その上を確定ゲージが左から右へ覆う。
-    commitGauge.style.transition = "none";
-    commitGauge.style.opacity = "1";
-    commitGauge.style.transform = "scaleX(0)";
-    commitGauge.offsetWidth;
-    commitGauge.style.transition = "transform .65s cubic-bezier(.22, .7, .25, 1)";
-    commitGauge.style.transform = `scaleX(${targetScale})`;
+  overlay.classList.add("is-visible");
+  await waitRankResult(500);
 
-    setTimeout(() => {
-      const segments = status.querySelectorAll(".eventLevelSegments span");
-      // 確定オーバーレイの下を先に完成色へ固定し、外した後の再着色を見せない。
-      segments.forEach((segment, index) => {
-        segment.style.transition = "none";
-        const mode = finalValue.charAt(index);
-        if (mode) segment.dataset.mode = mode;
-        else delete segment.dataset.mode;
-      });
-      status.offsetWidth;
-      if (pendingGauge) {
-        // 点滅解除時に通常opacityへ戻る1フレームを描画させない。
-        pendingGauge.style.visibility = "hidden";
-        pendingGauge.style.animation = "none";
-        pendingGauge.classList.remove("is-blinking");
-        pendingGauge.style.opacity = "0";
-        pendingGauge.style.transform = "scaleX(0)";
-        pendingGauge.style.transition = "";
-        delete pendingGauge.dataset.mode;
-      }
-      commitGauge.style.opacity = "0";
-      commitGauge.style.transition = "";
-      requestAnimationFrame(() => {
-        segments.forEach(segment => { segment.style.transition = ""; });
-      });
-      value.classList.remove("value-changing");
-      value.textContent = finalValue.length;
-      status.setAttribute("aria-label", `ランク${finalValue.length}`);
-      // ①を見せる直前からA動画を開始し、ランク演出中の裏再生を防ぐ。
-      startDeferredSelectionIntroPlayback();
-      setTimeout(onComplete, 350);
-    }, 650);
-  }, 500);
+  let gaugeProgress = fromRank / 4;
+  for (let nextRank = fromRank + 1; nextRank <= finalRank; nextRank++) {
+    const distance = 1 - gaugeProgress;
+    const fillDuration = Math.max(420, Math.round(900 * distance));
+    setRankResultGauge(nextRank, gaugeProgress);
+    await waitRankResult(80);
+    setRankResultGauge(nextRank, 1, fillDuration);
+    await waitRankResult(fillDuration);
+    await triggerRankResultBurst(nextRank);
+
+    if (nextRank === 4) {
+      gaugeProgress = 1;
+      break;
+    }
+
+    await clearRankResultGauge(nextRank + 1);
+    gaugeProgress = 0;
+  }
+
+  if (finalRank < 4) {
+    const finalProgress = finalRank / 4;
+    const finalDuration = Math.max(430, Math.round(900 * finalProgress));
+    setRankResultGauge(finalRank + 1, finalProgress, finalDuration);
+    await waitRankResult(finalDuration + 80);
+  }
+  overlay.classList.add("is-complete");
+
+  const finish = () => {
+    if (!overlay.classList.contains("is-complete") || overlay.classList.contains("is-finishing")) return;
+    overlay.classList.add("is-finishing");
+    startDeferredSelectionIntroPlayback();
+    onComplete();
+  };
+  overlay.addEventListener("click", finish, { once: true });
 }
 
 function readSelectionParams() {
@@ -982,8 +1068,9 @@ function selectEvent(index, instant = false) {
   }
 
   clearTimeout(eventPlaybackPreloadTimer);
+  // カードの選択状態を先に描画し、前の選択の本編プリロードを無効化する。
+  eventPlaybackPreloadSequence++;
   if (locked) {
-    eventPlaybackPreloadSequence++;
     if (instant) {
       cardList.offsetHeight;
       requestAnimationFrame(() => {
@@ -1000,20 +1087,16 @@ function selectEvent(index, instant = false) {
     }
     return;
   }
-  // カード移動（350ms）と動画の読込・デコードを競合させない。
-  const preloadDelay = instant ? 650 : 520;
   const selectedEvent = tgtEvtData;
-  eventPlaybackPreloadTimer = setTimeout(() => {
-    const preload = () => {
+  const preloadDelay = instant ? 300 : 60;
+  // 選択スタイルを2フレーム先に確定させてから、裏で動画を準備する。
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (screen !== "event" || tgtEvtData?.evtId !== selectedEvent.evtId) return;
+    eventPlaybackPreloadTimer = setTimeout(() => {
       if (screen !== "event" || tgtEvtData?.evtId !== selectedEvent.evtId) return;
       preloadSelectedEventVideo(selectedEvent);
-    };
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(preload, { timeout: 1000 });
-    } else {
-      preload();
-    }
-  }, preloadDelay);
+    }, preloadDelay);
+  }));
 
   if (instant) {
     cardList.offsetHeight;
@@ -1055,14 +1138,24 @@ function showSelectedEventVideo(evt) {
 
 function preloadSelectedEventVideo(evt) {
   const src = getEventLoopPath(evt);
-  if (selectPreloadVideo.dataset.src === src) return;
-  selectPreloadVideo.pause();
-  selectPreloadVideo.dataset.src = src;
-  selectPreloadVideo.src = src;
-  // 選択中はデコーダーを占有しないようメタデータだけ先読みする。
-  selectPreloadVideo.preload = "metadata";
-  selectPreloadVideo.load();
-  preloadSelectedEventPlayback(evt);
+  if (selectPreloadVideo.dataset.src !== src) {
+    selectPreloadVideo.pause();
+    selectPreloadVideo.dataset.src = src;
+    selectPreloadVideo.src = src;
+    // 選択中はデコーダーを占有しないようメタデータだけ先読みする。
+    selectPreloadVideo.preload = "metadata";
+    selectPreloadVideo.load();
+  }
+
+  const preloadPlayback = () => {
+    if (screen !== "event" || tgtEvtData?.evtId !== evt.evtId) return;
+    preloadSelectedEventPlayback(evt);
+  };
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(preloadPlayback, { timeout: 800 });
+  } else {
+    setTimeout(preloadPlayback, 120);
+  }
 }
 
 function preloadSelectedEventPlayback(evt) {
@@ -1648,10 +1741,16 @@ function goToEvent() {
 }
 
 function handleDecision() {
-  if (
-    decideBtn.classList.contains("disabled") ||
-    decideBtn.classList.contains("event-locked")
-  ) return;
+  if (decideBtn.classList.contains("disabled")) return;
+  if (decideBtn.classList.contains("event-locked")) {
+    decideBtn.classList.remove("locked-feedback");
+    decideBtn.offsetWidth;
+    decideBtn.classList.add("locked-feedback");
+    decideBtn.addEventListener("animationend", () => {
+      decideBtn.classList.remove("locked-feedback");
+    }, { once: true });
+    return;
+  }
   if (screen === "event") {
     enterEventPreview();
   } else if (screen === "preview") {
@@ -1831,7 +1930,21 @@ window.addEventListener("load", () => {
           rankResultPending = false;
           initialDisplayReady.then(() => {
             viewport.style.opacity = 1;
-            document.body.classList.remove("event-rank-result");
+            const resultOverlay = document.getElementById("rankResultOverlay");
+            requestAnimationFrame(() => {
+              resultOverlay?.classList.add("is-leaving");
+              setTimeout(() => {
+                document.body.classList.remove("event-rank-result");
+                resultOverlay?.classList.remove(
+                  "is-visible",
+                  "is-rank-burst",
+                  "has-ranked-up",
+                  "is-complete",
+                  "is-finishing",
+                  "is-leaving"
+                );
+              }, 580);
+            });
           });
         });
       });

@@ -19,7 +19,7 @@ body {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: sans-serif;
+  font-family: var(--app-font-family);
 }
 
 button { font: inherit; }
@@ -488,7 +488,7 @@ body.event-start-leaving #previewEventName {
   color: transparent;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: clamp(1.4px, .18vw, 2.2px) rgba(255,255,255,.1);
-  font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+  font-family: var(--app-font-family);
   font-size: clamp(54px, 10vh, 112px);
   font-weight: 900;
   line-height: 1;
@@ -520,7 +520,7 @@ body.event-start-leaving #previewEventName {
 .modeChoiceText::after {
   order: 2;
   margin-top: .9em;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--app-font-family);
   font-size: clamp(14px, 2.2vw, 20px);
   font-weight: 800;
   line-height: 1;
@@ -756,7 +756,7 @@ body.event-start-leaving #previewEventName {
 
 .levelBadgeText {
   fill: #fff;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--app-font-family);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0;
@@ -812,7 +812,7 @@ body.event-start-leaving #previewEventName {
   position: absolute;
   left: 50%;
   right: auto;
-  bottom: 40px;
+  bottom: max(40px, calc(env(safe-area-inset-bottom) + 16px));
   z-index: 20;
   opacity: 0;
   pointer-events: none;
@@ -1168,7 +1168,7 @@ body[data-selection-host="event"].character-selection-screen #eventLevelStatus.e
   border-radius: 50%;
   background: var(--level-color);
   color: #4a4961;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--app-font-family);
   font-size: 30px;
   font-weight: 900;
   line-height: 1;
@@ -2241,7 +2241,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   display: block;
   margin-top: clamp(7px, 1.2vh, 12px);
   color: #555463;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--app-font-family);
   font-size: clamp(10px, 1.6vw, 16px);
   font-weight: 800;
   letter-spacing: .04em;
@@ -2568,7 +2568,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   border-radius: 50%;
   background: var(--event-level-color, #39c7e8);
   color: #45435e;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--app-font-family);
   font-size: 22px;
   font-weight: 900;
   line-height: 1;
@@ -2893,12 +2893,24 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 #viewport[data-screen="event"] #decideBtn.event-locked {
   opacity: 1;
   visibility: visible;
-  pointer-events: none;
+  pointer-events: auto;
   color: #367f82;
   background: rgba(35, 44, 75, .96);
   border-color: #438f8f;
   box-shadow: none;
   filter: none;
+}
+
+#viewport[data-screen="event"] #decideBtn.event-locked.locked-feedback {
+  animation: lockedDecisionFeedback .36s cubic-bezier(.36, .07, .19, .97);
+}
+
+@keyframes lockedDecisionFeedback {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(1.5px); }
 }
 
 /* 決定ボタンは画面暗転とは別に、押下直後から早めに退場させる。 */

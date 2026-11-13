@@ -1,5 +1,6 @@
 const REVALIDATED_DESTINATIONS = new Set([
   "document",
+  "font",
   "script",
   "style",
   "manifest"
