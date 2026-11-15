@@ -2,6 +2,8 @@
 
   { evtId: "FF-S3", evtNm: "サンデーのもとへ行き説得する", fadeEvt: "2", plcNm: "オーディション会場"},
 
+  { evtId: "FF-R1", evtNm: "街を歩く", fadeEvt: "2", plcNm: "ピノコニー（仮）"},
+
   { evtId: "FF-R3", evtNm: "二人で全裸になり開放感を味わう", fadeEvt: "2", plcNm: "ホタルの秘密基地"},
 
 
