@@ -36,7 +36,7 @@ button { font: inherit; }
   position: relative;
   width: var(--media-frame-width);
   height: var(--app-height);
-  margin: 0 auto;
+  margin: 0 0 0 var(--media-frame-gutter);
   overflow: hidden;
   opacity: 0;
   transition: opacity .8s ease;
@@ -916,7 +916,8 @@ body.event-start-leaving #previewEventName {
 
 #selectionFade {
   position: absolute;
-  inset: 0;
+  /* opacity合成時の1px境界を表示領域の外へ逃がし、背面動画の先行露出を防ぐ。 */
+  inset: -2px;
   z-index: 30;
   opacity: 0;
   pointer-events: none;
@@ -1010,7 +1011,7 @@ body[data-selection-host="event"].event-playback #videoContainer .movie {
 body[data-selection-host="event"].event-playback #app {
   width: var(--media-frame-width);
   height: var(--app-height);
-  margin: 0 auto;
+  margin: 0 0 0 var(--media-frame-gutter);
   overflow: hidden;
   isolation: isolate;
 }
@@ -1023,6 +1024,8 @@ body[data-selection-host="event"].event-playback #videoContainer {
 
 /* 小数pxの丸めで右端に動画が残らないよう、被覆レイヤーだけ左右へ余分に広げる。 */
 body[data-selection-host="event"].event-playback #fade {
+  top: -2px;
+  bottom: -2px;
   left: -2px;
   right: -2px;
 }
@@ -1033,13 +1036,13 @@ body[data-selection-host="event"].event-playback #msgArea {
 }
 
 body[data-selection-host="event"].event-playback > #titleArea {
-  left: 50%;
+  left: var(--media-frame-gutter);
   top: 0;
   right: auto;
   bottom: auto;
   width: var(--media-frame-width);
   height: var(--app-height);
-  transform: translateX(-50%);
+  transform: none;
 }
 
 /* body直下のランク表示も、中央の表示フレーム右端を基準にする。 */
@@ -1344,13 +1347,13 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
 #previewEventName::after {
   content: "";
   position: fixed;
-  left: 50%;
+  left: var(--media-frame-gutter);
   right: auto;
   bottom: 0;
   z-index: -1;
   height: 180px;
   width: var(--media-frame-width);
-  transform: translateX(-50%);
+  transform: none;
   background: linear-gradient(
     to top,
     rgba(0, 0, 0, .75),
@@ -1567,7 +1570,7 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
 
 #previewStartFlash {
   position: fixed;
-  left: 50%;
+  left: var(--media-frame-gutter);
   top: 0;
   right: auto;
   bottom: auto;
@@ -1579,7 +1582,7 @@ body.event-rank-cutover #eventLevelStatus.eventLevelStatus {
   pointer-events: none;
   box-sizing: border-box;
   background: transparent;
-  transform: translateX(-50%);
+  transform: none;
 }
 
 .previewScreenWash,

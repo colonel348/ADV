@@ -1,7 +1,7 @@
 (function () {
 
 let viewportHeightSyncTimers = [];
-let lastAppViewportHeight = 0;
+let lastAppViewportSignature = "";
 
 function syncAppViewportHeight() {
   const visualViewport = window.visualViewport;
@@ -13,15 +13,34 @@ function syncAppViewportHeight() {
     Number(window.innerHeight) || 0,
     Number(document.documentElement.clientHeight) || 0
   );
-  if (!(height > 0)) return;
-  const resolvedHeight = Math.ceil(height);
-  if (resolvedHeight === lastAppViewportHeight) return;
-  lastAppViewportHeight = resolvedHeight;
-  document.documentElement.style.setProperty("--app-height", `${resolvedHeight}px`);
-  document.documentElement.style.setProperty(
-    "--app-frame-width",
-    `${resolvedHeight * 1152 / 2040}px`
+  const visualWidth = (Number(visualViewport?.width) || 0) * visualScale;
+  const width = Math.max(
+    visualWidth,
+    Number(window.innerWidth) || 0,
+    Number(document.documentElement.clientWidth) || 0
   );
+  if (!(height > 0) || !(width > 0)) return;
+
+  const resolvedHeight = Math.ceil(height);
+  const dpr = Math.max(1, Number(window.devicePixelRatio) || 1);
+  const viewportDeviceWidth = Math.max(1, Math.round(width * dpr));
+  const targetDeviceWidth = Math.min(
+    viewportDeviceWidth,
+    Math.max(1, Math.round(resolvedHeight * 1152 / 2040 * dpr))
+  );
+  // 左右端を実デバイスピクセル境界へ揃え、動画と暗転レイヤーの丸め差をなくす。
+  const gutterDeviceWidth = Math.floor((viewportDeviceWidth - targetDeviceWidth) / 2);
+  const frameDeviceWidth = viewportDeviceWidth - gutterDeviceWidth * 2;
+  const frameWidth = frameDeviceWidth / dpr;
+  const frameGutter = gutterDeviceWidth / dpr;
+  const signature = `${resolvedHeight}:${viewportDeviceWidth}:${frameDeviceWidth}:${dpr}`;
+  if (signature === lastAppViewportSignature) return;
+  lastAppViewportSignature = signature;
+
+  document.documentElement.style.setProperty("--app-height", `${resolvedHeight}px`);
+  document.documentElement.style.setProperty("--app-frame-width", `${frameWidth}px`);
+  document.documentElement.style.setProperty("--media-frame-width", `${frameWidth}px`);
+  document.documentElement.style.setProperty("--media-frame-gutter", `${frameGutter}px`);
 }
 
 function scheduleAppViewportHeightSync() {
