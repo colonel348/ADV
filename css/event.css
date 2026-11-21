@@ -178,6 +178,7 @@ body.event-rank-result .eventLevelStatus {
 
 #rankResultOverlay {
   --rank-result-color: #36c7ef;
+  --rank-burst-color: #36c7ef;
   position: fixed;
   left: var(--media-frame-gutter, 0);
   top: 0;
@@ -227,8 +228,8 @@ body.event-rank-result .eventLevelStatus {
   pointer-events: none;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--rank-result-color) 58%, white) 0,
-    color-mix(in srgb, var(--rank-result-color) 36%, transparent) 20%,
+    color-mix(in srgb, var(--rank-burst-color) 58%, white) 0,
+    color-mix(in srgb, var(--rank-burst-color) 36%, transparent) 20%,
     transparent 62%
   );
   transform: translate(-50%, -50%) scale(.2);

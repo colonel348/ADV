@@ -1,26 +1,26 @@
 ﻿window.msgData = [
 
   { movId: "evt1" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "ピノコニーって歩いてるだけでワクワクするね　ねえ、次はあそこのお店も見てみない？" },
+    { msgId: "A", msgTxt: "あれ……ねえ、あっちで何か始まるみたい　……わっ、すごい風……っ！" },
+    { msgId: "L", msgTxt: "な、なかなか止まないね、この風……っ　その……あんまりこっち見ちゃだめだよ……" },
 
   { movId: "evt1" },
-    { msgId: "A", msgTxt: "" },
+    { msgId: "A", msgTxt: "（風に煽られて足元が――）　えっ、穹、危な――きゃっ！？" },
 
  { movId: "evt2" },
-    { msgId: "N", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "N", msgTxt: "だ、大丈夫……？ 怪我はない……？　……っ、あの……きゅ、穹、その右手……っ" },
+    { msgId: "L", msgTxt: "あ、あの……起き上がれる……？　そんなにじっと見られたら、あたし……照れるよ……" },
 
   { movId: "evt2" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "A", msgTxt: "" },
-    { msgId: "L", msgTxt: "" },
+    { msgId: "A", msgTxt: "……でも、その……もっと触りたいなら　……あたしは、いいよ……？" },
+    { msgId: "A", msgTxt: "……あの……ちょ、ちょっと待って……！？　直接なんて、思ってなくて……っ！ ひゃっ……！" },
+    { msgId: "L", msgTxt: "はぁっ、ん……っ だめ、声、出ちゃう……っ！　やっ、そこ……っ、あ、んっ……！" },
 
   { movId: "evt2" },
-    { msgId: "A", msgTxt: "" },
+    { msgId: "A", msgTxt: "……はぁっ、はぁ……っ も、もう、いい……？　その……満足、してくれた……？" },
 
   { movId: "home" },
-    { msgId: "A", msgTxt: ""}
+    { msgId: "A", msgTxt: "……この前はすごくびっくりしたけど……　えへへ、なんでもないよ！今日もよろしくね"}
 
 ];

@@ -101,6 +101,8 @@ let eventLevelGaugeAnimationTimer = null;
 let eventLevelStatusInitialized = false;
 let rankResultPending = false;
 let rankResultFrom = "";
+let rankResultAnimationSequence = 0;
+let rankResultTapHandler = null;
 let modeHomeTypingTimer = null;
 let modeHomeShowTimer = null;
 let modeHomeAutoHideTimer = null;
@@ -245,19 +247,21 @@ function setRankResultGauge(rank, progress, duration = 0) {
   fill.style.transform = `scaleX(${Math.min(1, Math.max(0, progress))})`;
 }
 
-async function clearRankResultGauge(nextRank, duration = 190) {
+async function clearRankResultGauge(nextRank, duration = 190, isCurrent = () => true) {
   const overlay = document.getElementById("rankResultOverlay");
   const fill = document.getElementById("rankResultGaugeFill");
   if (!overlay || !fill) return;
   fill.style.transition = `opacity ${duration}ms ease`;
   fill.style.opacity = "0";
   await waitRankResult(duration);
+  if (!isCurrent()) return false;
   const resolvedRank = Math.min(4, Math.max(1, Number(nextRank) || 1));
   overlay.style.setProperty("--rank-result-color", rankResultColors[resolvedRank]);
   fill.style.transition = "none";
   fill.style.transform = "scaleX(0)";
   fill.style.opacity = "1";
   await waitRankResult(50);
+  return isCurrent();
 }
 
 function setRankResultBadge(badgeId, valueId, rank) {
@@ -327,6 +331,11 @@ function createRankResultParticles() {
 function prepareRankResultAnimation() {
   const overlay = document.getElementById("rankResultOverlay");
   if (!overlay) return;
+  rankResultAnimationSequence++;
+  if (rankResultTapHandler) {
+    overlay.removeEventListener("click", rankResultTapHandler);
+    rankResultTapHandler = null;
+  }
   const fromRank = normalizeLvKbn(rankResultFrom).length;
   setRankResultBadge("rankResultFromBadge", "rankResultFromValue", fromRank);
   setRankResultBadge("rankResultToBadge", "rankResultValue", fromRank);
@@ -343,15 +352,17 @@ function prepareRankResultAnimation() {
   createRankResultParticles();
 }
 
-async function triggerRankResultBurst(rank) {
+async function triggerRankResultBurst(rank, isCurrent = () => true) {
   const overlay = document.getElementById("rankResultOverlay");
-  if (!overlay) return;
+  if (!overlay) return false;
   const isConsecutiveRankUp = overlay.classList.contains("has-ranked-up");
   if (isConsecutiveRankUp) {
     overlay.classList.add("is-rank-refreshing");
     await waitRankResult(110);
+    if (!isCurrent()) return false;
   }
   setRankResultBadge("rankResultToBadge", "rankResultValue", rank);
+  overlay.style.setProperty("--rank-burst-color", rankResultColors[rank]);
   overlay.classList.add("has-ranked-up");
   if (isConsecutiveRankUp) {
     overlay.classList.remove("is-rank-refreshing");
@@ -360,7 +371,28 @@ async function triggerRankResultBurst(rank) {
   overlay.offsetWidth;
   overlay.classList.add("is-rank-burst");
   await waitRankResult(1080);
+  if (!isCurrent()) return false;
   overlay.classList.remove("is-rank-burst");
+  return true;
+}
+
+function showFinalRankResultState(finalRank) {
+  const overlay = document.getElementById("rankResultOverlay");
+  const fill = document.getElementById("rankResultGaugeFill");
+  if (!overlay || !fill) return;
+
+  fill.style.transition = "none";
+  fill.offsetWidth;
+  const finalGaugeRank = finalRank < 4 ? finalRank + 1 : 4;
+  const finalProgress = finalRank < 4 ? finalRank / 4 : 1;
+  setRankResultGauge(finalGaugeRank, finalProgress);
+  setRankResultBadge("rankResultToBadge", "rankResultValue", finalRank);
+  overlay.style.setProperty("--rank-burst-color", rankResultColors[finalRank]);
+
+  // 途中まで表示済みの演出を一度リセットし、最終ランクの演出として再生する。
+  overlay.classList.remove("is-rank-refreshing", "has-ranked-up", "is-rank-burst");
+  overlay.offsetWidth;
+  overlay.classList.add("has-ranked-up", "is-rank-burst");
 }
 
 async function playRankResultAnimation(onComplete) {
@@ -375,8 +407,48 @@ async function playRankResultAnimation(onComplete) {
     return;
   }
 
+  const animationSequence = ++rankResultAnimationSequence;
+  const isCurrent = () => animationSequence === rankResultAnimationSequence;
+  let isFastForwarding = false;
+  let isComplete = false;
+
+  const markComplete = () => {
+    if (isComplete) return;
+    isComplete = true;
+    overlay.classList.remove("is-rank-burst", "is-rank-refreshing");
+    overlay.classList.add("is-complete");
+  };
+
+  const finish = () => {
+    if (!isComplete || overlay.classList.contains("is-finishing")) return;
+    overlay.classList.add("is-finishing");
+    if (rankResultTapHandler) {
+      overlay.removeEventListener("click", rankResultTapHandler);
+      rankResultTapHandler = null;
+    }
+    startDeferredSelectionIntroPlayback();
+    onComplete();
+  };
+
+  rankResultTapHandler = () => {
+    if (isComplete) {
+      finish();
+      return;
+    }
+    if (isFastForwarding) return;
+    isFastForwarding = true;
+    rankResultAnimationSequence++;
+    showFinalRankResultState(finalRank);
+    // 最終ランクの発光を一度見せてから、次のタップを受け付ける。
+    setTimeout(() => {
+      if (!overlay.classList.contains("is-finishing")) markComplete();
+    }, 850);
+  };
+  overlay.addEventListener("click", rankResultTapHandler);
+
   overlay.classList.add("is-visible");
   await waitRankResult(500);
+  if (!isCurrent()) return;
 
   let gaugeProgress = fromRank / 4;
   for (let nextRank = fromRank + 1; nextRank <= finalRank; nextRank++) {
@@ -384,16 +456,18 @@ async function playRankResultAnimation(onComplete) {
     const fillDuration = Math.max(420, Math.round(900 * distance));
     setRankResultGauge(nextRank, gaugeProgress);
     await waitRankResult(80);
+    if (!isCurrent()) return;
     setRankResultGauge(nextRank, 1, fillDuration);
     await waitRankResult(fillDuration);
-    await triggerRankResultBurst(nextRank);
+    if (!isCurrent()) return;
+    if (!await triggerRankResultBurst(nextRank, isCurrent)) return;
 
     if (nextRank === 4) {
       gaugeProgress = 1;
       break;
     }
 
-    await clearRankResultGauge(nextRank + 1);
+    if (!await clearRankResultGauge(nextRank + 1, 190, isCurrent)) return;
     gaugeProgress = 0;
   }
 
@@ -402,16 +476,9 @@ async function playRankResultAnimation(onComplete) {
     const finalDuration = Math.max(430, Math.round(900 * finalProgress));
     setRankResultGauge(finalRank + 1, finalProgress, finalDuration);
     await waitRankResult(finalDuration + 80);
+    if (!isCurrent()) return;
   }
-  overlay.classList.add("is-complete");
-
-  const finish = () => {
-    if (!overlay.classList.contains("is-complete") || overlay.classList.contains("is-finishing")) return;
-    overlay.classList.add("is-finishing");
-    startDeferredSelectionIntroPlayback();
-    onComplete();
-  };
-  overlay.addEventListener("click", finish, { once: true });
+  markComplete();
 }
 
 function readSelectionParams() {
