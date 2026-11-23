@@ -95,10 +95,10 @@ let selectLoopWatching = false;
 let eventPlaybackPreloadSequence = 0;
 let eventPlaybackPreloadVideos = [];
 let eventPlaybackPreloadTimer = null;
+let eventPlaybackPreloadEventId = "";
+let eventPlaybackPreloadPromise = null;
 let eventCardAnimationTimer = null;
 let eventCardCenterTransforms = [];
-let eventLevelGaugeAnimationTimer = null;
-let eventLevelStatusInitialized = false;
 let rankResultPending = false;
 let rankResultFrom = "";
 let rankResultAnimationSequence = 0;
@@ -164,66 +164,25 @@ function getPreviewLvKbn(evt = null) {
   return (current + evt.evtId.charAt(3).repeat(addCount)).slice(0, 4);
 }
 
-function updateEventLevelStatus(evt = null, blinkPending = false) {
+function updateEventLevelStatus() {
   const status = document.getElementById("eventLevelStatus");
   if (!status) return;
 
-  const current = normalizeLvKbn(lvKbn);
-  const preview = getPreviewLvKbn(evt);
+  const rank = normalizeLvKbn(lvKbn).length;
   const value = document.getElementById("eventLevelStatusValue");
-  const segments = status.querySelectorAll(".eventLevelSegments span");
-  const pendingGauge = status.querySelector(".eventLevelPendingGauge");
-  const nextValue = String(current.length);
-  if (value.textContent !== nextValue) {
-    value.classList.remove("value-changing");
-    value.textContent = nextValue;
-    if (eventLevelStatusInitialized) {
-      value.offsetWidth;
-      value.classList.add("value-changing");
-    }
-  }
-  eventLevelStatusInitialized = true;
-  status.setAttribute("aria-label", `ランク${current.length}`);
-  segments.forEach((segment, index) => {
-    const mode = current.charAt(index);
-    if (mode) segment.dataset.mode = mode;
-    else delete segment.dataset.mode;
-  });
+  const fill = status.querySelector(".eventLevelGaugeFill");
+  const progress = rank / 4;
 
-  if (!pendingGauge) return;
-
-  clearTimeout(eventLevelGaugeAnimationTimer);
-
-  const remainingCount = Math.max(0, 4 - current.length);
-  const pendingCount = Math.max(0, preview.length - current.length);
-  const targetScale = remainingCount ? pendingCount / remainingCount : 0;
-  pendingGauge.style.left = `${current.length * 25}%`;
-  pendingGauge.style.width = `${remainingCount * 25}%`;
-
-  const pendingMode = preview.charAt(current.length);
-  if (pendingCount === 0) {
-    // ②→①では色と点滅を残したまま右端から縮め、縮み切ってから隠す。
-    pendingGauge.style.transform = "scaleX(0)";
-    eventLevelGaugeAnimationTimer = setTimeout(() => {
-      if (pendingGauge.style.transform !== "scaleX(0)") return;
-      pendingGauge.classList.remove("is-blinking");
-      pendingGauge.style.opacity = "0";
-      delete pendingGauge.dataset.mode;
-    }, 680);
-    return;
-  }
-
-  pendingGauge.dataset.mode = pendingMode;
-  pendingGauge.style.visibility = "visible";
-  pendingGauge.style.animation = "";
-  pendingGauge.style.opacity = "1";
-  pendingGauge.classList.toggle("is-blinking", blinkPending);
-  requestAnimationFrame(() => {
-    pendingGauge.style.transform = `scaleX(${targetScale})`;
-  });
+  value.textContent = String(rank);
+  status.setAttribute("aria-label", `ランク${rank}`);
+  if (!fill) return;
+  fill.dataset.rank = String(rank);
+  fill.style.opacity = "1";
+  fill.style.transform = `scaleX(${progress})`;
 }
 
 const rankResultColors = {
+  0: "#48d58a",
   1: "#36c7ef",
   2: "#f0c43f",
   3: "#ed5c67",
@@ -238,7 +197,8 @@ function setRankResultGauge(rank, progress, duration = 0) {
   const overlay = document.getElementById("rankResultOverlay");
   const fill = document.getElementById("rankResultGaugeFill");
   if (!overlay || !fill) return;
-  const resolvedRank = Math.min(4, Math.max(1, Number(rank) || 1));
+  const numericRank = Number(rank);
+  const resolvedRank = Math.min(4, Math.max(0, Number.isFinite(numericRank) ? numericRank : 0));
   overlay.style.setProperty("--rank-result-color", rankResultColors[resolvedRank]);
   fill.style.opacity = "1";
   fill.style.transition = duration
@@ -255,7 +215,8 @@ async function clearRankResultGauge(nextRank, duration = 190, isCurrent = () => 
   fill.style.opacity = "0";
   await waitRankResult(duration);
   if (!isCurrent()) return false;
-  const resolvedRank = Math.min(4, Math.max(1, Number(nextRank) || 1));
+  const numericRank = Number(nextRank);
+  const resolvedRank = Math.min(4, Math.max(0, Number.isFinite(numericRank) ? numericRank : 0));
   overlay.style.setProperty("--rank-result-color", rankResultColors[resolvedRank]);
   fill.style.transition = "none";
   fill.style.transform = "scaleX(0)";
@@ -348,7 +309,7 @@ function prepareRankResultAnimation() {
     "is-finishing",
     "is-leaving"
   );
-  setRankResultGauge(Math.min(4, fromRank + 1), fromRank / 4);
+  setRankResultGauge(fromRank, fromRank / 4);
   createRankResultParticles();
 }
 
@@ -376,25 +337,6 @@ async function triggerRankResultBurst(rank, isCurrent = () => true) {
   return true;
 }
 
-function showFinalRankResultState(finalRank) {
-  const overlay = document.getElementById("rankResultOverlay");
-  const fill = document.getElementById("rankResultGaugeFill");
-  if (!overlay || !fill) return;
-
-  fill.style.transition = "none";
-  fill.offsetWidth;
-  const finalGaugeRank = finalRank < 4 ? finalRank + 1 : 4;
-  const finalProgress = finalRank < 4 ? finalRank / 4 : 1;
-  setRankResultGauge(finalGaugeRank, finalProgress);
-  setRankResultBadge("rankResultToBadge", "rankResultValue", finalRank);
-  overlay.style.setProperty("--rank-burst-color", rankResultColors[finalRank]);
-
-  // 途中まで表示済みの演出を一度リセットし、最終ランクの演出として再生する。
-  overlay.classList.remove("is-rank-refreshing", "has-ranked-up", "is-rank-burst");
-  overlay.offsetWidth;
-  overlay.classList.add("has-ranked-up", "is-rank-burst");
-}
-
 async function playRankResultAnimation(onComplete) {
   const overlay = document.getElementById("rankResultOverlay");
   const fromRank = normalizeLvKbn(rankResultFrom).length;
@@ -409,7 +351,6 @@ async function playRankResultAnimation(onComplete) {
 
   const animationSequence = ++rankResultAnimationSequence;
   const isCurrent = () => animationSequence === rankResultAnimationSequence;
-  let isFastForwarding = false;
   let isComplete = false;
 
   const markComplete = () => {
@@ -431,18 +372,7 @@ async function playRankResultAnimation(onComplete) {
   };
 
   rankResultTapHandler = () => {
-    if (isComplete) {
-      finish();
-      return;
-    }
-    if (isFastForwarding) return;
-    isFastForwarding = true;
-    rankResultAnimationSequence++;
-    showFinalRankResultState(finalRank);
-    // 最終ランクの発光を一度見せてから、次のタップを受け付ける。
-    setTimeout(() => {
-      if (!overlay.classList.contains("is-finishing")) markComplete();
-    }, 850);
+    if (isComplete) finish();
   };
   overlay.addEventListener("click", rankResultTapHandler);
 
@@ -454,31 +384,70 @@ async function playRankResultAnimation(onComplete) {
   for (let nextRank = fromRank + 1; nextRank <= finalRank; nextRank++) {
     const distance = 1 - gaugeProgress;
     const fillDuration = Math.max(420, Math.round(900 * distance));
-    setRankResultGauge(nextRank, gaugeProgress);
+    setRankResultGauge(nextRank - 1, gaugeProgress);
     await waitRankResult(80);
     if (!isCurrent()) return;
-    setRankResultGauge(nextRank, 1, fillDuration);
+    setRankResultGauge(nextRank - 1, 1, fillDuration);
     await waitRankResult(fillDuration);
     if (!isCurrent()) return;
-    if (!await triggerRankResultBurst(nextRank, isCurrent)) return;
+    // MAX到達後もゲージを止めず、ランクアップ演出と次のゲージを並行させる。
+    const burstPromise = triggerRankResultBurst(nextRank, isCurrent);
 
     if (nextRank === 4) {
+      setRankResultGauge(4, 1);
+      if (!await burstPromise) return;
       gaugeProgress = 1;
       break;
     }
 
-    if (!await clearRankResultGauge(nextRank + 1, 190, isCurrent)) return;
+    if (!await clearRankResultGauge(nextRank, 190, isCurrent)) return;
     gaugeProgress = 0;
+
+    if (nextRank === finalRank) {
+      const finalProgress = finalRank / 4;
+      const finalDuration = Math.max(430, Math.round(900 * finalProgress));
+      setRankResultGauge(finalRank, finalProgress, finalDuration);
+      const [, burstCompleted] = await Promise.all([
+        waitRankResult(finalDuration + 80),
+        burstPromise
+      ]);
+      if (!burstCompleted || !isCurrent()) return;
+    }
   }
 
-  if (finalRank < 4) {
-    const finalProgress = finalRank / 4;
-    const finalDuration = Math.max(430, Math.round(900 * finalProgress));
-    setRankResultGauge(finalRank + 1, finalProgress, finalDuration);
-    await waitRankResult(finalDuration + 80);
-    if (!isCurrent()) return;
-  }
   markComplete();
+}
+
+function runRankResultPresentation(displayReady) {
+  const viewport = document.getElementById("viewport");
+  document.body.classList.add("event-rank-result");
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.body.classList.remove("event-rank-initializing");
+      playRankResultAnimation(() => {
+        rankResultPending = false;
+        displayReady.then(() => {
+          viewport.style.opacity = 1;
+          fade?.classList.remove("show");
+          const resultOverlay = document.getElementById("rankResultOverlay");
+          requestAnimationFrame(() => {
+            resultOverlay?.classList.add("is-leaving");
+            setTimeout(() => {
+              document.body.classList.remove("event-rank-result");
+              resultOverlay?.classList.remove(
+                "is-visible",
+                "is-rank-burst",
+                "has-ranked-up",
+                "is-complete",
+                "is-finishing",
+                "is-leaving"
+              );
+            }, 580);
+          });
+        });
+      });
+    });
+  });
 }
 
 function readSelectionParams() {
@@ -984,7 +953,7 @@ function showModeSelection(onReady = null, restartCommonVideo = true) {
   tgtEvtData = null;
   document.getElementById("viewport").classList.remove("event-unselected");
   decideBtn.classList.add("disabled");
-  if (!rankResultPending) updateEventLevelStatus();
+  updateEventLevelStatus();
   hideModeHomeMessage();
 
   document.querySelectorAll(".modeChoice").forEach(button => {
@@ -1127,7 +1096,6 @@ function selectEvent(index, instant = false) {
   tgtEvtData = filteredEvtData[index];
   evtId = tgtEvtData.evtId;
   const locked = isEventLocked(tgtEvtData);
-  updateEventLevelStatus(tgtEvtData, true);
   document.getElementById("viewport").classList.remove("event-unselected");
   document.getElementById("viewport").classList.toggle("event-locked-selection", locked);
   decideBtn.classList.toggle("event-locked", locked);
@@ -1155,8 +1123,9 @@ function selectEvent(index, instant = false) {
 
   clearTimeout(eventPlaybackPreloadTimer);
   // カードの選択状態を先に描画し、前の選択の本編プリロードを無効化する。
-  eventPlaybackPreloadSequence++;
+  invalidateEventPlaybackPreload();
   if (locked) {
+    setTimeout(clearEventPlaybackPreloadVideos, 0);
     if (instant) {
       cardList.offsetHeight;
       requestAnimationFrame(() => {
@@ -1244,18 +1213,57 @@ function preloadSelectedEventVideo(evt) {
   }
 }
 
-function preloadSelectedEventPlayback(evt) {
-  const sequence = ++eventPlaybackPreloadSequence;
+function clearEventPlaybackPreloadVideos() {
+  eventPlaybackPreloadVideos.forEach(video => {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    video.remove();
+  });
+  eventPlaybackPreloadVideos = [];
+}
 
-  EventMedia.loadMessageData(evt).then(data => {
+function invalidateEventPlaybackPreload() {
+  eventPlaybackPreloadSequence++;
+  eventPlaybackPreloadEventId = "";
+  eventPlaybackPreloadPromise = null;
+}
+
+window.releaseEmbeddedEventPreloads = function (playingEvtId = "") {
+  if (
+    playingEvtId &&
+    eventPlaybackPreloadEventId &&
+    playingEvtId !== eventPlaybackPreloadEventId
+  ) {
+    return;
+  }
+
+  invalidateEventPlaybackPreload();
+  clearEventPlaybackPreloadVideos();
+  if (selectPreloadVideo) {
+    selectPreloadVideo.pause();
+    selectPreloadVideo.removeAttribute("src");
+    delete selectPreloadVideo.dataset.src;
+    selectPreloadVideo.load();
+  }
+};
+
+function preloadSelectedEventPlayback(evt) {
+  if (!evt?.evtId) return Promise.resolve();
+  if (
+    eventPlaybackPreloadEventId === evt.evtId &&
+    eventPlaybackPreloadPromise
+  ) {
+    return eventPlaybackPreloadPromise;
+  }
+
+  const sequence = ++eventPlaybackPreloadSequence;
+  eventPlaybackPreloadEventId = evt.evtId;
+
+  const request = EventMedia.loadMessageData(evt).then(data => {
     if (sequence !== eventPlaybackPreloadSequence || tgtEvtData?.evtId !== evt.evtId) return;
 
-    eventPlaybackPreloadVideos.forEach(video => {
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-      video.remove();
-    });
+    clearEventPlaybackPreloadVideos();
     eventPlaybackPreloadVideos = EventMedia.getFirstMovBlockMedia(evt, data).map(src => {
       const video = document.createElement("video");
       video.className = "selectPreloadMovie";
@@ -1269,13 +1277,21 @@ function preloadSelectedEventPlayback(evt) {
     });
   }).catch(() => {
     // 読み込みに失敗しても、本編側の通常読み込みで再試行できるよう選択操作は止めない。
+    if (sequence === eventPlaybackPreloadSequence) {
+      eventPlaybackPreloadEventId = "";
+      eventPlaybackPreloadPromise = null;
+    }
   });
+  eventPlaybackPreloadPromise = request;
+  return request;
 }
 
 function enterEventPreview() {
   if (!tgtEvtData || isEventLocked(tgtEvtData)) return;
   const viewport = document.getElementById("viewport");
   const previewEvtId = tgtEvtData.evtId;
+  // ②でアイドル読込が始まる前に③へ進んだ場合も、ここで必ず本編の準備を始める。
+  preloadSelectedEventPlayback(tgtEvtData);
   viewport.classList.remove("preview-controls-visible", "preview-button-visible");
   clearTimeout(selectionChangeTimer);
   decideBtn.classList.add("pressed");
@@ -1743,6 +1759,7 @@ function showEventSelection(restartCommonVideo = true, onVideoReady = null) {
   evtIdx = -1;
   evtId = "";
   tgtEvtData = null;
+  updateEventLevelStatus();
   updateFilteredEvents();
   updateDecideButton();
   createCards();
@@ -1964,6 +1981,77 @@ function initializeCharacterSelection() {
   }))).then(() => { viewport.style.opacity = 1; });
 }
 
+window.returnFromEmbeddedEventPlayback = function (options = {}) {
+  const viewport = document.getElementById("viewport");
+  const completedEventId = String(options.befEvtId || "");
+  const completedEvent = evtData.find(evt => evt.evtId === completedEventId);
+  const hasRankResult = options.rankResultFrom !== undefined;
+
+  befEvtId = completedEventId;
+  previousEventLevel = completedEvent ? Number(completedEvent.evtId.charAt(4)) || 0 : 0;
+  lvKbn = normalizeLvKbn(options.lvKbn);
+  rankResultFrom = hasRankResult ? normalizeLvKbn(options.rankResultFrom) : "";
+  rankResultPending = hasRankResult;
+  initialEvtId = "";
+  selectedMode = "";
+  evtId = "";
+  evtIdx = -1;
+  tgtEvtData = null;
+  isDeciding = false;
+
+  // 再読込せずに戻るため、③・④で付与した一時状態を明示的に破棄する。
+  clearTimeout(screenTransitionTimer);
+  clearTimeout(eventPlaybackPreloadTimer);
+  window.releaseEmbeddedEventPreloads();
+  stopSelectionVideos();
+  viewport.style.opacity = 0;
+  viewport.classList.remove(
+    "preview-starting",
+    "screen-transitioning",
+    "screen-leaving",
+    "mode-to-event",
+    "event-revealing",
+    "event-reveal-visible",
+    "mode-buttons-leaving",
+    "event-cards-static"
+  );
+  document.body.classList.remove(
+    "event-playback",
+    "preview-starting",
+    "preview-black-transition",
+    "event-start-leaving",
+    "event-rank-cutover",
+    "event-rank-hidden"
+  );
+  document.body.classList.toggle("event-rank-initializing", hasRankResult);
+  decideBtn.classList.remove("pressed");
+  document.getElementById("fade")?.classList.remove("show", "fade-white");
+
+  const nextUrl = new URL(location.href);
+  nextUrl.search = "";
+  nextUrl.searchParams.set("chrId", chrId);
+  nextUrl.searchParams.set("screen", "mode");
+  nextUrl.searchParams.set("autoFlg", autoFlg);
+  nextUrl.searchParams.set("LvKbn", lvKbn);
+  if (completedEventId) nextUrl.searchParams.set("befEvtId", completedEventId);
+  history.replaceState(null, "", nextUrl.href);
+
+  let modeReadyResolve;
+  const modeReady = new Promise(resolve => { modeReadyResolve = resolve; });
+  setScreen("mode", false, modeReadyResolve);
+
+  if (hasRankResult) {
+    prepareRankResultAnimation();
+    runRankResultPresentation(modeReady);
+    return;
+  }
+
+  modeReady.then(() => {
+    viewport.style.opacity = 1;
+    fade.classList.remove("show");
+  });
+};
+
 window.addEventListener("load", () => {
   // 同じselect.htmlで本編を開始する場合、背後の選択動画を起動して帯域を競合させない。
   if (hasPendingEventPlaybackEntry()) return;
@@ -2008,33 +2096,7 @@ window.addEventListener("load", () => {
   const viewport = document.getElementById("viewport");
   if (rankResultPending) {
     // ランク演出は画像読込を待たず、ページ遷移直後の黒画面上で開始する。
-    document.body.classList.add("event-rank-result");
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        document.body.classList.remove("event-rank-initializing");
-        playRankResultAnimation(() => {
-          rankResultPending = false;
-          initialDisplayReady.then(() => {
-            viewport.style.opacity = 1;
-            const resultOverlay = document.getElementById("rankResultOverlay");
-            requestAnimationFrame(() => {
-              resultOverlay?.classList.add("is-leaving");
-              setTimeout(() => {
-                document.body.classList.remove("event-rank-result");
-                resultOverlay?.classList.remove(
-                  "is-visible",
-                  "is-rank-burst",
-                  "has-ranked-up",
-                  "is-complete",
-                  "is-finishing",
-                  "is-leaving"
-                );
-              }, 580);
-            });
-          });
-        });
-      });
-    });
+    runRankResultPresentation(initialDisplayReady);
   } else {
     initialDisplayReady.then(() => {
       viewport.style.opacity = 1;

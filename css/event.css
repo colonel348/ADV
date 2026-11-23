@@ -63,61 +63,27 @@ body[data-selection-host="event"].event-playback > #titleArea {
 .eventLevelSegments {
   position: absolute;
   inset: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.eventLevelSegments span {
-  box-sizing: border-box;
+  overflow: hidden;
   background: #3c3e4d;
-  transition: background-color .3s ease, opacity .3s ease;
 }
 
-.eventLevelSegments span[data-mode="R"] { background: #e97aa7; }
-.eventLevelSegments span[data-mode="S"] { background: #e7a329; }
-.eventLevelSegments span[data-mode="C"] { background: #9278d5; }
-
-.eventLevelPendingGauge {
+.eventLevelGaugeFill {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   z-index: 1;
   opacity: 0;
   pointer-events: none;
   transform: scaleX(0);
   transform-origin: left center;
-  will-change: transform, opacity;
-  transition: transform .65s cubic-bezier(.22, .7, .25, 1), opacity .2s ease;
+  transition: none;
 }
 
-.eventLevelPendingGauge[data-mode="R"] { background: #e97aa7; }
-.eventLevelPendingGauge[data-mode="S"] { background: #e7a329; }
-.eventLevelPendingGauge[data-mode="C"] { background: #9278d5; }
-
-.eventLevelPendingGauge.is-blinking {
-  animation: eventLevelPendingBlink 1.5s ease-in-out infinite;
-}
-
-.eventLevelCommitGauge {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1;
-  opacity: 0;
-  pointer-events: none;
-  transform: scaleX(0);
-  transform-origin: left center;
-  will-change: transform, opacity;
-  transition: transform .65s cubic-bezier(.22, .7, .25, 1), opacity .2s ease;
-}
-
-.eventLevelCommitGauge[data-mode="R"] { background: #e97aa7; }
-.eventLevelCommitGauge[data-mode="S"] { background: #e7a329; }
-.eventLevelCommitGauge[data-mode="C"] { background: #9278d5; }
+.eventLevelGaugeFill[data-rank="0"] { background: #48d58a; }
+.eventLevelGaugeFill[data-rank="1"] { background: #36c7ef; }
+.eventLevelGaugeFill[data-rank="2"] { background: #f0c43f; }
+.eventLevelGaugeFill[data-rank="3"] { background: #ed5c67; }
+.eventLevelGaugeFill[data-rank="4"] { background: #a66ce7; }
 
 .eventLevelStatusLabel,
 .eventLevelStatusValue {
@@ -130,21 +96,6 @@ body[data-selection-host="event"].event-playback > #titleArea {
 
 .eventLevelStatusLabel { left: 42%; font-size: 14px; }
 .eventLevelStatusValue { left: 67%; min-width: 12px; font-size: 21px; line-height: 1; text-align: center; }
-
-.eventLevelStatusValue.value-changing {
-  animation: eventLevelValueChange .45s ease;
-}
-
-@keyframes eventLevelPendingBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .28; }
-}
-
-@keyframes eventLevelValueChange {
-  0% { opacity: 0; transform: translate(-50%, -30%); }
-  55% { opacity: 1; transform: translate(-50%, -56%); }
-  100% { opacity: 1; transform: translate(-50%, -50%); }
-}
 
 body.event-rank-initializing .eventLevelStatus,
 body.event-rank-hidden .eventLevelStatus {
