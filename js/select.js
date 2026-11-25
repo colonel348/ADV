@@ -394,8 +394,18 @@ async function playRankResultAnimation(onComplete) {
     const burstPromise = triggerRankResultBurst(nextRank, isCurrent);
 
     if (nextRank === 4) {
-      setRankResultGauge(4, 1);
-      if (!await burstPromise) return;
+      // Lv4もほかのランクと同様に一度ゲージを0へ切り替え、
+      // 紫のゲージを0からMAXまで一周させる。
+      if (!await clearRankResultGauge(4, 190, isCurrent)) return;
+      gaugeProgress = 0;
+
+      const finalDuration = 900;
+      setRankResultGauge(4, 1, finalDuration);
+      const [, burstCompleted] = await Promise.all([
+        waitRankResult(finalDuration + 80),
+        burstPromise
+      ]);
+      if (!burstCompleted || !isCurrent()) return;
       gaugeProgress = 1;
       break;
     }

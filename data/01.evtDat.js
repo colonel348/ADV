@@ -18,7 +18,7 @@
 
   { evtId: "SA-S1", evtNm: "下半身のフォームを徹底指導する", fadeEvt: "2", plcNm: "ダンススタジオ"},
 
-  { evtId: "SA-S2", evtNm: "無人ライブハウスで全裸で歌わせる", fadeEvt: "2", plcNm: "COLライブハウス"},
+  { evtId: "SA-S2", evtNm: "無人ライブハウスで裸で歌わせる", fadeEvt: "2", plcNm: "COLライブハウス"},
 
   { evtId: "SA-S4", evtNm: "こはねと真剣勝負", fadeEvt: "1", plcNm: "ビビッドストリート"},
 
