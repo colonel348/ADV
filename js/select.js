@@ -33,6 +33,14 @@ function syncAppViewportHeight() {
   const frameDeviceWidth = viewportDeviceWidth - gutterDeviceWidth * 2;
   const frameWidth = frameDeviceWidth / dpr;
   const frameGutter = gutterDeviceWidth / dpr;
+  // Fold端末の開閉判定を画面全体の縦横比だけで行うと、縦に開いた広い画面も
+  // 「細長い画面」と誤判定する。実際の素材表示フレーム幅を基準に文字を補間する。
+  const messageWidthProgress = Math.min(
+    1,
+    Math.max(0, (frameWidth - 400) / 80)
+  );
+  const modeMessageFontSize = 14 + messageWidthProgress * 2;
+  const eventMessageFontSize = 14 + messageWidthProgress;
   const signature = `${resolvedHeight}:${viewportDeviceWidth}:${frameDeviceWidth}:${dpr}`;
   if (signature === lastAppViewportSignature) return;
   lastAppViewportSignature = signature;
@@ -41,6 +49,16 @@ function syncAppViewportHeight() {
   document.documentElement.style.setProperty("--app-frame-width", `${frameWidth}px`);
   document.documentElement.style.setProperty("--media-frame-width", `${frameWidth}px`);
   document.documentElement.style.setProperty("--media-frame-gutter", `${frameGutter}px`);
+  document.documentElement.style.setProperty(
+    "--mode-message-font-size",
+    `${modeMessageFontSize.toFixed(2)}px`
+  );
+  document.documentElement.style.setProperty(
+    "--event-message-font-size",
+    `${eventMessageFontSize.toFixed(2)}px`
+  );
+  document.documentElement.dataset.frameLayout =
+    messageWidthProgress >= 0.5 ? "expanded" : "compact";
 }
 
 function scheduleAppViewportHeightSync() {

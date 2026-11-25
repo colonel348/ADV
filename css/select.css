@@ -6,6 +6,8 @@
   --app-frame-width: 56.47058824dvh;
   --media-frame-width: min(100vw, var(--app-frame-width));
   --media-frame-gutter: calc((100vw - var(--media-frame-width)) / 2);
+  --mode-message-font-size: 14px;
+  --event-message-font-size: 15px;
 }
 
 html:root,
@@ -1033,6 +1035,10 @@ body[data-selection-host="event"].event-playback #fade {
 body[data-selection-host="event"].event-playback #msgArea {
   left: -2px;
   right: -2px;
+}
+
+body[data-selection-host="event"].event-playback #msgText {
+  font-size: var(--event-message-font-size);
 }
 
 body[data-selection-host="event"].event-playback > #titleArea {
@@ -2113,7 +2119,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   background: transparent;
   isolation: isolate;
   color: #fff;
-  font-size: clamp(14px, 2.1vw, 20px);
+  font-size: var(--mode-message-font-size);
   font-weight: 700;
   line-height: 1.35;
   letter-spacing: .02em;
@@ -2695,7 +2701,6 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
   #modeHomeMessage {
     padding-right: 14px;
     padding-left: 14px;
-    font-size: clamp(12px, 3.3vw, 14px);
   }
 
   .modeChoiceText {
@@ -2722,7 +2727,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
 
   body[data-selection-host="event"].event-playback #msgText {
     margin-left: 2px;
-    font-size: 14px;
+    font-size: var(--event-message-font-size);
   }
 
   body[data-selection-host="event"].event-playback .msgArea-hs #msgText {
@@ -2762,7 +2767,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
     padding-right: min(14px, 1.8dvh);
     padding-left: min(14px, 1.8dvh);
     border-radius: min(18px, 2.55dvh);
-    font-size: min(14px, 1.86dvh);
+    font-size: var(--mode-message-font-size);
   }
 
   #modePanel {
@@ -2808,7 +2813,7 @@ body.preview-starting.preview-black-transition #previewStartFlash::after {
     min-height: min(100px, 14.1dvh);
     margin-left: min(2px, .3dvh);
     padding-top: min(6px, .85dvh);
-    font-size: min(14px, 1.98dvh);
+    font-size: var(--event-message-font-size);
   }
 
   body[data-selection-host="event"].event-playback #chrName {
