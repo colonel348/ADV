@@ -6,7 +6,7 @@
   --app-frame-width: 56.47058824dvh;
   --media-frame-width: min(100vw, var(--app-frame-width));
   --media-frame-gutter: calc((100vw - var(--media-frame-width)) / 2);
-  --mode-message-font-size: 14px;
+  --mode-message-font-size: 16px;
   --event-message-font-size: 15px;
 }
 
@@ -22,6 +22,9 @@ body {
   overflow: hidden;
   background: #000;
   font-family: var(--app-font-family);
+  /* Safariの狭いFold画面だけで一部の文字が自動拡大されるのを防ぐ。 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 button { font: inherit; }

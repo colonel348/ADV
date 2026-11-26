@@ -39,8 +39,9 @@ function syncAppViewportHeight() {
     1,
     Math.max(0, (frameWidth - 400) / 80)
   );
-  const modeMessageFontSize = 14 + messageWidthProgress * 2;
-  const eventMessageFontSize = 14 + messageWidthProgress;
+  // Duo A/Cでメッセージ文字を変えず、Duo C側のサイズへ統一する。
+  const modeMessageFontSize = 16;
+  const eventMessageFontSize = 15;
   const signature = `${resolvedHeight}:${viewportDeviceWidth}:${frameDeviceWidth}:${dpr}`;
   if (signature === lastAppViewportSignature) return;
   lastAppViewportSignature = signature;
